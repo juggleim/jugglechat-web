@@ -1,0 +1,79 @@
+@media (min-width: 992px){
+  .tyn-profile-cover-image {
+    height: 100px;
+    background-image: url(../images/cover/1.jpg);
+    background-repeat: no-repeat;
+    background-position: top;
+    background-size: cover;
+  }
+}
+.contact_dp_show{
+  position: absolute; 
+  inset: 0px 0px auto auto; 
+  margin: 0px; 
+  transform: translate3d(0px, 40px, 0px);
+}
+.contact-content{
+  height: 100%;
+  display: flex;
+  justify-content: center;
+}
+.contact-content .tyn-chat-head{
+  flex-direction: column;
+  background: none;
+}
+.contact-content .tyn-media-group{
+  width: 380px;
+  margin-top: 2rem;
+}
+.contact-content .tyn-media-row{
+  width: 100%;
+}
+.contact-send-msg{
+  background: #2563eb;
+  color: #FFF;
+  border: 0;
+}
+.contact-content .tyn-media-col{
+  margin-right: 3rem;
+}
+.tyn-contact .nav-link::before{
+  font-size: 14px;
+  margin-right: 2px;
+}
+.contact-content .lower-btn{
+  color: red;
+  background-color: var(--bs-btn-hover-bg);
+  border-color: var(--bs-btn-hover-border-color);
+  border: 0;
+}
+.tyn-contact .modal-content{
+  height: 140px;
+}
+.tyn-contact .tyn-conver-avatar{
+  border: 1px solid #e8e6e6;
+}
+.tyn-contact .modal-body .tyn-aside-search{
+  padding: 0 0 0 0;
+}
+
+.m-friend-name,
+.m-friend-add-btn{
+  width: 6rem;
+  display: flex;
+  justify-content: end;
+}
+.m-friend-name{
+  justify-content: start;
+}
+.m-friend-add-btn .wr-plus{
+  background-color: #eaeff3;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-weight: 700;
+  transition: background-color 0.3s ease;
+}
+.m-friend-add-btn .wr-plus:hover{
+  background-color: #2563eb;
+  color: #eaeff3;
+}

@@ -1,0 +1,181 @@
+@font-face {
+  font-family: 'wr';  /* Project id 4376445 */
+  src: url('//at.alicdn.com/t/c/font_4376445_kmkbuvvmqn.woff2?t=1712123420949') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4376445_kmkbuvvmqn.woff?t=1712123420949') format('woff'),
+       url('//at.alicdn.com/t/c/font_4376445_kmkbuvvmqn.ttf?t=1712123420949') format('truetype');
+}
+
+.wr {
+  font-family: 'wr' !important;
+  font-size: 14px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.wr-notice:before {
+  content: '\e645';
+}
+.wr-contact:before {
+  content: '\e63b';
+}
+.wr-message:before {
+  content: '\e6aa';
+}
+.wr-setting:before {
+  content: '\e634';
+}
+.wr-logout:before {
+  content: '\e6a4';
+}
+.wr-adduser:before {
+  content: '\e636';
+}
+.wr-search:before {
+  content: '\e79e';
+}
+.wr-delete:before {
+  content: '\e635';
+}
+.wr-read:before {
+  content: '\e671';
+}
+.wr-mute:before {
+  content: '\e644';
+}
+.wr-category:before {
+  content: '\e62c';
+}
+.wr-config:before {
+  content: '\e7b1';
+}
+.wr-close:before {
+  content: '\e62b';
+}
+.wr-up:before {
+  content: '\e637';
+}
+.wr-down:before {
+  content: '\e639';
+}
+.wr-operate:before {
+  content: '\e7b2';
+}
+.wr-block:before {
+  content: '\e7b3';
+}
+.wr-image:before {
+  content: '\e648';
+}
+.wr-modify:before {
+  content: '\e62a';
+}
+.wr-modify-a::after{
+  content: '\e62a';
+}
+.wr-smile:before {
+  content: '\e66b';
+}
+.wr-more:before {
+  content: '\e607';
+}
+.wr-plus:before {
+  content: '\e630';
+}
+.wr-jian:before {
+  content: '\e633';
+}
+.wr-submit:before {
+  content: '\e6c4';
+}
+.wr-file:before {
+  content: '\e7b5';
+}
+.wr-video:before {
+  content: '\e79f';
+}
+.wr-recall:before {
+  content: '\e62d';
+}
+.wr-clear:before {
+  content: '\e7a0';
+}
+.wr-modify-pen:before {
+  content: '\e642';
+}
+.wr-video:before {
+  content: '\e62e';
+}
+.wr-dui:before {
+  content: '\e62f';
+}
+.wr-circle:before {
+  content: '\e669';
+}
+.wr-left:before {
+  content: '\e63c';
+}
+.wr-right:before {
+  content: '\e63a';
+}
+.wr-share:before {
+  content: '\e631';
+}
+.wr-success:before {
+  content: '\e600';
+}
+.wr-success-square:before {
+  content: '\e652';
+}
+.wr-square:before {
+  content: '\e654';
+}
+.wr-transfer:before {
+  content: '\e61f';
+}
+.wr-transfer-merge:before {
+  content: '\e65f';
+}
+.wr-message-square:before {
+  content: '\e6ad';
+}
+.wr-group:before {
+  content: '\e670';
+}
+.wr-huixing:before {
+  content: '\e601';
+}
+.wr-send:before {
+  content: '\e6a5';
+}
+.wr-bubble-b:before {
+  content: '\e662';
+}
+.wr-subtract:before {
+  content: '\e633';
+}
+.wr-fang:before {
+  content: '\e66a';
+}
+.wr-bubble-a:after {
+  content: '\e662';
+}
+.wr-mark:after {
+  content: '\e608';
+}
+
+.wr-success::before{
+  content: '\e6a2';
+  color: #4caf50;
+}
+.wr-error::before{
+  content: '\e6a1';
+  color: #df1717df;
+}
+.wr-warn::before{
+  content: '\e6a3';
+  color: #fb8c00;
+}
+.wr-disabled::before{
+  color: #CCC !important;
+}

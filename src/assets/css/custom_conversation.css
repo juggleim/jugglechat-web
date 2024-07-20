@@ -1,0 +1,56 @@
+.jg-cndrop-show{
+  position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate3d(0px, 40px, 0px);
+}
+
+.jg-toggle::before{
+  font-size: 20px;
+}
+.jg-aside-show{
+  right: 0;
+}
+.tyn-aside-row .nav-link::before{
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.tyn-reply-bubble > *:first-child:not(:only-child){
+  max-width: 80%;
+}
+
+.tyn-aside-members{
+  width: 100%;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.tyn-aside-member{
+  width: 20%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.tyn-aside-member-name{
+  font-size: 10px;
+  margin-top: 2px;
+}
+.tyn-group-avatars{
+  display: flex !important;
+  justify-content: space-evenly;
+  align-items: center;
+  background: #f2f2f2;
+  border-radius: 2px;
+  padding: 2px;
+  flex-flow: wrap-reverse;
+}
+.tyn-group-avatar{
+  height: 30%;
+  width: 30%;
+  background-size: contain;
+  border-radius: 2px;
+  background-repeat: no-repeat;
+}

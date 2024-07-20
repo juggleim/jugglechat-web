@@ -1,0 +1,670 @@
+@import './iconfont.css';
+@import './custom_chat.css';
+@import './custom_header.css';
+@import './custom_conversation.css';
+@import './custom_contacts.css';
+
+
+.tyn-root {
+  --appbar-height: 48px;
+}
+.tyn-web-root{
+  --footer-height: 20px;
+  height: calc(100vh - var(--footer-height));
+}
+@media (min-width: 768px){
+  .tyn-root {
+    --appbar-height: 66px;
+  }
+  .tyn-logo {
+    height: 60px;
+  }
+}
+/* 滚动条 */
+::-webkit-scrollbar {
+  --bar-width: 4px;
+  width: var(--bar-width);
+  height: var(--bar-width);
+}
+::-webkit-scrollbar-track {
+  background-color: transparent
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: hsla(0,0%,100%,.11);
+  border-radius: 1px;
+  background-clip: content-box;
+  border: 1px solid transparent
+}
+::-webkit-scrollbar{
+  width: 0;
+}
+.tyn-without{
+  margin-top: 20px;
+}
+.tyn-avatar{
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: 100%;
+  border-radius: 14%;
+}
+.tyn-mention-all{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #2563EB;
+  color: #FFF;
+}
+.tyn-input-file{
+  position: relative;
+}
+.tyn-input-file::before{
+  /* box-sizing: border-box; */
+  display: flex;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.tyn-reply-media,
+.tyn-reply-file{
+  position: relative;
+}
+.jg-progress,
+.jg-progress-stacked{
+  height: 0.4rem;
+  border-radius: 0.5rem;
+  background: rgb(184 186 225);
+  position: absolute;
+  bottom: 0;
+  width: 99.5%;
+}
+.jg-progress-stacked{
+  background: none;
+  width: 0;
+  background: rgb(75 112 252);
+}
+.tyb-msg-fileicon::before{
+  font-size: 20px;
+}
+.tyn-reply-media .jg-progress{
+  width: 95%;
+}
+/* .tyn-s-avatar{
+  border-radius: 0.3rem;
+} */
+.badge{
+  --bs-badge-font-size: 0.6rem;
+}
+.tyn-reply-tools .wr-more::before{
+  font-size: 1.4rem;
+}
+.tyn-text-btn{
+  color: #FFF;
+  border: 1px solid;
+  margin-right: 6px;
+}
+.tyn-text-btn:hover{
+  border-color: transparent;
+  color: #2149dc;
+  background-color: #FFF;
+}
+.tyn-text-modify{
+  color: #2149dc;
+  font-size: 12px;
+  font-weight: 700;
+}
+.content-draft::before{
+  color: red;
+  margin-right: 2px;
+}
+.tyn-conver-avatar{
+  background-size: 100%;
+}
+.tyn-video-icon::before{
+  font-size: 2rem;
+  color: #FFF;
+}
+.message-state{
+  position: absolute;
+  left: -1rem;
+  bottom: 0;
+  cursor: pointer;
+}
+.message-state::before{
+  font-weight: 700;
+  color: #e5e5e5;
+}
+.message-group-state{
+  position: absolute;
+  left: 3px;
+  top: 6px;
+  border-radius: 50%;
+  height: 8px;
+  width: 8px;
+}
+.message-read::before{
+  color: #008000;
+}
+.tyn-replies,
+.tyn-mentions{
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: 3.4rem;
+  padding: 0;
+}
+.tyn-replies{
+  padding: 0.6rem;
+}
+.mention-row{
+  cursor: pointer;
+  padding: 0.5rem 0.875rem;
+  margin-right: 6px;
+  border-radius: 6px;
+}
+.mention-row:hover,
+.mention-active{
+  background-color: #F1f5f9;
+}
+.tyn-input-block{
+  margin-right: 0.3rem;
+  margin-left: 0.5rem;
+}
+.tyn-chat-file .tyn-input-block{
+  margin-bottom: 0.3rem;
+}
+.lastmsg-mention{
+  margin-right: 2px;
+}
+.tyn-msg-mention{
+  border-radius: 0.3rem;
+  font-weight: 700;
+  padding: 0 0.3rem;
+  font-size: 12px;
+  margin-right: 4px;
+}
+.tyn-mention-me{
+  color: #2149dc;
+}
+.tyn-chat-cover-bg{
+  height: 160px;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: 100%;
+  background-image: url(https://file.lwoowl.cn/77cd-0d13.png?attname=77cd-0d13.png);
+}
+.tyn-chat-aside-avatar{
+  background-size: 100%;
+}
+.tyn-aside-group{
+  padding: 0.2rem 0;
+}
+.tyn-aside-video::before{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+.tyn-tab-pane-aside{
+  margin-top: 2rem;
+}
+.tyn-aside-filename{
+  font-size: 12px;
+}
+.tyn-aside-nothing{
+  text-align: center;
+  font-size: 12px;
+}
+.tyn-group-dropdown.show{
+  display: flex;
+  justify-content: center;
+}
+.tyn-group-dropdown{
+  position: absolute;
+  right: 0;
+  top: 1.2rem;
+  max-height: 200px;
+  min-width: 13rem;
+  user-select: none;
+}
+.tyn-group-dropdown-bottom{
+  bottom: 1.2rem;
+  top: auto;
+}
+.tyn-group-msg-avatar{
+  background-size: 100%;
+  background-repeat: no-repeat;
+}
+.tyn-group-reads-links{
+  padding: 0.8rem;
+  overflow-y: auto;
+  position: relative;
+  min-width: 140px;
+}
+.tyn-group-reads-links:first-child{
+  border-right: 1px solid #CCC;
+}
+.tyn-group-reads-links li:last-child{
+  margin-bottom: 0;
+}
+
+.tyn-group-reads-links li{
+  margin-bottom: 0.5rem;
+}
+.tyn-media-group-reads{
+  gap: 0;
+}
+.tyn-media-group-reads .name{
+  margin: 0 0.3rem;
+  max-width: 4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 400;
+  color: inherit;
+}
+.modal-tp-backdrop.show{
+  opacity: 0;
+}
+.tny-conent-msg{
+  position: relative;
+}
+.tyn-transfer{
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  /* color: #b3b0b0; */
+}
+.tyn-transfer::before{
+  font-size: 16px;
+}
+.tyn-transfer.wr-success-square{
+  color: #214521;
+}
+.tyn-transfer-pn{
+  position: absolute;
+  top: auto;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  height: 4.5rem;
+  transform: translateY(100%);
+  z-index: 999;
+}
+.tyn-transfer-pn.show-aside {
+  transform: none;
+  transition: transform 0.3s ease;
+  top: 0;
+}
+.transfer-icon{
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.transfer-icon::before{
+  font-size: 18px;
+  font-weight: 700;
+  margin-right: 0.2rem;
+}
+.transfer-button{
+  padding: 0;
+}
+.tny-message{
+  transition: background 0.4s ease;
+  /* background: hsl(215deg 89% 51% / 20%);; */
+}
+.tny-message:hover{
+  background: hsl(215deg 89% 51% / 20%);
+  cursor: pointer;
+}
+.tyn-modal.show{
+  display: block;
+}
+.tyn-modal .modal-backdrop.show{
+  z-index: -1;
+}
+.form-check-algin{
+  align-items: center;
+}
+.tyn-tfcontact-s::before{
+  font-size: 18px;
+  color: #bbbaba;
+  cursor: pointer;
+}
+.tyn-contact-checked::before{
+  color: #02be02;
+}
+.tny-content-center{
+  justify-content: center;
+}
+.tyn-msg-mergetitle{
+  font-weight: 700;
+}
+.tyn-msg-merge-list{
+  font-size: 12px;
+}
+.tyn-reply-merge{
+  cursor: pointer;
+}
+.modal-merge-content{
+  height: 30rem;
+  background: #e3efff;
+}
+.tyn-reply-row{
+  margin-left: 0.5rem;
+}
+.tyn-message-refer{
+  --font-color: #c90e0ea8;
+  border-left: 4px solid var(--font-color);
+  border-radius: 4px;
+  padding-left: 4px;
+  color: var(--font-color);
+}
+.tyn-chat-form .btn-light{
+  background: none;
+  border: 0;
+}
+.tyn-chat-form .btn-light::before{
+  font-size: 20px;
+}
+.tyn-chat-has-content{
+  color: var(--bs-btn-hover-color);
+}
+.tyn-content .modal-backdrop{
+  opacity: 0;
+}
+.show-aside{
+  /* display: block; */
+  height: 100%;
+  overflow: hidden scroll;
+}
+
+.tyn-modal .tyn-chat-body{
+  background-image: none;
+}
+.tyn-header-logo{
+  background-size: contain;
+  cursor: pointer;
+}
+
+/* Login */
+.jg-login-root{
+  display: flex;
+  flex-direction: column;
+  padding: 100px 200px;
+  background-color: #f7f9fa;
+  background-image: none;
+  -webkit-app-region: drag;
+}
+.jg-login-root::before,
+.jg-login-root::after{
+  background: #FFF;
+  position: relative;
+}
+
+.jg-login-header{
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+.jg-login-logo{
+  background-image: url("../favicon.ico");
+  height: 40px;
+  width: 40px;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  opacity: 0.85;
+}
+.jg-login-appname{
+  font-size: 30px;
+  font-weight: bold;
+  color: #4a98fc;
+  margin-left: 4px;
+}
+.jg-login-main{
+  flex: 1 1;
+  display: flex;
+  flex-direction: row;
+}
+.jg-login-banner{
+  width: 50%;
+  background-image: url('../images/login-bg.png');
+  background-size: 100%;
+  background-position: 100%;
+  background-repeat: no-repeat;
+}
+.jg-login-formbox{
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 8%;
+  -webkit-app-region: no-drag;
+}
+.jg-login-sms{
+  display: flex;
+}
+.jg-login-sendcode{
+  color: #2563EB;
+  cursor: pointer;
+}
+.jg-login-sms input{
+  border: none;
+  outline: none;
+  color: #64748b;
+  flex: 1;
+}
+.jg-login-sms input::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}
+@media (max-width: 768px) {
+  .jg-login-banner{
+    display: none;
+  }
+}
+
+/* dropmenu */
+.dropdown-menu-xxs-bottom{
+  bottom: 2rem;
+}
+.tyn-appbar .btn-primary-soft:hover{
+  background: #dee8fc;
+  color: #2563eb;
+}
+.tyn-user-modal{
+}
+.form-avatars{
+ width: 100%; 
+ height: 300px;
+ overflow-y: auto;
+ display: flex;
+ flex-wrap: wrap;
+ justify-content: space-around;
+ margin: 1rem 0;
+}
+.form-avatar{
+  height: 50px;
+  width: 50px;
+  background-size: contain;
+  margin: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #b6c9f2;
+  position: relative;
+  transition: border 0.1s ease-out; 
+}
+.form-avatar::after{
+  position: absolute;
+  right: -1px;
+  bottom: -4px;
+  color: #23ff23;
+}
+.form-avatar-selected::before{
+  content: "\e602";
+  color: hsl(0deg 78% 4% / 40%);
+  font-size: 54px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  position: absolute;
+}
+.form-avatar-selected{
+  border: 2px solid #23ff23;
+}
+.form-control-warn{
+  border-color: #ff0000;
+}
+/* toast */
+.jg-toast{
+  position: absolute;
+  left: 50%;
+  top: -100%;
+  transform: translate(-50%, -10%);
+  transition: all .4s ease;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  z-index: 3000
+}
+.jg-toast-box{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+.jg-toast-icon{
+  margin-right: 10px;
+}
+.jg-toast-icon::before{
+  font-size: 20px;
+}
+.jg-toast-title{
+  font-size: 14px;
+}
+.jg-toast-text{
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.toast{
+  max-width: none;
+  width: auto;
+  min-width: 7rem;
+}
+.tyn-desktop-root{
+  --dheight: 26px;
+  height: calc(100vh - var(--dheight));
+}
+.tyn-desktop-header{
+  width: 100%;
+  height: 26px;
+  background-color: #FAFAFA;
+}
+.tyn-desktop-navs{
+  display: flex;
+  justify-content: end;
+}
+.tyn-desktop-nav{
+  margin: 0 4px;
+  cursor: pointer;
+  cursor: pointer;
+  font-weight: 700;
+}
+.tyn-desktop-nav a{
+  color: #334155;
+}
+.modal-friend-add{
+  margin-top: 10%;
+}
+.modal-friend-add .tyn-aside-search{
+  padding: 0;
+}
+.modal-friend-add .form-label{
+  margin-bottom: 0;
+}
+.modal-friend-add .modal-content{
+  transition: height 0.5s ease-in;
+}
+.contact-avatar{
+  background-size: 100%;
+}
+.modal-loading{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: hwb(0deg 0% 100% / 60%);
+  width: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  width: 35px;
+  aspect-ratio: 1;
+  --c:no-repeat linear-gradient(#d1e9f0 0 0);
+  background:
+    var(--c) 0 0,
+    var(--c) 100% 0,
+    var(--c) 100% 100%,
+    var(--c) 0 100%;
+  animation: 
+    l2-1 2s infinite,
+    l2-2 2s infinite;
+}
+@keyframes l2-1 {
+  0%   {background-size: 0    4px,4px 0   ,0    4px,4px 0   }
+  12.5%{background-size: 100% 4px,4px 0   ,0    4px,4px 0   }
+  25%  {background-size: 100% 4px,4px 100%,0    4px,4px 0   }
+  37.5%{background-size: 100% 4px,4px 100%,100% 4px,4px 0   }
+  45%,
+  55%  {background-size: 100% 4px,4px 100%,100% 4px,4px 100%}
+  62.5%{background-size: 0    4px,4px 100%,100% 4px,4px 100%}
+  75%  {background-size: 0    4px,4px 0   ,100% 4px,4px 100%}
+  87.5%{background-size: 0    4px,4px 0   ,0    4px,4px 100%}
+  100% {background-size: 0    4px,4px 0   ,0    4px,4px 0   }
+}
+@keyframes l2-2 {
+  0%,49.9%{background-position: 0 0   ,100% 0   ,100% 100%,0 100%}
+  50%,100%{background-position: 100% 0,100% 100%,0    100%,0 0   }
+}
+.text-none{
+  outline: none;
+  border: 0 !important;
+  text-transform: none;
+}
+.tyn-aside-group-info{
+  margin-bottom: 16px;
+}
+
+.tyn-aside-group-col{
+  padding-bottom: 2px;
+}
+/* tyn-footer */
+.tyn-footer{
+  height: 20px;
+  line-height: 20px;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  border-top: 1px solid #dbeafe;
+  font-size: 10px;
+}
+
+.fade-bg{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
