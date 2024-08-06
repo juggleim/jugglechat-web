@@ -13,6 +13,7 @@
     "clipboard.js": "^1.0.1",
     "event-source-polyfill": "^1.0.31",
     "html2canvas": "^1.4.1",
+    "jugglechat-websdk": "^1.0.1",
     "markdown-it": "^13.0.1",
     "mitt": "^3.0.0",
     "qiniu-js": "^3.4.1",

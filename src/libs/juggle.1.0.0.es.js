@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.0.0
+* JuggleChat.js v1.0.1
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -846,15 +846,12 @@ let FUNC_PARAM_CHECKER = {
   }, {
     name: 'undisturbType'
   }],
-  UNMUTE_CONVERSATION: [{
+  SET_TOP_CONVERSATION: [{
     name: 'conversationType'
   }, {
     name: 'conversationId'
-  }],
-  TOP_CONVERSATION: [{
-    name: 'conversationType'
   }, {
-    name: 'conversationId'
+    name: 'isTop'
   }],
   UNTOP_CONVERSATION: [{
     name: 'conversationType'
@@ -6289,14 +6286,14 @@ function getPublishBody ({
   if (utils.isEqual(COMMAND_TOPICS.TOP_CONVERSATION, topic)) {
     let {
       userId,
-      conversations,
-      isTop
+      conversations
     } = data;
     let items = utils.isArray(conversations) ? conversations : [conversations];
     items = utils.map(items, item => {
       let {
         conversationType,
-        conversationId
+        conversationId,
+        isTop
       } = item;
       return {
         targetId: conversationId,
@@ -6481,16 +6478,18 @@ function getQueryBody({
   }
   if (utils.isEqual(COMMAND_TOPICS.GET_MSG_BY_IDS, topic)) {
     let {
-      conversationId: targetId,
+      conversationId,
       conversationType: channelType,
-      messageIds: msgIds
+      messageIds: msgIds,
+      userId
     } = data;
     let codec = $root.lookup('codec.QryHisMsgByIdsReq');
     let message = codec.create({
       channelType,
-      targetId,
+      targetId: conversationId,
       msgIds
     });
+    targetId = userId;
     buffer = codec.encode(message).finish();
   }
   if (utils.isEqual(COMMAND_TOPICS.GET_UNREAD_TOTLAL_CONVERSATION, topic)) {
@@ -6967,11 +6966,7 @@ function Decoder(cache, io) {
       topic,
       targetId
     } = cache.get(index);
-    let result = {
-      index,
-      code,
-      timestamp
-    };
+    let result = {};
     if (utils.isInclude([COMMAND_TOPICS.HISTORY_MESSAGES, COMMAND_TOPICS.SYNC_MESSAGES, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES, COMMAND_TOPICS.GET_MSG_BY_IDS, COMMAND_TOPICS.GET_MERGE_MSGS], topic)) {
       result = getMessagesHandler(index, data);
     }
@@ -6998,6 +6993,11 @@ function Decoder(cache, io) {
     if (utils.isEqual(topic, COMMAND_TOPICS.GET_USER_INFO)) {
       result = getUserInfo(index, data);
     }
+    result = utils.extend(result, {
+      code,
+      timestamp,
+      index
+    });
     return result;
   }
   function getMentionMessages(index, data) {
@@ -7849,8 +7849,12 @@ function Syncer(send, emitter) {
       };
       send(SIGNAL_CMD.QUERY, data, ({
         isFinished,
-        messages
+        messages,
+        code
       }) => {
+        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+          return next();
+        }
         utils.forEach(messages, (message, index) => {
           let isNewMsg = common.updateSyncTime(message);
           if (isNewMsg) {
@@ -7883,10 +7887,16 @@ function Syncer(send, emitter) {
         topic: COMMAND_TOPICS.SYNC_CONVERSATIONS,
         count: 200
       };
-      send(SIGNAL_CMD.QUERY, data, ({
-        isFinished,
-        conversations
-      }) => {
+      send(SIGNAL_CMD.QUERY, data, qryResult => {
+        let {
+          isFinished,
+          conversations,
+          code
+        } = qryResult;
+        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+          emitter.emit(SIGNAL_NAME.CMD_SYNC_CONVERSATION_FINISHED, {});
+          return next();
+        }
         let len = conversations.length;
         let conversation = conversations[len - 1] || {
           syncTime: 0
@@ -8828,58 +8838,9 @@ function Conversation$1 (io, emitter) {
       });
     });
   };
-  let undisturbConversation = conversations => {
+  let setTopConversation = conversations => {
     return utils.deferred((resolve, reject) => {
-      let error = common.check(io, conversations, FUNC_PARAM_CHECKER.UNMUTE_CONVERSATION);
-      if (!utils.isEmpty(error)) {
-        return reject(error);
-      }
-      let user = io.getCurrentUser();
-      let data = {
-        topic: COMMAND_TOPICS.MUTE_CONVERSATION,
-        conversations,
-        userId: user.id,
-        type: UNDISTURB_TYPE.UNDISTURB
-      };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
-        code,
-        msg,
-        timestamp
-      }) => {
-        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return reject({
-            code,
-            msg
-          });
-        }
-        common.updateSyncTime({
-          isSender: true,
-          sentTime: timestamp
-        });
-        let config = io.getConfig();
-        if (!config.isPC) {
-          let list = utils.isArray(conversations) ? conversations : [conversations];
-          list = utils.map(list, item => {
-            return {
-              ...item,
-              undisturbType: UNDISTURB_TYPE.UNDISTURB
-            };
-          });
-          let msg = {
-            name: MESSAGE_TYPE.COMMAND_UNDISTURB,
-            content: {
-              conversations: list
-            }
-          };
-          io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, msg);
-        }
-        resolve();
-      });
-    });
-  };
-  let topConversation = conversations => {
-    return utils.deferred((resolve, reject) => {
-      let error = common.check(io, conversations, FUNC_PARAM_CHECKER.TOP_CONVERSATION);
+      let error = common.check(io, conversations, FUNC_PARAM_CHECKER.SET_TOP_CONVERSATION);
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
@@ -8887,8 +8848,7 @@ function Conversation$1 (io, emitter) {
       let data = {
         topic: COMMAND_TOPICS.TOP_CONVERSATION,
         conversations,
-        userId: user.id,
-        isTop: true
+        userId: user.id
       };
       io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
         code,
@@ -8907,66 +8867,10 @@ function Conversation$1 (io, emitter) {
         });
         let config = io.getConfig();
         if (!config.isPC) {
-          let list = utils.isArray(conversations) ? conversations : [conversations];
-          list = utils.map(list, item => {
-            return {
-              ...item,
-              isTop: true
-            };
-          });
           let msg = {
             name: MESSAGE_TYPE.COMMAND_TOPCONVERS,
             content: {
-              conversations: list
-            }
-          };
-          io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, msg);
-        }
-        resolve();
-      });
-    });
-  };
-  let untopConversation = conversations => {
-    return utils.deferred((resolve, reject) => {
-      let error = common.check(io, conversations, FUNC_PARAM_CHECKER.UNTOP_CONVERSATION);
-      if (!utils.isEmpty(error)) {
-        return reject(error);
-      }
-      let user = io.getCurrentUser();
-      let data = {
-        topic: COMMAND_TOPICS.TOP_CONVERSATION,
-        conversations,
-        userId: user.id,
-        isTop: false
-      };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
-        code,
-        msg,
-        timestamp
-      }) => {
-        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return reject({
-            code,
-            msg
-          });
-        }
-        common.updateSyncTime({
-          isSender: true,
-          sentTime: timestamp
-        });
-        let config = io.getConfig();
-        if (!config.isPC) {
-          let list = utils.isArray(conversations) ? conversations : [conversations];
-          list = utils.map(list, item => {
-            return {
-              ...item,
-              isTop: false
-            };
-          });
-          let msg = {
-            name: MESSAGE_TYPE.COMMAND_TOPCONVERS,
-            content: {
-              conversations: list
+              conversations: conversations
             }
           };
           io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, msg);
@@ -9209,9 +9113,7 @@ function Conversation$1 (io, emitter) {
     insertConversation,
     getConversation,
     disturbConversation,
-    undisturbConversation,
-    topConversation,
-    untopConversation,
+    setTopConversation,
     getTopConversations,
     clearUnreadcount,
     getTotalUnreadcount,
@@ -9590,8 +9492,10 @@ function Message$1 (io, emitter, logger) {
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
+      let user = io.getCurrentUser();
       let data = {
-        topic: COMMAND_TOPICS.GET_MSG_BY_IDS
+        topic: COMMAND_TOPICS.GET_MSG_BY_IDS,
+        userId: user.id
       };
       data = utils.extend(data, params);
       io.sendCommand(SIGNAL_CMD.QUERY, data, ({
@@ -9965,19 +9869,19 @@ function Message$1 (io, emitter, logger) {
       if (utils.isEqual(name, MESSAGE_TYPE.VIDEO)) {
         // 业务层设置封面，传入优先，不再执行生成缩略图逻辑
         let {
-          poster
+          snapshotUrl
         } = content;
-        if (poster) {
+        if (snapshotUrl) {
           return uploadFile(auth, message);
         }
-        common.uploadFrame(upload, params, (error, poster, args) => {
+        common.uploadFrame(upload, params, (error, snapshotUrl, args) => {
           let {
             height,
             width,
             duration
           } = args;
           utils.extend(message.content, {
-            poster,
+            snapshotUrl,
             height,
             width,
             duration
@@ -10713,7 +10617,7 @@ function Conversation ($conversation, {
   conversationUtils,
   webAgent
 }) {
-  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'undisturbConversation', 'topConversation', 'untopConversation', 'getTopConversations', '_batchInsertConversations'];
+  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'setTopConversation', 'getTopConversations', '_batchInsertConversations'];
   let invokes = common.formatProvider(funcs, $conversation);
   invokes.getConversations = params => {
     return $conversation.getConversations(params).then(({
@@ -10788,9 +10692,9 @@ function Message ($message, {
           return utils.isEqual(msg.sentState, MESSAGE_SENT_STATE.SUCCESS);
         });
         let next = () => {
-          if (utils.isEqual(order, MESSAGE_ORDER.BACKWARD)) {
-            messages.reverse();
-          }
+          // if(utils.isEqual(order, MESSAGE_ORDER.BACKWARD)){
+          //   messages.reverse();
+          // }
           let _msgs = tools.formatMsgs({
             messages,
             senders,

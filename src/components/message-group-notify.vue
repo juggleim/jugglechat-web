@@ -4,6 +4,9 @@ import utils from "../common/utils";
 import { GROUP_CHANGE_TYPE } from "../common/enum";
 const props = defineProps(['message']);
 let { content: { type, members }, isSender, sender } = props.message;
+if(!members){
+  members = []
+}
 let name = isSender ? '你' : sender.name;
 let users = utils.map(members, (member) => {
   return member.nickname;

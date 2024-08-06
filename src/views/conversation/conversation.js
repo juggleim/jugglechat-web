@@ -46,9 +46,15 @@ function getMessages(isFirst, callback, state, props) {
       }
       utils.extend(message, { isSelected: false })
       state.messages.push(message);
-      // 暂时仅单聊支持设置已读状态
-      if(!message.isSender && !message.isRead){
-        unReadMsgs.push(message);
+      
+      if(isGroup(message)){
+        if(!message.isSender){
+          unReadMsgs.push(message);
+        }
+      }else{
+        if(!message.isSender && !message.isRead){
+          unReadMsgs.push(message);
+        }
       }
     });
     state.isFinished = isFinished;

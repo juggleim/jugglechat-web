@@ -68,6 +68,7 @@ let state = reactive({
 });
 
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
+  console.log('---------', message)
   if (conversationTools.isSameConversation(message, state)) {
     state.messages.unshift(message);
     scrollBottom();

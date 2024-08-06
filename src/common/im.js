@@ -4,6 +4,7 @@ import utils from "./utils";
 import { EVENT_NAME, MSG_NAME } from "../common/enum";
 import emitter from "../common/emmit";
 
+console.log(JuggleChat)
 
 let juggle = JuggleChat.init({ appkey: CONFIG.appkey, upload: OSS });
 juggle.registerMessage([

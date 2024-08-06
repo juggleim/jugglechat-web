@@ -153,7 +153,6 @@ function onConfirmRemoveGroupMember({ members }) {
           let { id, name, portrait } = member;
           return { id, nickname: name, avatar: portrait };
         });
-        sendGroupNotify(group, MSG_NAME.GROUP_NTF, { members: list, type: GROUP_CHANGE_TYPE.REMOVE_MEMBER });
         onCancelRemoveGroupMember();
       });
     });
@@ -182,7 +181,6 @@ function onConfirmGroupCreate({ friends }) {
   let next = (group) => {
     onCancelGroupCreate();
     state.isCreateGroupLoading = false;
-    sendGroupNotify(group, MSG_NAME.GROUP_NTF, { members, type: GROUP_CHANGE_TYPE.ADD_MEMBER });
   };
   common.createGroupAvatar(friends, (avatar) => {
     let { conversationId, conversationTitle, conversationType } = props.conversation;
@@ -213,26 +211,7 @@ function onConfirmGroupCreate({ friends }) {
     });
   });
 }
-function sendGroupNotify(group, name, content) {
-  let uuid = utils.getUUID();
-  let sender = juggle.getCurrentUser();
-  let msg = {
-    conversationType: ConversationType.GROUP,
-    conversationPortrait: group.group_portrait,
-    conversationTitle: group.group_name,
-    conversationId: group.group_id,
-    name: name,
-    content: content,
-    isSender: true,
-    sentTime: Date.now(),
-    uuid,
-    sender
-  };
-  juggle.sendMessage(msg).then((message) => {
-    console.log(message)
-    emitter.$emit(EVENT_NAME.SEND_MESSAGE, message);
-  });
-}
+
 function onSaveGroup(){
   let { conversationId, conversationTitle, conversationPortrait } = props.conversation;
   let { groupName } = state;
@@ -243,10 +222,8 @@ function onSaveGroup(){
     state.groupName = conversationTitle
     return;
   }
-  let group = { group_id: conversationId, group_name: groupName, group_portrait: conversationPortrait };
-  Group.update(group).then(() => {
-    sendGroupNotify(group, MSG_NAME.GROUP_NTF, { members: [], type: GROUP_CHANGE_TYPE.RENAME, name: groupName });
-  });
+  let group = { group_id: conversationId, group_name: groupName, group_portrait: conversationPortrait, is_notify: true };
+  Group.update(group);
 }
 
 watch(() => props.conversation, (conversation) => {
