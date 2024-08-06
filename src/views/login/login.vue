@@ -64,7 +64,7 @@ function onSend(){
   let { user } = state;
   let { phone } = user;
   if (utils.isEmpty(phone)) {
-    return state.errorMsg.phone = '手机号不能为空';
+    return state.errorMsg.phone = '手机号不可为空';
   }
   if (!utils.isPhoneNumber(phone)) {
     return state.errorMsg.phone = '手机号不正确';
