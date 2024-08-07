@@ -117,7 +117,7 @@ function onInput() {
           </div>
           <div class="form-group">
             <div class="form-control-wrap jg-login-sms form-control">
-              <input type="text"  v-model="state.user.code" placeholder="输入验证码, 万能验证码: 000000"
+              <input type="text"  v-model="state.user.code" placeholder="请输入验证码, 万能验证码: 000000"
                 @input="onInput()"  @keydown.enter="onLogin()">
               <div class="jg-login-sendcode" @click="onSend">{{ state.btnLabel }}</div>
             </div>
