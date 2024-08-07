@@ -149,10 +149,8 @@ function onConfirmRemoveGroupMember({ members }) {
     common.createGroupAvatar(state.members, (avatar) => {
       let group = { group_id: conversationId, group_name: name, group_portrait: avatar };
       Group.update(group).then(() => {
-        let list = utils.map(members, (member) => {
-          let { id, name, portrait } = member;
-          return { id, nickname: name, avatar: portrait };
-        });
+        let conversation = { conversationId, conversationPortrait: avatar, conversationTitle: name };
+        emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, { conversation })
         onCancelRemoveGroupMember();
       });
     });
@@ -193,6 +191,8 @@ function onConfirmGroupCreate({ friends }) {
       return Group.addMember({ id: conversationId, members }).then(() => {
         let group = { group_id: conversationId, group_name: name, group_portrait: avatar };
         Group.update(group).then(() => {
+          let conversation = { conversationId, conversationPortrait: avatar, conversationTitle: name };
+          emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_ADDED, { conversation })
           next(group);
         });
       });

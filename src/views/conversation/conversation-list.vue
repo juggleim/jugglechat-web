@@ -9,6 +9,7 @@ import Storage from "../../common/storage";
 import im from "../../common/im";
 import common from "../../common/common";
 import emitter from "../../common/emmit";
+import messageUtils from "../../components/message-utils";
 
 const router = useRouter();
 let { currentRoute: { _rawValue: { query } } } = router;
@@ -39,6 +40,22 @@ function onConversation(item, index) {
 emitter.$on(EVENT_NAME.ON_GROUP_CREATED, ({ conversation }) => {
   state.currentConversation = conversation;
 });
+emitter.$on(EVENT_NAME.ON_GROUP_MEMBER_ADDED, ({ conversation }) => {
+  updateConversation(conversation)
+});
+emitter.$on(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, ({ conversation }) => {
+  updateConversation(conversation)
+});
+
+function updateConversation(conversation){
+  console.log('updateconversation', conversation)
+  utils.extend(state.currentConversation, conversation);
+  utils.forEach(state.conversations, (item) => {
+    if(utils.isEqual(item.conversationId, conversation.conversationId) && messageUtils.isGroup(item)){
+      utils.extend(item, conversation);
+    }
+  })
+}
 
 function clearUnreadCount(item, index) {
   let conversation = state.conversations[index];

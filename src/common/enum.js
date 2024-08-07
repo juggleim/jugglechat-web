@@ -5,6 +5,8 @@ let EVENT_NAME = {
   SEND_MESSAGE: 'on_send_message',
   ON_ADDED_FRIEND: 'on_added_friend',
   ON_GROUP_CREATED: 'on_group_created',
+  ON_GROUP_MEMBER_ADDED: 'on_group_member_added',
+  ON_GROUP_MEMBER_REMOVED: 'on_group_member_removed',
 };
 export let STORAGE = {
   PREFIX: 'jgweb',
