@@ -35,6 +35,7 @@ function onConversation(item, index) {
     conversation.isActive = utils.isEqual(item.conversationId, conversation.conversationId);
     return conversation;
   });
+  item.isActive = true;
   state.currentConversation = item;
   clearUnreadCount(item, index);
 }
@@ -89,17 +90,17 @@ function getConversationTime(sentTime) {
   }
   return time;
 }
-juggle.once(Event.CONVERSATION_CLEARUNREAD, ({ conversations }) => {
-  utils.forEach(conversations, (conver) => {
-    let index = utils.find(state.conversations, (item) => {
-      return utils.isEqual(item.conversationType, conver.conversationType) && utils.isEqual(item.conversationId, conver.conversationId);
-    });
-    if(index > -1){
-      let item = state.conversations[index];
-      clearUnreadCount(item, index);
-    }
-  })
-});
+// juggle.once(Event.CONVERSATION_CLEARUNREAD, ({ conversations }) => {
+//   utils.forEach(conversations, (conver) => {
+//     let index = utils.find(state.conversations, (item) => {
+//       return utils.isEqual(item.conversationType, conver.conversationType) && utils.isEqual(item.conversationId, conver.conversationId);
+//     });
+//     if(index > -1){
+//       let item = state.conversations[index];
+//       clearUnreadCount(item, index);
+//     }
+//   })
+// });
 juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
   utils.forEach(conversations, (conversation) => {
     console.log('conversation', conversation)
@@ -114,6 +115,7 @@ juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
     });
     if (!utils.isEqual(index, -1)) {
       let oldConversation = state.conversations[index];
+      let { isActive } = oldConversation;
 
       if(!conversation.conversationTitle){
         let { conversationPortrait, conversationTitle } = oldConversation;
@@ -132,6 +134,7 @@ juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
         utils.extend(oldConversation, { unreadCount });
       }
 
+      utils.extend(conversation, { isActive });
       if(conversation.sortTime > oldConversation.sortTime){
         state.conversations.splice(index, 1)[0];
         state.conversations.unshift(conversation);
