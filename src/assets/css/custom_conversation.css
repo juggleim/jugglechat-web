@@ -39,18 +39,20 @@
   margin-top: 2px;
 }
 .tyn-group-avatars{
-  display: flex !important;
-  justify-content: space-evenly;
-  align-items: center;
+  display: flex;
+  justify-content: center;
   background: #f2f2f2;
   border-radius: 2px;
-  padding: 2px;
-  flex-flow: wrap-reverse;
+  padding: 10px;
+  flex-direction: row-reverse;
+  flex-wrap: wrap-reverse;
+  align-content: center;
 }
 .tyn-group-avatar{
   height: 30%;
   width: 30%;
-  background-size: contain;
+  background-size: cover;
   border-radius: 2px;
   background-repeat: no-repeat;
+  margin: 2px;
 }

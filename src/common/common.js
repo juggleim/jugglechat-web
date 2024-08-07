@@ -168,12 +168,12 @@ common.createGroupAvatar(groupAvatars, ({url}) => {
 function createGroupAvatar(members, callback){
   let memberLen = members.length;
   let parent = document.createElement('div');
-  parent.classList = ['tyn-media tyn-size-lg d-none d-sm-inline-flex tyn-group-avatars'];
+  parent.classList = ['tyn-group-avatars'];
   parent.id = 'group_avatar_temp';
   parent.style.height = '100px';
   parent.style.width = '100px';
   utils.forEach(members, (member) => {
-    let size = memberLen < 5 ? 48 : 33;
+    let size = memberLen < 5 ? 45 : 28;
     let child = document.createElement('div');
     child.classList = ['tyn-group-avatar'];
     child.style.backgroundImage = `url(${member.avatar || member.portrait})`;
@@ -200,6 +200,7 @@ function getConversationInfo(params, callback){
   let isGroup = utils.isEqual(Number(type), ConversationType.GROUP);
   return isGroup ? Group.get(params, callback) : Friend.get(params, callback);
 }
+
 export default {
  isElementTop,
  getAvatar,
