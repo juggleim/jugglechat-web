@@ -1,8 +1,9 @@
 import JuggleChat from "../libs/juggle.1.0.0.es";
 import { CONFIG } from "../config";
 import utils from "./utils";
-import { EVENT_NAME, MSG_NAME } from "../common/enum";
+import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
 import emitter from "../common/emmit";
+import Storage from "../common/storage";
 
 console.log(JuggleChat)
 
@@ -31,6 +32,9 @@ function connect(user, callbacks){
   juggle.connect({ userId: id, token }).then((user) => {
     let { code } = user;
     if(ErrorType.CONNECT_SUCCESS.code == code){
+      let _user = Storage.get(STORAGE.USER_TOKEN);
+      utils.extend(_user, user);
+      Storage.set(STORAGE.USER_TOKEN, _user);
       callbacks.success(user);
     }
   }, () => {

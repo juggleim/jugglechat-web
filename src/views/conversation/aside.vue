@@ -138,10 +138,16 @@ function onConfirmRemoveGroupMember({ members }) {
         }
       })
     });
-    let name = utils.map(state.members, (member) => {
+
+    let _members = utils.clone(state.members);
+    let name = utils.map(_members, (member) => {
       return member.name;
-    }).join(',').substr(0, 20);
+    }).join(', ');
     
+    if(name.length > 20){
+      name = `${name.substr(0, 20)}...`;
+    }
+
     // 如果修改过自定义名字不再拼接名称，通过逗号判断比较简单粗暴，准确做法需要服务端支持
     if(!utils.isInclude(conversationTitle, ',')){
       name = conversationTitle;
@@ -166,7 +172,10 @@ function onConfirmGroupCreate({ friends }) {
 
   let name = utils.map(friends, (friend) => {
     return friend.nickname;
-  }).join(',').substr(0, 20);
+  }).join(', ');
+  if(name.length > 20){
+    name = `${name.substr(0, 20)}...`;
+  }
 
   let members = utils.filter(friends, (friend) => {
     let isOK = !friend.disabled;
