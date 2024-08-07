@@ -10,6 +10,7 @@ import im from "../../common/im";
 import common from "../../common/common";
 import emitter from "../../common/emmit";
 import messageUtils from "../../components/message-utils";
+import conversationTools from "./conversation";
 
 const router = useRouter();
 let { currentRoute: { _rawValue: { query } } } = router;
@@ -48,7 +49,6 @@ emitter.$on(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, ({ conversation }) => {
 });
 
 function updateConversation(conversation){
-  console.log('updateconversation', conversation)
   utils.extend(state.currentConversation, conversation);
   utils.forEach(state.conversations, (item) => {
     if(utils.isEqual(item.conversationId, conversation.conversationId) && messageUtils.isGroup(item)){
@@ -103,6 +103,9 @@ juggle.once(Event.CONVERSATION_CLEARUNREAD, ({ conversations }) => {
 juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
   utils.forEach(conversations, (conversation) => {
     console.log('conversation', conversation)
+    if(conversationTools.isSameConversation(conversation, state)){
+      utils.extend(state.currentConversation, conversation);
+    }
     formatMention(conversation);
     let { conversations } = state;
     let { conversationId, conversationType, latestMessage, unreadCount } = conversation;
