@@ -249,7 +249,7 @@ function insertTempConversation() {
       });
       state.conversations.unshift(conversation);
       utils.extend(state, { currentConversation: conversation })
-      juggle.insertConversation(conversation);
+      // juggle.insertConversation(conversation);
     });
   }
 }

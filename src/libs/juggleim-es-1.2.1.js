@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.0.1
+* JuggleChat.js v1.2.1
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -586,11 +586,11 @@ function Emitter () {
 let STORAGE = {
   PREFIX: 'suprjj_im',
   NAVI: 'navi',
-  SYNC_RECEIVED_MSG_TIME: 'sync_received_msg_time',
-  SYNC_SENT_MSG_TIME: 'sync_sent_msg_time',
   SYNC_CHATROOM_RECEIVED_MSG_TIME: 'sync_chatroom_received_msg_time',
   //PC 端有同样的 KEY，如果修改 VALUE，需要一起修改
-  SYNC_CONVERSATION_TIME: 'sync_conversation_time'
+  SYNC_CONVERSATION_TIME: 'sync_conversation_time',
+  SYNC_RECEIVED_MSG_TIME: 'sync_received_msg_time',
+  SYNC_SENT_MSG_TIME: 'sync_sent_msg_time'
 };
 let HEART_TIMEOUT = 1 * 30 * 1000;
 let SYNC_MESSAGE_TIME = 3 * 60 * 1000;
@@ -602,6 +602,7 @@ let SIGNAL_NAME = {
   CMD_SYNC_CONVERSATION_FINISHED: 'cmd_inner_sync_conversations_finished',
   CMD_CONVERSATION_CHANGED: 'cmd_inner_conversation_changed',
   CONN_CHANGED: 'conn_inner_changed',
+  CHATROOM_EVENT: 'cmd_inner_chatroom_event',
   // 与下行信令进行匹配，在 io.js 中进行派发
   S_CONNECT_ACK: 's_connect_ack',
   S_DISCONNECT: 's_disconnect',
@@ -636,8 +637,6 @@ let QOS = {
 let FUNC_PARAM_CHECKER = {
   CONNECT: [{
     name: 'token'
-  }, {
-    name: 'userId'
   }],
   SENDMSG: [{
     name: 'conversationType'
@@ -907,6 +906,7 @@ let NOTIFY_TYPE = {
 };
 let CONNECT_TOOL = {
   START_TIME: 'connect_start_time',
+  RECONNECT_FREQUENCY: 'reconnect_frequency',
   RECONNECT_COUNT: 'reconnect_count'
 };
 let LOG_LEVEL = {
@@ -984,7 +984,8 @@ let CONNECT_STATE = {
   DISCONNECTED: 2,
   CONNECT_FAILED: 3,
   DB_OPENED: 4,
-  DB_CLOSED: 5
+  DB_CLOSED: 5,
+  RECONNECTING: 6
 };
 let CONVERATION_TYPE = {
   PRIVATE: 1,
@@ -1071,6 +1072,10 @@ let ErrorMessages = [{
   code: 11012,
   msg: '注销下线',
   name: 'CONNECT_USER_LOGOUT'
+}, {
+  code: 14005,
+  msg: '聊天室不存在',
+  name: 'CHATROOM_NOT_EXISTS'
 }, {
   code: 11100,
   msg: '入参pb解析失败',
@@ -1203,6 +1208,12 @@ let MESSAGE_SENT_STATE = {
   FAILED: 3,
   UPLOADING: 4
 };
+let DISCONNECT_TYPE = {
+  DISCONNECT: 1,
+  CLOSE: 2,
+  ERROR: 3,
+  SERVER: 4
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1234,9 +1245,33 @@ var ENUM = /*#__PURE__*/Object.freeze({
   MESSAGE_TYPE: MESSAGE_TYPE,
   MENTION_TYPE: MENTION_TYPE,
   FILE_TYPE: FILE_TYPE,
-  MESSAGE_SENT_STATE: MESSAGE_SENT_STATE
+  MESSAGE_SENT_STATE: MESSAGE_SENT_STATE,
+  DISCONNECT_TYPE: DISCONNECT_TYPE
 });
 
+function Cache () {
+  let caches = {};
+  let set = (key, value) => {
+    caches[key] = value;
+  };
+  let get = key => {
+    return caches[key] || {};
+  };
+  let remove = key => {
+    delete caches[key];
+  };
+  let clear = () => {
+    caches = {};
+  };
+  return {
+    set,
+    get,
+    remove,
+    clear
+  };
+}
+
+let storageCacher = Cache();
 // 动态设置 storage key 前缀，例如 _appkey_userid_
 let _storage_private_prefix_ = '';
 let getKey = key => {
@@ -1247,19 +1282,27 @@ let set = (key, value) => {
   let storage = {
     data: value
   };
+  storageCacher.set(_key, storage);
   localStorage.setItem(_key, utils.toJSON(storage));
 };
 let get = key => {
   let _key = getKey(key);
+  let _storage = storageCacher.get(_key);
+  let _value = _storage.data;
+  if (!utils.isUndefined(_value)) {
+    return _value;
+  }
   let storage = localStorage.getItem(_key);
   storage = utils.parse(storage) || {
     data: {}
   };
+  storageCacher.set(_key, storage);
   let value = storage.data;
   return value;
 };
 let remove = key => {
   let _key = getKey(key);
+  storageCacher.remove(key);
   localStorage.removeItem(_key);
 };
 let setPrefix = str => {
@@ -4697,13 +4740,33 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
       },
       SyncChatroomMsgReq: {
         fields: {
-          syncTime: {
-            type: "int64",
-            id: 1
-          },
           chatroomId: {
             type: "string",
-            id: 4
+            id: 1
+          },
+          syncTime: {
+            type: "int64",
+            id: 2
+          },
+          attSyncTime: {
+            type: "int64",
+            id: 3
+          }
+        }
+      },
+      SyncChatroomResp: {
+        fields: {
+          msgs: {
+            type: "DownMsgSet",
+            id: 1
+          },
+          atts: {
+            type: "ChatAtts",
+            id: 2
+          },
+          isFinished: {
+            type: "bool",
+            id: 3
           }
         }
       },
@@ -5178,6 +5241,58 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             id: 2
           }
         }
+      },
+      ChatAtts: {
+        fields: {
+          chatId: {
+            type: "string",
+            id: 1
+          },
+          atts: {
+            rule: "repeated",
+            type: "ChatAttItem",
+            id: 2
+          },
+          isComplete: {
+            type: "bool",
+            id: 3
+          },
+          isFinished: {
+            type: "bool",
+            id: 4
+          }
+        }
+      },
+      ChatAttItem: {
+        fields: {
+          key: {
+            type: "string",
+            id: 1
+          },
+          value: {
+            type: "string",
+            id: 2
+          },
+          attTime: {
+            type: "int64",
+            id: 3
+          },
+          userId: {
+            type: "string",
+            id: 4
+          },
+          optType: {
+            type: "ChatAttOptType",
+            id: 5
+          }
+        }
+      },
+      ChatAttOptType: {
+        values: {
+          ChatAttOpt_Default: 0,
+          ChatAttOpt_Add: 1,
+          ChatAttOpt_Del: 2
+        }
       }
     }
   }
@@ -5497,7 +5612,8 @@ let getNum = () => {
 function updateSyncTime(message) {
   let {
     isSender,
-    sentTime
+    sentTime,
+    io
   } = message;
   let key = STORAGE.SYNC_RECEIVED_MSG_TIME;
   if (isSender) {
@@ -5509,21 +5625,35 @@ function updateSyncTime(message) {
     Storage.set(key, {
       time: sentTime
     });
+    let config = io.getConfig();
+    if (config.isPC) {
+      let times = {};
+      times[key] = sentTime;
+      config.$socket.updateSyncTime(times);
+    }
   }
   return isNewMsg;
 }
-function updateChatroomSyncTime(message) {
+
+// PC 端打开数据库后，将本地时间戳同步至 localStorage 中
+function initSyncTime(params) {
   let {
-    sentTime
-  } = message;
-  let key = STORAGE.SYNC_CHATROOM_RECEIVED_MSG_TIME;
-  let time = Storage.get(key).time || 0;
-  let isNewMsg = sentTime > time;
-  if (isNewMsg) {
-    Storage.set(key, {
-      time: sentTime
-    });
-  }
+    appkey,
+    userId,
+    times
+  } = params;
+  Storage.setPrefix(`${appkey}_${userId}`);
+  utils.forEach(times, (localTime, key) => {
+    if (utils.isInclude([STORAGE.SYNC_RECEIVED_MSG_TIME, STORAGE.SYNC_SENT_MSG_TIME, STORAGE.SYNC_CONVERSATION_TIME], key)) {
+      let item = Storage.get(key);
+      let time = item.time || 0;
+      if (localTime > time) {
+        Storage.set(key, {
+          time: localTime
+        });
+      }
+    }
+  });
 }
 function getError(code) {
   let error = ErrorMessages.find(error => error.code == code) || {
@@ -6062,12 +6192,16 @@ function getSessionId() {
     return v.toString(16);
   });
 }
+function getTokenKey(appkey, token) {
+  return `${appkey}_${token}`;
+}
 var common = {
   check,
   getNum,
+  getTokenKey,
   getNaviStorageKey,
+  initSyncTime,
   updateSyncTime,
-  updateChatroomSyncTime,
   getError,
   ConversationUtils,
   checkUploadType,
@@ -6096,7 +6230,7 @@ function getPublishBody ({
     topic
   } = data;
   let buffer = [];
-  if (utils.isInclude([COMMAND_TOPICS.SEND_GROUP, COMMAND_TOPICS.SEND_PRIVATE], topic)) {
+  if (utils.isInclude([COMMAND_TOPICS.SEND_GROUP, COMMAND_TOPICS.SEND_PRIVATE, COMMAND_TOPICS.SEND_CHATROOM], topic)) {
     let {
       name,
       content,
@@ -6226,6 +6360,7 @@ function getPublishBody ({
     let message = codec.create({
       chatId
     });
+    targetId = chatId;
     buffer = codec.encode(message).finish();
   }
   if (utils.isEqual(COMMAND_TOPICS.QUIT_CHATROOM, topic)) {
@@ -6238,6 +6373,7 @@ function getPublishBody ({
     let message = codec.create({
       chatId
     });
+    targetId = chatId;
     buffer = codec.encode(message).finish();
   }
   if (utils.isEqual(COMMAND_TOPICS.INSERT_CONVERSATION, topic)) {
@@ -6468,12 +6604,12 @@ function getQueryBody({
       syncTime,
       chatroomId
     } = data;
-    targetId = userId;
-    let codec = $root.lookup('codec.SyncMsgReq');
+    let codec = $root.lookup('codec.SyncChatroomMsgReq');
     let message = codec.create({
       syncTime,
       chatroomId
     });
+    targetId = chatroomId;
     buffer = codec.encode(message).finish();
   }
   if (utils.isEqual(COMMAND_TOPICS.GET_MSG_BY_IDS, topic)) {
@@ -6778,28 +6914,6 @@ function Encoder(cache) {
   };
 }
 
-function Cache () {
-  let caches = {};
-  let set = (key, value) => {
-    caches[key] = value;
-  };
-  let get = key => {
-    return caches[key] || {};
-  };
-  let remove = key => {
-    delete caches[key];
-  };
-  let clear = () => {
-    caches = {};
-  };
-  return {
-    set,
-    get,
-    remove,
-    clear
-  };
-}
-
 function InfoCacher () {
   let cache = Cache();
   let set = (id, info = {}) => {
@@ -6967,8 +7081,11 @@ function Decoder(cache, io) {
       targetId
     } = cache.get(index);
     let result = {};
-    if (utils.isInclude([COMMAND_TOPICS.HISTORY_MESSAGES, COMMAND_TOPICS.SYNC_MESSAGES, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES, COMMAND_TOPICS.GET_MSG_BY_IDS, COMMAND_TOPICS.GET_MERGE_MSGS], topic)) {
+    if (utils.isInclude([COMMAND_TOPICS.HISTORY_MESSAGES, COMMAND_TOPICS.SYNC_MESSAGES, COMMAND_TOPICS.GET_MSG_BY_IDS, COMMAND_TOPICS.GET_MERGE_MSGS], topic)) {
       result = getMessagesHandler(index, data);
+    }
+    if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES)) {
+      result = getChatroomMsgsHandler(index, data);
     }
     if (utils.isInclude([COMMAND_TOPICS.CONVERSATIONS, COMMAND_TOPICS.SYNC_CONVERSATIONS, COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS], topic)) {
       result = getConversationsHandler(index, data, {
@@ -7245,6 +7362,24 @@ function Decoder(cache, io) {
     return {
       conversations,
       isFinished,
+      index
+    };
+  }
+  function getChatroomMsgsHandler(index, data) {
+    let payload = $root.lookup('codec.SyncChatroomResp');
+    let result = payload.decode(data);
+    let {
+      isFinished,
+      msgs: {
+        msgs
+      }
+    } = result;
+    let messages = utils.map(msgs, msg => {
+      return msgFormat(msg);
+    });
+    return {
+      isFinished,
+      messages,
       index
     };
   }
@@ -7642,9 +7777,15 @@ let getNavis = (urls, option, callback) => {
     errors = [];
   let {
     appkey,
-    token,
-    userId
+    token
   } = option;
+
+  // 通过 AppKey_Token 获取 userId
+  let tokenKey = common.getTokenKey(appkey, token);
+  let userId = Storage.get(tokenKey);
+  if (!utils.isEmpty(userId)) {
+    Storage.setPrefix(`${appkey}_${userId}`);
+  }
   let key = common.getNaviStorageKey(appkey, userId);
   let navi = Storage.get(key);
   if (!utils.isEmpty(navi)) {
@@ -7682,6 +7823,14 @@ let getNavis = (urls, option, callback) => {
             code
           };
           if (!utils.isEmpty(servers)) {
+            // 优先设置本地 AppKey 和 Token 缓存的 UserId
+            Storage.set(tokenKey, userId);
+
+            // 设置全局存储前缀
+            Storage.setPrefix(`${appkey}_${userId}`);
+
+            // 设置导航缓存
+            key = common.getNaviStorageKey();
             Storage.set(key, nav);
           }
           callback(nav);
@@ -7744,8 +7893,9 @@ function Consumer() {
   };
 }
 
-function Syncer(send, emitter) {
+function Syncer(send, emitter, io) {
   let consumer = Consumer();
+  let chatroomCacher = Cache();
   let exec = data => {
     consumer.produce(data);
     consumer.consume(({
@@ -7768,7 +7918,10 @@ function Syncer(send, emitter) {
       let {
         msg
       } = item;
-      let isNewMsg = common.updateSyncTime(msg);
+      let isNewMsg = common.updateSyncTime({
+        ...msg,
+        io
+      });
       if (isNewMsg) {
         let {
           msgIndex,
@@ -7801,23 +7954,27 @@ function Syncer(send, emitter) {
         msg,
         name
       } = item;
-      let syncTime = Storage.get(STORAGE.SYNC_CHATROOM_RECEIVED_MSG_TIME).time || 0;
+      let chatroomId = msg.targetId;
+      let syncTime = getChatroomSyncTime(chatroomId);
       if (syncTime >= msg.receiveTime) {
-        return;
+        return next();
       }
       let data = {
         syncTime: syncTime,
-        chatroomId: msg.targetId,
+        chatroomId: chatroomId,
         topic: COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES
       };
       send(SIGNAL_CMD.QUERY, data, ({
         isFinished,
-        messages
+        messages,
+        code
       }) => {
+        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+          return next();
+        }
         utils.forEach(messages, message => {
-          common.updateChatroomSyncTime(message);
-          let isFinishedAll = isFinished && utils.isEqual(messages.length - 1, index);
-          emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message, isFinishedAll]);
+          setChatRoomSyncTime(message.conversationId, message.sentTime);
+          emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message]);
         });
         let isSyncing = !isFinished;
         if (isSyncing) {
@@ -7838,7 +7995,7 @@ function Syncer(send, emitter) {
 
       // 如果本地记录时间戳大于 ntf 中的接收时间，认为消息已被当前端接收过，不再执行拉取动作
       if (syncReceiveTime >= msg.receiveTime) {
-        return;
+        return next();
       }
       let data = {
         userId: user.id,
@@ -7856,7 +8013,10 @@ function Syncer(send, emitter) {
           return next();
         }
         utils.forEach(messages, (message, index) => {
-          let isNewMsg = common.updateSyncTime(message);
+          let isNewMsg = common.updateSyncTime({
+            ...message,
+            io
+          });
           if (isNewMsg) {
             let isFinishedAll = isFinished && utils.isEqual(messages.length - 1, index);
             emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message, isFinishedAll]);
@@ -7926,6 +8086,17 @@ function Syncer(send, emitter) {
           }
           next();
         });
+      });
+    }
+    function getChatroomSyncTime(chatroomId) {
+      let key = `${STORAGE.SYNC_CHATROOM_RECEIVED_MSG_TIME}_${chatroomId}`;
+      let syncInfo = chatroomCacher.get(key);
+      return syncInfo.time || 0;
+    }
+    function setChatRoomSyncTime(chatroomId, time) {
+      let key = `${STORAGE.SYNC_CHATROOM_RECEIVED_MSG_TIME}_${chatroomId}`;
+      chatroomCacher.set(key, {
+        time
       });
     }
   };
@@ -7998,7 +8169,7 @@ function IO(config) {
     navList,
     serverList = [],
     isSync = true,
-    connectTimeout = 1 * 90 * 1000
+    reconnectCount = 100
   } = config;
   if (!utils.isArray(navList)) {
     navList = ['https://nav.juggleim.com'];
@@ -8015,24 +8186,39 @@ function IO(config) {
     timeout: SYNC_MESSAGE_TIME
   });
   let connectionState = CONNECT_STATE.DISCONNECTED;
+  let reconnectErrors = [ErrorType.CONNECT_APPKEY_IS_REQUIRE.code, ErrorType.CONNECT_TOKEN_NOT_EXISTS.code, ErrorType.CONNECT_APPKEY_NOT_EXISTS.code, ErrorType.CONNECT_TOKEN_ILLEGAL.code, ErrorType.CONNECT_TOKEN_UNAUTHORIZED.code, ErrorType.CONNECT_TOKEN_EXPIRE.code, ErrorType.CONNECT_APP_BLOCKED.code, ErrorType.CONNECT_USER_BLOCKED.code, ErrorType.CONNECT_USER_KICKED.code, ErrorType.CONNECT_USER_LOGOUT.code];
   let updateState = result => {
     connectionState = result.state;
     emitter.emit(SIGNAL_NAME.CONN_CHANGED, {
       ...result
     });
   };
+  let clearHeart = () => {
+    timer.pause();
+    syncTimer.pause();
+  };
+  let isUserDisconnected = false;
   let onDisconnect = (result = {}) => {
-    let state = CONNECT_STATE.DISCONNECTED;
+    let {
+      code
+    } = result;
+    if (!isUserDisconnected && !utils.isInclude(reconnectErrors, code) && !utils.isEqual(connectionState, CONNECT_STATE.DISCONNECTED)) {
+      let user = getCurrentUser();
+      updateState({
+        state: CONNECT_STATE.RECONNECTING
+      });
+      clearHeart();
+      return reconnect(user, utils.noop);
+    }
     if (!utils.isEqual(connectionState, CONNECT_STATE.DISCONNECTED)) {
       let user = getCurrentUser();
       updateState({
-        state,
+        state: CONNECT_STATE.DISCONNECTED,
         ...result,
         user
       });
+      clearHeart();
     }
-    timer.pause();
-    syncTimer.pause();
   };
   let currentUserInfo = {};
   let setCurrentUser = user => {
@@ -8044,26 +8230,17 @@ function IO(config) {
   };
   let connect = ({
     token,
-    userId,
     deviceId,
     _isReconnect = false
   }, callback) => {
-    if (!_isReconnect) {
-      cache.set(CONNECT_TOOL.START_TIME, Date.now());
-      updateState({
-        state: CONNECT_STATE.CONNECTING,
-        user: {
-          id: userId
-        }
-      });
-    }
     function smack({
       servers,
       userId
     }) {
       setCurrentUser({
         id: userId,
-        token
+        token,
+        deviceId
       });
       cache.set(SIGNAL_NAME.S_CONNECT_ACK, callback);
       Network.detect(servers, (domain, error) => {
@@ -8094,11 +8271,15 @@ function IO(config) {
             platform
           });
         };
-        ws.onclose = () => {
-          onDisconnect();
+        ws.onclose = e => {
+          onDisconnect({
+            type: DISCONNECT_TYPE.CLOSE
+          });
         };
         ws.onerror = () => {
-          onDisconnect();
+          onDisconnect({
+            type: DISCONNECT_TYPE.ERROR
+          });
         };
         ws.onmessage = function ({
           data
@@ -8113,14 +8294,12 @@ function IO(config) {
     }
     if (!utils.isEmpty(serverList)) {
       return smack({
-        servers: serverList,
-        userId
+        servers: serverList
       });
     }
     return Network.getNavis(navList, {
       appkey,
-      token,
-      userId
+      token
     }, result => {
       let {
         code,
@@ -8153,23 +8332,28 @@ function IO(config) {
     userId,
     deviceId
   }, callback) => {
-    let startTime = cache.get(CONNECT_TOOL.START_TIME);
-    let currentTime = Date.now();
-    let isTimeout = currentTime - startTime - connectTimeout > 0;
+    let rCountObj = cache.get(CONNECT_TOOL.RECONNECT_COUNT);
+    let count = rCountObj.count || 1;
+    let isTimeout = count > reconnectCount;
     if (isTimeout) {
       cache.remove(CONNECT_TOOL.RECONNECT_COUNT);
+      cache.remove(CONNECT_TOOL.RECONNECT_FREQUENCY);
       return updateState({
         state: CONNECT_STATE.DISCONNECTED,
         code: ErrorType.IM_SERVER_CONNECT_ERROR.code
       });
     }
-    let reconnectOpt = cache.get(CONNECT_TOOL.RECONNECT_COUNT);
-    let count = reconnectOpt.count || 1;
-    let msec = count * 1000;
+    let reconnectOpt = cache.get(CONNECT_TOOL.RECONNECT_FREQUENCY);
+    let frequency = reconnectOpt.frequency || 1;
+    let msec = frequency * 1000;
     setTimeout(() => {
-      count = count * 2;
+      count += 1;
       cache.set(CONNECT_TOOL.RECONNECT_COUNT, {
         count
+      });
+      frequency = frequency * 2;
+      cache.set(CONNECT_TOOL.RECONNECT_FREQUENCY, {
+        frequency
       });
       connect({
         token,
@@ -8181,6 +8365,7 @@ function IO(config) {
   };
   let PingTimeouts = [];
   let disconnect = () => {
+    isUserDisconnected = true;
     if (ws) {
       ws.close && ws.close();
     }
@@ -8223,7 +8408,7 @@ function IO(config) {
       });
     }
   };
-  let syncer = Syncer(sendCommand, emitter);
+  let syncer = Syncer(sendCommand, emitter, io);
   let bufferHandler = buffer => {
     let {
       cmd,
@@ -8261,7 +8446,10 @@ function IO(config) {
       } = data;
       // 单群聊和聊天室通知和拉取消息时间戳分开计算，只有发送单群聊消息更新发件箱
       if (!utils.isEqual(conversationType, CONVERATION_TYPE.CHATROOM)) {
-        common.updateSyncTime(data);
+        common.updateSyncTime({
+          ...data,
+          io
+        });
       }
       callback(data);
     }
@@ -8269,6 +8457,7 @@ function IO(config) {
       callback(result);
     }
     if (utils.isEqual(cmd, SIGNAL_CMD.CONNECT_ACK)) {
+      isUserDisconnected = false;
       let _callback = cache.get(SIGNAL_NAME.S_CONNECT_ACK) || utils.noop;
       let {
         ack: {
@@ -8283,7 +8472,9 @@ function IO(config) {
         setCurrentUser({
           id: userId
         });
-        cache.remove(CONNECT_TOOL.RECONNECT_COUNT);
+        // 兼容只设置 IM Server 列表的情况
+        Storage.setPrefix(`${appkey}_${userId}`);
+        cache.remove(CONNECT_TOOL.RECONNECT_FREQUENCY);
         return getUserInfo({
           id: userId
         }, ({
@@ -8299,17 +8490,43 @@ function IO(config) {
             exts,
             updatedTime: _user.updatedTime
           });
+          updateState({
+            state,
+            user: currentUserInfo
+          });
+
+          // 首先返回连接方法回调，确保 PC 端本地数据库同步信息时间戳优先更新至 localStorage 中
+          _callback({
+            user: currentUserInfo,
+            error
+          });
 
           // 同步会话和同步消息顺序不能调整，保证先同步会话再同步消息，规避会话列表最后一条消息不是最新的
           if (config.isPC) {
-            syncer.exec({
-              time: Storage.get(STORAGE.SYNC_CONVERSATION_TIME).time || 0,
-              name: SIGNAL_NAME.S_SYNC_CONVERSATION_NTF,
-              user: {
-                id: currentUserInfo.id
-              },
-              $conversation: config.$conversation
-            });
+            let syncNext = () => {
+              syncer.exec({
+                time: Storage.get(STORAGE.SYNC_CONVERSATION_TIME).time || 0,
+                name: SIGNAL_NAME.S_SYNC_CONVERSATION_NTF,
+                user: {
+                  id: currentUserInfo.id
+                },
+                $conversation: config.$conversation
+              });
+            };
+
+            // PC 中先连接后打开数据库，优先将本地数据库中的同步时间更新至 LocalStorage 中，避免换 Token 不换用户 Id 重复同步会话
+            let syncTime = Storage.get(STORAGE.SYNC_CONVERSATION_TIME).time || 0;
+            if (utils.isEqual(syncTime, 0)) {
+              config.$socket.openDB({
+                appkey,
+                userId,
+                token: currentUserInfo.token
+              }).then(() => {
+                syncNext();
+              });
+            } else {
+              syncNext();
+            }
           }
           if (isSync) {
             syncer.exec({
@@ -8336,14 +8553,6 @@ function IO(config) {
               }
             });
           });
-          updateState({
-            state,
-            user: currentUserInfo
-          });
-          _callback({
-            user: currentUserInfo,
-            error
-          });
         });
       }
       updateState({
@@ -8362,7 +8571,8 @@ function IO(config) {
       } = result;
       onDisconnect({
         code,
-        extra
+        extra,
+        type: DISCONNECT_TYPE.SERVER
       });
     }
     cache.remove(index);
@@ -8709,7 +8919,8 @@ function Conversation$1 (io, emitter) {
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
           common.updateSyncTime({
             isSender: true,
-            sentTime: timestamp
+            sentTime: timestamp,
+            io
           });
         }
         if (!config.isPC) {
@@ -8750,7 +8961,8 @@ function Conversation$1 (io, emitter) {
         }
         common.updateSyncTime({
           isSender: true,
-          sentTime: timestamp
+          sentTime: timestamp,
+          io
         });
         let item = createConversation({
           ...conversation,
@@ -8821,7 +9033,8 @@ function Conversation$1 (io, emitter) {
         }
         common.updateSyncTime({
           isSender: true,
-          sentTime: timestamp
+          sentTime: timestamp,
+          io
         });
         let config = io.getConfig();
         if (!config.isPC) {
@@ -8863,7 +9076,8 @@ function Conversation$1 (io, emitter) {
         }
         common.updateSyncTime({
           isSender: true,
-          sentTime: timestamp
+          sentTime: timestamp,
+          io
         });
         let config = io.getConfig();
         if (!config.isPC) {
@@ -8928,7 +9142,8 @@ function Conversation$1 (io, emitter) {
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
           common.updateSyncTime({
             isSender: true,
-            sentTime: timestamp
+            sentTime: timestamp,
+            io
           });
         }
         let config = io.getConfig();
@@ -9193,9 +9408,11 @@ function Message$1 (io, emitter, logger) {
         sentTime
       });
     }
-
-    // 收到消息一定要更新会话列表
-    io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, utils.clone(message));
+    let isChatroom = utils.isEqual(message.conversationType, CONVERATION_TYPE.CHATROOM);
+    if (!isChatroom) {
+      // 收到非消息一定要更新会话列表
+      io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, utils.clone(message));
+    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_DELETE_MSGS)) {
       let {
         content: {
@@ -9393,7 +9610,7 @@ function Message$1 (io, emitter, logger) {
           sentState: MESSAGE_SENT_STATE.SUCCESS
         });
         let config = io.getConfig();
-        if (!config.isPC) {
+        if (!config.isPC && !utils.isEqual(conversationType, CONVERATION_TYPE.CHATROOM)) {
           io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, message);
         }
         resolve(message);
@@ -9529,7 +9746,8 @@ function Message$1 (io, emitter, logger) {
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
           common.updateSyncTime({
             isSender: true,
-            sentTime: timestamp
+            sentTime: timestamp,
+            io
           });
         }
         let config = io.getConfig();
@@ -9576,7 +9794,8 @@ function Message$1 (io, emitter, logger) {
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
           common.updateSyncTime({
             isSender: true,
-            sentTime: timestamp
+            sentTime: timestamp,
+            io
           });
         }
         let config = io.getConfig();
@@ -9618,7 +9837,8 @@ function Message$1 (io, emitter, logger) {
         if (utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
           common.updateSyncTime({
             isSender: true,
-            sentTime: timestamp
+            sentTime: timestamp,
+            io
           });
           let msg = utils.clone(message);
           let {
@@ -9675,7 +9895,8 @@ function Message$1 (io, emitter, logger) {
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
           common.updateSyncTime({
             isSender: true,
-            sentTime: timestamp
+            sentTime: timestamp,
+            io
           });
         }
         resolve();
@@ -10259,22 +10480,25 @@ function Socket$1 (io, emitter, logger) {
         tag: LOG_MODULE.CON_CONNECT
       });
       // 通过 appkye_userid 隔离本地存储 Key
-      let config = io.getConfig();
+      // let config = io.getConfig();
+      // let { appkey, token } = config;
+      // let key = common.getTokenKey(appkey, token);
+      // let userId = Storage.get(key);
+
+      // Storage.setPrefix(`${appkey}_${userId}`);
+
+      // let { syncConversationTime } = user;
+      // if(utils.isNumber(syncConversationTime)){
+      //   Storage.set(STORAGE.SYNC_CONVERSATION_TIME,  { time: syncConversationTime })
+      // }
+
       let {
-        appkey
-      } = config;
-      let {
-        userId
+        token = ''
       } = user;
-      Storage.setPrefix(`${appkey}_${userId}`);
-      let {
-        syncConversationTime
-      } = user;
-      if (utils.isNumber(syncConversationTime)) {
-        Storage.set(STORAGE.SYNC_CONVERSATION_TIME, {
-          time: syncConversationTime
-        });
-      }
+      token = token.trim();
+      user = utils.extend(user, {
+        token
+      });
       io.connect(user, ({
         error,
         user
@@ -10323,7 +10547,17 @@ function Socket$1 (io, emitter, logger) {
   };
 }
 
-function Chatroom$1 (io) {
+function Chatroom$1 (io, emitter, logger) {
+  io.on(SIGNAL_NAME.CHATROOM_EVENT, notify => {
+
+    // 事件说明：
+    // 事件说明：
+    // USER_REJOIN: 当前用户断网重新加入
+    // MEMBER_CHANGED: 加入 、退出触发
+    // ATTRIBUTE_UPDATED: 属性变更
+    // ATTRIBUTE_REMOVED: 属性被删除
+    // CHATROOM_DESTROYED: 聊天室销毁
+  });
   let joinChatroom = chatroom => {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.JOINCHATROOM);
@@ -10338,8 +10572,14 @@ function Chatroom$1 (io) {
         chatroom,
         conversationId: id
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, () => {
-        resolve();
+      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+        code
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve();
+        }
+        let error = common.getError(code);
+        reject(error);
       });
     });
   };
@@ -10353,14 +10593,68 @@ function Chatroom$1 (io) {
         topic: COMMAND_TOPICS.QUIT_CHATROOM,
         chatroom
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, () => {
-        resolve();
+      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+        code
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve();
+        }
+        let error = common.getError(code);
+        reject(error);
       });
     });
   };
+
+  /* 
+    let chatroom = {
+      id: 'chatroomId',
+      attributes: {
+        key1: 'value1',
+        key2: 'value2'
+      },
+      options: {
+        isNotify: false,
+        isForce: true,
+        isAutoDelete: true,
+        notifyContent: '',
+      }
+    }
+  */
+  let setChatroomAttributes = chatroom => {};
+
+  /* 
+    let chatroom = {
+      id: 'chatroomId',
+      attributes: ['key1', 'key2']
+    };
+  */
+  let getChatroomAttributes = chatroom => {};
+
+  /* 
+    let chatroom = {
+      id: 'chatroomId',
+      attributes: ['key1', 'key2'],
+      options: {
+        isNotify: false,
+        notifyContent: '',
+      }
+    };
+  */
+  let removeChatroomAttributes = () => {};
+
+  /* 
+  let chatroom = {
+    id: 'chatroomId',
+  };
+  */
+  let getAllChatRoomAttributes = chatroom => {};
   return {
     joinChatroom,
-    quitChatroom
+    quitChatroom,
+    setChatroomAttributes,
+    getChatroomAttributes,
+    removeChatroomAttributes,
+    getAllChatRoomAttributes
   };
 }
 
@@ -10373,6 +10667,9 @@ let init$2 = ({
   let conversation = Conversation$1(io, emitter);
   let message = Message$1(io, emitter, logger);
   let chatroom = Chatroom$1(io);
+  io.setConfig({
+    logger: logger
+  });
   return {
     socket,
     conversation,
@@ -10682,7 +10979,7 @@ function Message ($message, {
         conversationType: conversation.conversationType,
         conversationId: conversation.conversationId
       };
-      return $message.getMessages(conversation).then(({
+      return $message.getMessages(params).then(({
         messages = [],
         isFinished,
         groups,
@@ -10811,7 +11108,8 @@ let init$1 = ({
   io,
   emitter,
   web,
-  client
+  client,
+  logger
 }) => {
   let {
     SIGNAL_NAME
@@ -10846,7 +11144,10 @@ let init$1 = ({
   // 告知 IO 模块当前是 PC 端，做特殊处理，例如：同步会话列表
   io.setConfig({
     isPC: true,
-    $conversation: pc.conversation
+    $conversation: pc.conversation,
+    $socket: pc.socket,
+    $message: pc.message,
+    logger: logger
   });
   return {
     socket,
@@ -11180,7 +11481,7 @@ let init = config => {
   let provider = {};
   let {
     upload,
-    appkey,
+    appkey = '',
     log = {}
   } = config;
   let uploadType = common.checkUploadType(upload);
@@ -11192,9 +11493,13 @@ let init = config => {
     sessionId,
     io
   });
+
+  // 移除 AppKey 前后空格
+  appkey = appkey.trim();
   utils.extend(config, {
     uploadType,
-    logger
+    logger,
+    appkey
   });
   let web = Web.init({
     io,
@@ -11253,8 +11558,8 @@ var client = {
   SentState: MESSAGE_SENT_STATE
 };
 
-var index$1 = {
+var index = {
   ...client
 };
 
-export { index$1 as default };
+export { index as default };

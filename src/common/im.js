@@ -1,4 +1,4 @@
-import JuggleChat from "../libs/juggle.1.0.0.es";
+import JuggleChat from "../libs/juggleim-es-1.2.1";
 import { CONFIG } from "../config";
 import utils from "./utils";
 import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
