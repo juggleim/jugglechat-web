@@ -47,14 +47,14 @@ function onLogin() {
       });
     }
     let { data } = result;
-    let { user_id, authorization, nick_name, avatar, im_token } = data;
+    let { user_id, authorization, nickname, avatar, im_token } = data;
     if(!avatar){
-      avatar = common.getTextAvatar(nick_name);
+      avatar = common.getTextAvatar(nickname);
     }
     if(!im_token){
       return state.errorMsg.code = '登录失败，IM Token 为空'
     }
-    Storage.set(STORAGE.USER_TOKEN, { id: user_id, token: im_token, authorization: authorization, name: nick_name, portrait: avatar });
+    Storage.set(STORAGE.USER_TOKEN, { id: user_id, token: im_token, authorization: authorization, name: nickname, portrait: avatar });
     router.replace({ name: 'ConversationList' });
   });
 
@@ -117,7 +117,7 @@ function onInput() {
           </div>
           <div class="form-group">
             <div class="form-control-wrap jg-login-sms form-control">
-              <input type="text"  v-model="state.user.code" placeholder="请输入验证码, 万能验证码: 000000"
+              <input type="text"  v-model="state.user.code" placeholder="万能验证码: 000000"
                 @input="onInput()"  @keydown.enter="onLogin()">
               <div class="jg-login-sendcode" @click="onSend">{{ state.btnLabel }}</div>
             </div>

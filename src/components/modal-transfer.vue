@@ -11,7 +11,7 @@
   });
 
   if(im.isConnected()){
-    juggle.getConversations().then(({ conversations }) => {
+    juggle.getConversations({}).then(({ conversations }) => {
       utils.extend(state, { conversations })
     });
   }

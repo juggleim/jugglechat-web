@@ -188,11 +188,11 @@ function formatMention(conversation) {
   // utils.extend(conversation, { f_mentionContent });
 }
 function getConversations() {
-  juggle.getConversations().then((result) => {
+  juggle.getConversations({}).then((result) => {
     let { conversations: _list } = result;
     console.log('conversatoins', _list)
     utils.forEach(_list, (conversation) => {
-      let { latestMessage, conversationPortrait, conversationTitle } = conversation;
+      let { latestMessage, conversationPortrait, conversationTitle = '' } = conversation;
       let { sentTime } = latestMessage;
       let f_time = getConversationTime(sentTime);
       if (!sentTime) {
