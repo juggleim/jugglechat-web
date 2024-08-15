@@ -2,17 +2,10 @@
 import JHeader from '../header/header.vue';
 import WinHeader from '../../components/win-header.vue';
 import JFooter from '../../components/footer.vue';
-import { useRouter } from 'vue-router'
-import { reactive } from 'vue'
 import im from "../../common/im";
 import utils from '../../common/utils';
 
 let juggle = im.getCurrent();
-const router = useRouter()
-let { currentRoute: { _rawValue: { fullPath } } } = router;
-if (fullPath == '/') {
-  router.replace({ name: 'ConversationList' })
-}
 
 </script>
 

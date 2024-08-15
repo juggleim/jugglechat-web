@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { Layout } from '@/views/layout';
 import Common from '@/common/common';
 import utils from '@/common/utils';
+import { STORAGE } from "../common/enum";
+import Storage from "../common/storage";
 
 let routes = [{
   path: '/',
@@ -55,14 +57,15 @@ const router = createRouter({
   history: createWebHistory(),
   routes: routes
 })
-// router.beforeEach((to, from, next)=> {
-//   let user = Common.getStorage(STORAGE.USER_INFO);
-//   if (user || utils.isEqual(to.name, 'Login') || utils.isEqual(to.name, 'Mask')|| utils.isEqual(to.path, '/') || to.path.includes('conversation')) {
-//     next();
-//   }else{
-//     next({ name: 'Login'})
-//   }
-// })
+router.beforeEach((to, from, next)=> {
+  let user = Storage.get(STORAGE.USER_TOKEN);
+  console.log(user, to)
+  if (user.id || utils.isEqual(to.name, 'Login')) {
+    next();
+  }else{
+    next({ name: 'Login'})
+  }
+})
 export async function setupRouter(app) {
   app.use(router);
   await router.isReady();
