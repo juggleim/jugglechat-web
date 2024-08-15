@@ -442,7 +442,7 @@
   background-repeat: no-repeat;
 }
 .jg-login-formbox{
-  min-width: 300px;
+  min-width: 330px;
   width: 50%;
   display: flex;
   flex-direction: column;
