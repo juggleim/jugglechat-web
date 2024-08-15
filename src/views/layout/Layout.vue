@@ -13,19 +13,44 @@ if (fullPath == '/') {
   router.replace({ name: 'ConversationList' })
 }
 
+let state = reactive({
+  isMax: getMax()
+});
+
+function setWin(type){
+  if(utils.isEqual(type, 'maximize')){
+    state.isMax = true;
+  }
+  if(utils.isEqual(type, 'unmaximize')){
+    state.isMax = false;
+  }
+  JuggleIMDesktop.setWindow({ type });
+}
+
+async function getMax(){
+  let isMax = false;
+  if(typeof JuggleIMDesktop != 'undefined'){
+    isMax = await JuggleIMDesktop.isMaximized();;
+  }
+  return isMax;
+}
+
 </script>
 
 <template>
   <div class="tyn-desktop-header" v-if="juggle.isDesktop() && !utils.isMacBrowser()">
-    <ul class="tyn-desktop-navs">
+    <ul class="tyn-desktop-navs" v-if="!utils.isMacBrowser()">
       <li class="tyn-desktop-nav">
-        <a class="wr wr-subtract"></a>
+        <a class="wr wr-win-hide" @click="setWin('hide')"></a>
+      </li>
+      <li class="tyn-desktop-nav" v-if="state.isMax">
+        <a class="wr wr-win-min" @click="setWin('unmaximize')"></a>
+      </li>
+      <li class="tyn-desktop-nav" v-else>
+        <a class="wr wr-win-max" @click="setWin('maximize')"></a>
       </li>
       <li class="tyn-desktop-nav">
-        <a class="wr wr-fang"></a>
-      </li>
-      <li class="tyn-desktop-nav">
-        <a class="wr wr-close"></a>
+        <a class="wr wr-win-close" @click="setWin('close')"></a>
       </li>
     </ul>
   </div>
