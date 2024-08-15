@@ -59,7 +59,9 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next)=> {
   let user = Storage.get(STORAGE.USER_TOKEN);
-  console.log(user, to)
+  if(utils.isEqual(to.name, 'Root')){
+    return router.push({ name: 'ConversationList' })
+  }
   if (user.id || utils.isEqual(to.name, 'Login')) {
     next();
   }else{
