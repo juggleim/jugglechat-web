@@ -32,7 +32,11 @@ function onHideDrop(conversation) {
 }
 function onConversation(item, index) {
   state.conversations.map((conversation) => {
-    conversation.isActive = utils.isEqual(item.conversationId, conversation.conversationId);
+    let isActive = utils.isEqual(item.conversationId, conversation.conversationId);
+    if(isActive){
+      conversation.f_mentionContent = '';
+    }
+    conversation.isActive = isActive;
     return conversation;
   });
   item.isActive = true;
@@ -174,18 +178,12 @@ juggle.on(Event.STATE_CHANGED, ({ state: status }) => {
   }
 });
 function formatMention(conversation) {
-  // let { latestMentionMsg } = conversation;
-  // let f_mentionContent = '';
-  // if (latestMentionMsg) {
-  //   let { type } = latestMentionMsg;
-  //   if (utils.isEqual(type, MentionType.ALL)) {
-  //     f_mentionContent = '@所有人';
-  //   }
-  //   if (utils.isEqual(type, MentionType.SOMEONE)) {
-  //     f_mentionContent = '有人@我';
-  //   }
-  // }
-  // utils.extend(conversation, { f_mentionContent });
+  let { mentions } = conversation;
+  let f_mentionContent = '';
+  if (mentions.isMentioned) {
+    f_mentionContent = '有人@我';
+  }
+  return utils.extend(conversation, { f_mentionContent });
 }
 function getConversations() {
   juggle.getConversations({}).then((result) => {
@@ -198,7 +196,7 @@ function getConversations() {
       if (!sentTime) {
         f_time = '';
       }
-      formatMention(conversation);
+      conversation = formatMention(conversation);
       let shortName = im.msgShortFormat(latestMessage);
       conversationPortrait = conversationPortrait || common.getTextAvatar(conversationTitle);
       utils.extend(conversation, { f_time, isShowDrop: false, isActive: false, shortName, conversationPortrait });
@@ -337,7 +335,7 @@ function onDraft(conversation) {
                       <p class="content wr" v-if="item.draft" :class="{ 'wr-modify-pen content-draft': item.draft }">{{
         item.draft }}</p>
                       <p class="content" v-else>
-                        <span class="text-danger lastmsg-mention">{{ item.f_mentionContent }}</span>{{ item.shortName }}
+                        <span class="text-danger lastmsg-mention" v-if="item.f_mentionContent != ''">{{ item.f_mentionContent }}</span>{{ item.shortName }}
                       </p>
                       <span class="meta">{{ item.f_time }}</span>
                     </div>

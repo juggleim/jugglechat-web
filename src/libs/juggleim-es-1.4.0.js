@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.2.1
+* JuggleChat.js v1.4.0
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -489,6 +489,10 @@ function formatTime(time, fmt = 'yyyy-MM-dd hh:mm:ss') {
   for (var k in o) if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length));
   return fmt;
 }
+function isValidHMTime(timeStr) {
+  const regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+  return regex.test(timeStr);
+}
 var utils = {
   Prosumer,
   Observer,
@@ -535,7 +539,8 @@ var utils = {
   isContinuous,
   isBase64,
   iterator,
-  formatTime
+  formatTime,
+  isValidHMTime
 };
 
 function Emitter () {
@@ -587,6 +592,7 @@ let STORAGE = {
   PREFIX: 'suprjj_im',
   NAVI: 'navi',
   SYNC_CHATROOM_RECEIVED_MSG_TIME: 'sync_chatroom_received_msg_time',
+  CLIENT_SESSION: 'jgim_client_session',
   //PC 端有同样的 KEY，如果修改 VALUE，需要一起修改
   SYNC_CONVERSATION_TIME: 'sync_conversation_time',
   SYNC_RECEIVED_MSG_TIME: 'sync_received_msg_time',
@@ -804,6 +810,20 @@ let FUNC_PARAM_CHECKER = {
       name: 'conversationId'
     }]
   }],
+  SET_ALL_DISTURB: [{
+    name: 'type'
+  }
+  // { name: 'timezone' }, 
+  // { 
+  //   name: 'times', 
+  //   type: 'Array',
+  //   children: [
+  //     { name: 'start', type: 'String' },
+  //     { name: 'end', type: 'String' },
+  //   ]
+  // }
+  ],
+
   CLEARUNREADCOUNT: [{
     name: 'conversationType'
   }, {
@@ -864,6 +884,31 @@ let FUNC_PARAM_CHECKER = {
   QUITCHATROOM: [{
     name: 'id',
     type: 'String'
+  }],
+  SET_CHATROOM_ATTRS: [{
+    name: 'id',
+    type: 'String'
+  }, {
+    name: 'attributes',
+    type: 'Object'
+  }],
+  REMOVE_CHATROOM_ATTRS: [{
+    name: 'id',
+    type: 'String'
+  }, {
+    name: 'attributeKeys',
+    type: 'Array'
+  }],
+  GET_CHATROOM_ATTRS: [{
+    name: 'id',
+    type: 'String'
+  }, {
+    name: 'attributeKeys',
+    type: 'Array'
+  }],
+  GET_ALL_CHATROOM_ATTRS: [{
+    name: 'id',
+    type: 'String'
   }]
 };
 let COMMAND_TOPICS = {
@@ -887,6 +932,8 @@ let COMMAND_TOPICS = {
   TOP_CONVERSATION: 'top_convers',
   GET_UNREAD_TOTLAL_CONVERSATION: 'qry_total_unread_count',
   CLEAR_UNREAD_TOTLAL_CONVERSATION: 'clear_total_unread',
+  SET_ALL_DISTURB: 'set_user_undisturb',
+  GET_ALL_DISTURB: 'get_user_undisturb',
   READ_MESSAGE: 'mark_read',
   GET_READ_MESSAGE_DETAIL: 'qry_read_detail',
   UPDATE_MESSAGE: 'modify_msg',
@@ -897,7 +944,11 @@ let COMMAND_TOPICS = {
   GET_USER_INFO: 'qry_user_info',
   JOIN_CHATROOM: 'c_join',
   QUIT_CHATROOM: 'c_quit',
-  SYNC_CHATROOM_MESSAGES: 'c_sync_msgs'
+  SYNC_CHATROOM_MESSAGES: 'c_sync_msgs',
+  SET_CHATROOM_ATTRIBUTES: 'c_add_att',
+  REMOVE_CHATROOM_ATTRIBUTES: 'c_del_att',
+  GET_CHATROOM_ATTRIBUTES: '',
+  GET_ALL_CHATROOM_ATTRIBUTES: ''
 };
 let NOTIFY_TYPE = {
   DEFAULT: 0,
@@ -4010,6 +4061,22 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           clientIp: {
             type: "string",
             id: 13
+          },
+          packageName: {
+            type: "string",
+            id: 14
+          },
+          pushChannel: {
+            type: "string",
+            id: 15
+          },
+          ext: {
+            type: "string",
+            id: 16
+          },
+          clientSession: {
+            type: "string",
+            id: 17
           }
         }
       },
@@ -5003,6 +5070,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           order: {
             type: "int32",
             id: 5
+          },
+          latestReadIndex: {
+            type: "int64",
+            id: 6
           }
         }
       },
@@ -5293,6 +5364,38 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           ChatAttOpt_Add: 1,
           ChatAttOpt_Del: 2
         }
+      },
+      UserUndisturb: {
+        fields: {
+          "switch": {
+            type: "bool",
+            id: 1
+          },
+          timezone: {
+            type: "string",
+            id: 2
+          },
+          rules: {
+            rule: "repeated",
+            type: "UserUndisturbItem",
+            id: 3
+          }
+        }
+      },
+      UserUndisturbItem: {
+        fields: {
+          start: {
+            type: "string",
+            id: 1
+          },
+          end: {
+            type: "string",
+            id: 2
+          }
+        }
+      },
+      Nil: {
+        fields: {}
       }
     }
   }
@@ -5305,14 +5408,16 @@ function getConnectBody ({
     appkey,
     token,
     deviceId,
-    platform
+    platform,
+    clientSession
   } = data;
   return {
     connectMsgBody: {
       appkey,
       token,
       platform,
-      deviceId
+      deviceId,
+      clientSession
     }
   };
 }
@@ -5981,6 +6086,7 @@ function ConversationUtils() {
       if (index > -1) {
         conversations[index].latestReadIndex = item.unreadIndex;
         conversations[index].unreadCount = 0;
+        conversations[index].mentions = {};
         _list.push(conversations[index]);
       }
     });
@@ -6195,6 +6301,21 @@ function getSessionId() {
 function getTokenKey(appkey, token) {
   return `${appkey}_${token}`;
 }
+function genUId() {
+  return 'xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
+}
+function getClientSession() {
+  let clientSession = sessionStorage.getItem(STORAGE.CLIENT_SESSION);
+  if (!clientSession) {
+    clientSession = genUId();
+    sessionStorage.setItem(STORAGE.CLIENT_SESSION, clientSession);
+  }
+  return clientSession;
+}
 var common = {
   check,
   getNum,
@@ -6216,7 +6337,8 @@ var common = {
   formatter,
   formatProvider,
   isDesktop,
-  getSessionId
+  getSessionId,
+  getClientSession
 };
 
 function getPublishBody ({
@@ -6376,6 +6498,10 @@ function getPublishBody ({
     targetId = chatId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isEqual(COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES, topic)) ;
+  if (utils.isEqual(COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES, topic)) ;
+  if (utils.isEqual(COMMAND_TOPICS.GET_ALL_CHATROOM_ATTRIBUTES, topic)) ;
+  if (utils.isEqual(COMMAND_TOPICS.GET_CHATROOM_ATTRIBUTES, topic)) ;
   if (utils.isEqual(COMMAND_TOPICS.INSERT_CONVERSATION, topic)) {
     let {
       conversation,
@@ -6829,6 +6955,32 @@ function getQueryBody({
     targetId = userId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isEqual(COMMAND_TOPICS.SET_ALL_DISTURB, topic)) {
+    let {
+      userId,
+      times,
+      timezone,
+      type
+    } = data;
+    let codec = $root.lookup('codec.UserUndisturb');
+    let isSwitch = utils.isEqual(UNDISTURB_TYPE.DISTURB, type);
+    let message = codec.create({
+      switch: isSwitch,
+      timezone: timezone,
+      rules: times
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.GET_ALL_DISTURB, topic)) {
+    let {
+      userId
+    } = data;
+    let codec = $root.lookup('codec.Nil');
+    let message = codec.create({});
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
   return {
     qryMsgBody: {
       index,
@@ -7110,6 +7262,9 @@ function Decoder(cache, io) {
     if (utils.isEqual(topic, COMMAND_TOPICS.GET_USER_INFO)) {
       result = getUserInfo(index, data);
     }
+    if (utils.isEqual(topic, COMMAND_TOPICS.GET_ALL_DISTURB)) {
+      result = getAllDisturb(index, data);
+    }
     result = utils.extend(result, {
       code,
       timestamp,
@@ -7177,6 +7332,31 @@ function Decoder(cache, io) {
     return {
       index,
       user
+    };
+  }
+  function getAllDisturb(index, data) {
+    let payload = $root.lookup('codec.UserUndisturb');
+    let params = payload.decode(data);
+    let {
+      timezone,
+      rules = []
+    } = params;
+    let type = params.switch ? UNDISTURB_TYPE.UNDISTURB : UNDISTURB_TYPE.DISTURB;
+    let times = [];
+    utils.forEach(rules, ({
+      start,
+      end
+    }) => {
+      times.push({
+        start,
+        end
+      });
+    });
+    return {
+      index,
+      type,
+      timezone,
+      times
     };
   }
   function getMessageReadDetails(index, data) {
@@ -8264,11 +8444,13 @@ function IO(config) {
           if (common.isDesktop()) {
             platform = PLATFORM.DESKTOP;
           }
+          let clientSession = common.getClientSession();
           sendCommand(SIGNAL_CMD.CONNECT, {
             appkey,
             token,
             deviceId,
-            platform
+            platform,
+            clientSession
           });
         };
         ws.onclose = e => {
@@ -9322,6 +9504,124 @@ function Conversation$1 (io, emitter) {
     }
     return $conversation;
   }
+
+  /* 
+    let params = {
+      type: UNDISTURB_TYPE.DISTURB,
+      timezone: 'Asia/Shanghai',
+      times: [
+        { start: 'HH:mm', end: 'HH:mm' }
+      ]
+    };
+  */
+  let setAllDisturb = params => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, params, FUNC_PARAM_CHECKER.SET_ALL_DISTURB);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        code
+      } = ErrorType.ILLEGAL_TYPE_PARAMS;
+      let _params = {
+        timezone: '',
+        times: []
+      };
+      let {
+        type,
+        timezone,
+        times
+      } = params;
+      let isDisturb = utils.isEqual(type, UNDISTURB_TYPE.DISTURB);
+      if (isDisturb && !utils.isString(timezone)) {
+        let msg = 'timezone 参数不合法，请检查，格式示例：Asia/Shanghai';
+        return reject({
+          msg,
+          code
+        });
+      }
+      if (isDisturb && !utils.isArray(times)) {
+        let msg = "times 参数不合法，请检查，格式示例：[{ start: '12:00', end: '13:00' }]";
+        return reject({
+          msg,
+          code
+        });
+      }
+      let isValid = true;
+      let timeIndex = 0;
+      times = times || [];
+      for (let i = 0; i < times.length; i++) {
+        let time = times[i];
+        if (!utils.isObject(time)) {
+          isValid = false;
+          timeIndex = i;
+          break;
+        }
+        let {
+          start,
+          end
+        } = time;
+        if (!utils.isValidHMTime(start) || !utils.isValidHMTime(end)) {
+          isValid = false;
+          timeIndex = i;
+          break;
+        }
+      }
+      if (!isValid) {
+        let msg = `times 下标 ${timeIndex} 参数，时间格式不正确`;
+        return reject({
+          msg,
+          code
+        });
+      }
+      _params = utils.extend(_params, params);
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.SET_ALL_DISTURB,
+        userId,
+        ..._params
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, () => {
+        resolve();
+      });
+    });
+  };
+  let getAllDisturb = () => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, {}, {});
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.GET_ALL_DISTURB,
+        userId
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          timezone,
+          times,
+          type,
+          code
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg: ''
+          });
+        }
+        resolve({
+          timezone,
+          times,
+          type
+        });
+      });
+    });
+  };
   return {
     getConversations,
     removeConversation,
@@ -9335,7 +9635,9 @@ function Conversation$1 (io, emitter) {
     clearTotalUnreadcount,
     setDraft,
     getDraft,
-    removeDraft
+    removeDraft,
+    setAllDisturb,
+    getAllDisturb
   };
 }
 
@@ -10549,11 +10851,12 @@ function Socket$1 (io, emitter, logger) {
 
 function Chatroom$1 (io, emitter, logger) {
   io.on(SIGNAL_NAME.CHATROOM_EVENT, notify => {
-
     // 事件说明：
-    // 事件说明：
-    // USER_REJOIN: 当前用户断网重新加入
-    // MEMBER_CHANGED: 加入 、退出触发
+    // USER_REJOINED: 当前用户断网重新加入
+    // USER_JOINED: 当前用户断网重新加入
+    // USER_QUIT: 当前用户退出 
+    // MEMBER_JOINED: 成员加入
+    // MEMBER_QUIT: 成员退出
     // ATTRIBUTE_UPDATED: 属性变更
     // ATTRIBUTE_REMOVED: 属性被删除
     // CHATROOM_DESTROYED: 聊天室销毁
@@ -10620,34 +10923,134 @@ function Chatroom$1 (io, emitter, logger) {
       }
     }
   */
-  let setChatroomAttributes = chatroom => {};
+  let setChatroomAttributes = chatroom => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.SET_CHATROOM_ATTRS);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        options
+      } = chatroom;
+      if (!utils.isObject(options)) {
+        options = {};
+      }
+      chatroom = utils.extend(chatroom, {
+        options
+      });
+      let data = {
+        topic: COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES,
+        chatroom
+      };
+      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+        code
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve();
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
 
   /* 
     let chatroom = {
       id: 'chatroomId',
-      attributes: ['key1', 'key2']
+      attributeKeys: ['key1', 'key2'],
     };
   */
-  let getChatroomAttributes = chatroom => {};
+  let getChatroomAttributes = chatroom => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.GET_CHATROOM_ATTRS);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let data = {
+        topic: COMMAND_TOPICS.GET_CHATROOM_ATTRIBUTES,
+        chatroom
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
+        code,
+        attributes
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve(attributes);
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
 
   /* 
     let chatroom = {
       id: 'chatroomId',
-      attributes: ['key1', 'key2'],
+      attributeKeys: ['key1', 'key2'],
       options: {
         isNotify: false,
         notifyContent: '',
       }
     };
   */
-  let removeChatroomAttributes = () => {};
+  let removeChatroomAttributes = chatroom => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.REMOVE_CHATROOM_ATTRS);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        options
+      } = chatroom;
+      if (!utils.isObject(options)) {
+        options = {};
+      }
+      chatroom = utils.extend(chatroom, {
+        options
+      });
+      let data = {
+        topic: COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES,
+        chatroom
+      };
+      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+        code
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve();
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
 
   /* 
   let chatroom = {
     id: 'chatroomId',
   };
   */
-  let getAllChatRoomAttributes = chatroom => {};
+  let getAllChatRoomAttributes = chatroom => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.GET_ALL_CHATROOM_ATTRS);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let data = {
+        topic: COMMAND_TOPICS.GET_ALL_CHATROOM_ATTRIBUTES,
+        chatroom
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
+        code,
+        attributes
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve(attributes);
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
   return {
     joinChatroom,
     quitChatroom,
@@ -10914,9 +11317,9 @@ function Conversation ($conversation, {
   conversationUtils,
   webAgent
 }) {
-  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'setTopConversation', 'getTopConversations', '_batchInsertConversations'];
+  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'setTopConversation', 'getTopConversations', 'setAllDisturb', 'getAllDisturb', '_batchInsertConversations'];
   let invokes = common.formatProvider(funcs, $conversation);
-  invokes.getConversations = params => {
+  invokes.getConversations = (params = {}) => {
     return $conversation.getConversations(params).then(({
       conversations,
       groups,
