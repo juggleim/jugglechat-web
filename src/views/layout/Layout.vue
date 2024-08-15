@@ -1,5 +1,6 @@
 <script setup>
 import JHeader from '../header/header.vue';
+import WinHeader from '../../components/win-header.vue';
 import JFooter from '../../components/footer.vue';
 import { useRouter } from 'vue-router'
 import { reactive } from 'vue'
@@ -13,47 +14,10 @@ if (fullPath == '/') {
   router.replace({ name: 'ConversationList' })
 }
 
-let state = reactive({
-  isMax: false
-});
-
-if(typeof JuggleIMDesktop != 'undefined'){
-  JuggleIMDesktop.isMaximized().then((isMax) => {
-    state.isMax = isMax
-  })
-}
-
-function setWin(type){
-  if(utils.isEqual(type, 'maximize')){
-    state.isMax = true;
-  }
-  if(utils.isEqual(type, 'unmaximize')){
-    state.isMax = false;
-  }
-  JuggleIMDesktop.setWindow({ type });
-}
-
-
 </script>
 
 <template>
-  
-  <div class="tyn-desktop-header" v-if="juggle.isDesktop() && !utils.isMacBrowser()">
-    <ul class="tyn-desktop-navs" v-if="!utils.isMacBrowser()">
-      <li class="tyn-desktop-nav">
-        <a class="wr wr-win-hide" @click="setWin('hide')"></a>
-      </li>
-      <li class="tyn-desktop-nav" v-if="state.isMax">
-        <a class="wr wr-win-max" @click="setWin('unmaximize')"></a>
-      </li>
-      <li class="tyn-desktop-nav" v-else>
-        <a class="wr wr-win-min" @click="setWin('maximize')"></a>
-      </li>
-      <li class="tyn-desktop-nav">
-        <a class="wr wr-win-close" @click="setWin('close')"></a>
-      </li>
-    </ul>
-  </div>
+  <WinHeader></WinHeader>
   <!--  -->
   <div class="tyn-root" :class="{ 'tyn-desktop-root': juggle.isDesktop() && !utils.isMacBrowser(), 'tyn-web-root': !juggle.isDesktop() }">
     <JHeader />

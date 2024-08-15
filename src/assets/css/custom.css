@@ -567,6 +567,7 @@
   width: 100%;
   height: 26px;
   background-color: #FAFAFA;
+  -webkit-app-region: drag;
 }
 .tyn-desktop-navs{
   display: flex;
