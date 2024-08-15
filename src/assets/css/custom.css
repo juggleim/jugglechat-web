@@ -578,6 +578,7 @@
   cursor: pointer;
   cursor: pointer;
   font-weight: 700;
+  -webkit-app-region: no-drag;
 }
 .tyn-desktop-nav a{
   color: #334155;

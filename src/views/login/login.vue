@@ -8,6 +8,7 @@ import common from "../../common/common";
 import Storage from "../../common/storage";
 import { User } from "../../services/index";
 import im from "../../common/im";
+import WinHeader from '../../components/win-header.vue';
 
 let juggle = im.getCurrent();
 let context = getCurrentInstance();
