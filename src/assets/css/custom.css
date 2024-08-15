@@ -435,12 +435,14 @@
 }
 .jg-login-banner{
   width: 50%;
+  min-width: 300px;
   background-image: url('../images/login-bg.png');
   background-size: 100%;
   background-position: 100%;
   background-repeat: no-repeat;
 }
 .jg-login-formbox{
+  min-width: 300px;
   width: 50%;
   display: flex;
   flex-direction: column;
