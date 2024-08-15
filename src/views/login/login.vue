@@ -98,7 +98,7 @@ function onInput() {
 }
 </script>
 <template>
-  <div class="tyn-root jg-login-root"  :class="{'tyn-web-root': !juggle.isDesktop()}">
+  <div class="tyn-root jg-login-root" :class="{'tyn-web-root': !juggle.isDesktop()}">
       <div class="jg-login-header">
         <div class="jg-login-logo"></div>
         <span class="jg-login-appname">JuggleChat</span>
