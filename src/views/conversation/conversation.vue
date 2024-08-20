@@ -88,6 +88,15 @@ juggle.once(Event.MESSAGE_UPDATED, (notify) => {
   }
 });
 
+juggle.once(Event.MESSAGE_RECALLED, (notify) => {
+  if (conversationTools.isSameConversation(notify, state)) {
+    let index = utils.find(state.messages, (msg) => {
+      return utils.isEqual(msg.messageId, notify.content.messageId)
+    });
+    state.messages.splice(index, 1, {...notify, name: MessageType.RECALL_INFO});
+  }
+});
+
 juggle.once(Event.MESSAGE_READ, (notify) => {
   if (conversationTools.isSameConversation(notify, state)) {
     let { messages } = notify;
@@ -268,6 +277,11 @@ function onSend() {
   }).then(({ sentTime, messageId }) => {
     utils.extend(msg, { sentTime, messageId });
     isSending = false;
+    let index = utils.find(state.messages, (m) => { return utils.isEqual(m.tid, msg.tid)});
+    let _msg = state.messages[index];
+    if(_msg){
+      utils.extend(_msg, { sentTime, messageId })
+    }
     console.log('send successfully', msg);
     onCancelReply();
   }, (error) => {
