@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.5.1
+* JuggleChat.js v1.5.3
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -8560,6 +8560,7 @@ function Syncer(send, emitter, io) {
             time: newSyncTime
           });
         }
+        conversations = utils.clone(conversations);
         $conversation._batchInsertConversations({
           conversations,
           syncTime: newSyncTime
