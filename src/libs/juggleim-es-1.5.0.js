@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.4.0
+* JuggleChat.js v1.5.0
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -70,7 +70,7 @@ const isEmpty = obj => {
     result = obj.length === 0;
   }
   if (isNumber(obj)) {
-    result = obj === 0;
+    result = obj === -1;
   }
   return result;
 };
@@ -493,6 +493,9 @@ function isValidHMTime(timeStr) {
   const regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
   return regex.test(timeStr);
 }
+function getRandoms(len) {
+  return Array(len).fill(0).map(() => Math.floor(Math.random() * 10));
+}
 var utils = {
   Prosumer,
   Observer,
@@ -540,7 +543,8 @@ var utils = {
   isBase64,
   iterator,
   formatTime,
-  isValidHMTime
+  isValidHMTime,
+  getRandoms
 };
 
 function Emitter () {
@@ -592,7 +596,9 @@ let STORAGE = {
   PREFIX: 'suprjj_im',
   NAVI: 'navi',
   SYNC_CHATROOM_RECEIVED_MSG_TIME: 'sync_chatroom_received_msg_time',
+  SYNC_CHATROOM_ATTR_TIME: 'sync_chatroom_attr_time',
   CLIENT_SESSION: 'jgim_client_session',
+  CRYPTO_RANDOM: 'jg_crypto_randowm',
   //PC 端有同样的 KEY，如果修改 VALUE，需要一起修改
   SYNC_CONVERSATION_TIME: 'sync_conversation_time',
   SYNC_RECEIVED_MSG_TIME: 'sync_received_msg_time',
@@ -801,6 +807,14 @@ let FUNC_PARAM_CHECKER = {
   }, {
     name: 'conversationId'
   }],
+  MARK_UNREAD: [{
+    name: 'conversationType'
+  }, {
+    name: 'conversationId'
+  }, {
+    name: 'unreadTag',
+    type: 'Number'
+  }],
   GET_TOTAL_UNREADCOUNT: [{
     name: 'ignoreConversations',
     type: 'Array',
@@ -890,21 +904,32 @@ let FUNC_PARAM_CHECKER = {
     type: 'String'
   }, {
     name: 'attributes',
-    type: 'Object'
+    type: 'Array',
+    children: [{
+      name: 'key'
+    }, {
+      name: 'value'
+    }]
   }],
   REMOVE_CHATROOM_ATTRS: [{
     name: 'id',
     type: 'String'
   }, {
-    name: 'attributeKeys',
-    type: 'Array'
+    name: 'attributes',
+    type: 'Array',
+    children: [{
+      name: 'key'
+    }]
   }],
   GET_CHATROOM_ATTRS: [{
     name: 'id',
     type: 'String'
   }, {
-    name: 'attributeKeys',
-    type: 'Array'
+    name: 'attributes',
+    type: 'Array',
+    children: [{
+      name: 'key'
+    }]
   }],
   GET_ALL_CHATROOM_ATTRS: [{
     name: 'id',
@@ -932,6 +957,7 @@ let COMMAND_TOPICS = {
   TOP_CONVERSATION: 'top_convers',
   GET_UNREAD_TOTLAL_CONVERSATION: 'qry_total_unread_count',
   CLEAR_UNREAD_TOTLAL_CONVERSATION: 'clear_total_unread',
+  MARK_CONVERSATION_UNREAD: 'mark_unread',
   SET_ALL_DISTURB: 'set_user_undisturb',
   GET_ALL_DISTURB: 'get_user_undisturb',
   READ_MESSAGE: 'mark_read',
@@ -945,15 +971,17 @@ let COMMAND_TOPICS = {
   JOIN_CHATROOM: 'c_join',
   QUIT_CHATROOM: 'c_quit',
   SYNC_CHATROOM_MESSAGES: 'c_sync_msgs',
-  SET_CHATROOM_ATTRIBUTES: 'c_add_att',
-  REMOVE_CHATROOM_ATTRIBUTES: 'c_del_att',
-  GET_CHATROOM_ATTRIBUTES: '',
-  GET_ALL_CHATROOM_ATTRIBUTES: ''
+  SYNC_CHATROOM_ATTRS: 'c_sync_atts',
+  SET_CHATROOM_ATTRIBUTES: 'c_batch_add_att',
+  REMOVE_CHATROOM_ATTRIBUTES: 'c_batch_del_att',
+  GET_CHATROOM_ATTRIBUTES: 'fake_c_get_one',
+  GET_ALL_CHATROOM_ATTRIBUTES: 'fake_c_get_all'
 };
 let NOTIFY_TYPE = {
   DEFAULT: 0,
   MSG: 1,
-  CHATROOM: 2
+  CHATROOM: 2,
+  CHATROOM_ATTR: 3
 };
 let CONNECT_TOOL = {
   START_TIME: 'connect_start_time',
@@ -1124,6 +1152,18 @@ let ErrorMessages = [{
   msg: '注销下线',
   name: 'CONNECT_USER_LOGOUT'
 }, {
+  code: 14001,
+  msg: '未加入聊天室',
+  name: 'CHATROOM_NOT_JOIN'
+}, {
+  code: 14002,
+  msg: '聊天室属性个数超限制',
+  name: 'CHATROOM_ATTR_EXCEED_LIMIT'
+}, {
+  code: 14003,
+  msg: '聊天室属性已存在，如需覆盖设置请设置 isForce 为 true',
+  name: 'CHATROOM_ATTR_EXISTS'
+}, {
   code: 14005,
   msg: '聊天室不存在',
   name: 'CHATROOM_NOT_EXISTS'
@@ -1236,10 +1276,12 @@ let MESSAGE_TYPE = {
   COMMAND_REMOVE_CONVERS: 'jg:delconvers',
   COMMAND_ADD_CONVER: 'jg:addconver',
   COMMAND_CLEAR_TOTALUNREAD: 'jg:cleartotalunread',
+  COMMAND_MARK_UNREAD: 'jg:markunread',
   // CLIENT_* 约定为客户端定义适用
   CLIENT_REMOVE_MSGS: 'jgc:removemsgs',
   CLIENT_REMOVE_CONVERS: 'jgc:removeconvers',
-  CLIENT_RECALL_MSG: 'jgc:recallmsg'
+  CLIENT_RECALL_MSG: 'jgc:recallmsg',
+  CLIENT_MARK_UNREAD: 'jgc:markunread'
 };
 let MENTION_TYPE = {
   ALL: 1,
@@ -1264,6 +1306,10 @@ let DISCONNECT_TYPE = {
   CLOSE: 2,
   ERROR: 3,
   SERVER: 4
+};
+let UNREAD_TAG = {
+  READ: 0,
+  UNREAD: 1
 };
 
 var ENUM = /*#__PURE__*/Object.freeze({
@@ -1297,7 +1343,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   MENTION_TYPE: MENTION_TYPE,
   FILE_TYPE: FILE_TYPE,
   MESSAGE_SENT_STATE: MESSAGE_SENT_STATE,
-  DISCONNECT_TYPE: DISCONNECT_TYPE
+  DISCONNECT_TYPE: DISCONNECT_TYPE,
+  UNREAD_TAG: UNREAD_TAG
 });
 
 function Cache () {
@@ -4239,6 +4286,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "int32",
             id: 3
           },
+          payload: {
+            type: "bytes",
+            id: 4
+          },
           connectMsgBody: {
             type: "ConnectMsgBody",
             id: 11
@@ -4744,6 +4795,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           latestUnreadIndex: {
             type: "int64",
             id: 16
+          },
+          unreadTag: {
+            type: "int32",
+            id: 17
           }
         }
       },
@@ -4805,7 +4860,7 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           }
         }
       },
-      SyncChatroomMsgReq: {
+      SyncChatroomReq: {
         fields: {
           chatroomId: {
             type: "string",
@@ -4814,26 +4869,15 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           syncTime: {
             type: "int64",
             id: 2
-          },
-          attSyncTime: {
-            type: "int64",
-            id: 3
           }
         }
       },
-      SyncChatroomResp: {
+      SyncChatroomMsgResp: {
         fields: {
           msgs: {
-            type: "DownMsgSet",
+            rule: "repeated",
+            type: "DownMsg",
             id: 1
-          },
-          atts: {
-            type: "ChatAtts",
-            id: 2
-          },
-          isFinished: {
-            type: "bool",
-            id: 3
           }
         }
       },
@@ -5313,6 +5357,15 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           }
         }
       },
+      SyncChatroomAttResp: {
+        fields: {
+          atts: {
+            rule: "repeated",
+            type: "ChatAttItem",
+            id: 1
+          }
+        }
+      },
       ChatAtts: {
         fields: {
           chatId: {
@@ -5396,31 +5449,84 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
       },
       Nil: {
         fields: {}
+      },
+      ChatAttBatchReq: {
+        fields: {
+          atts: {
+            rule: "repeated",
+            type: "ChatAttReq",
+            id: 1
+          }
+        }
+      },
+      ChatAttBatchResp: {
+        fields: {
+          attResps: {
+            rule: "repeated",
+            type: "ChatAttResp",
+            id: 1
+          }
+        }
+      },
+      ChatAttReq: {
+        fields: {
+          key: {
+            type: "string",
+            id: 1
+          },
+          value: {
+            type: "string",
+            id: 2
+          },
+          isForce: {
+            type: "bool",
+            id: 3
+          },
+          isAutoDel: {
+            type: "bool",
+            id: 4
+          },
+          msg: {
+            type: "UpMsg",
+            id: 5
+          }
+        }
+      },
+      ChatAttResp: {
+        fields: {
+          key: {
+            type: "string",
+            id: 1
+          },
+          code: {
+            type: "int32",
+            id: 2
+          },
+          attTime: {
+            type: "int64",
+            id: 3
+          },
+          msgCode: {
+            type: "int32",
+            id: 11
+          },
+          msgId: {
+            type: "string",
+            id: 12
+          },
+          msgTime: {
+            type: "int64",
+            id: 13
+          },
+          msgSeq: {
+            type: "int64",
+            id: 14
+          }
+        }
       }
     }
   }
 });
-
-function getConnectBody ({
-  data
-}) {
-  let {
-    appkey,
-    token,
-    deviceId,
-    platform,
-    clientSession
-  } = data;
-  return {
-    connectMsgBody: {
-      appkey,
-      token,
-      platform,
-      deviceId,
-      clientSession
-    }
-  };
-}
 
 function Uploder (uploader, {
   type
@@ -6043,13 +6149,16 @@ function ConversationUtils() {
     }
     return conversations[index] || {};
   };
-  let modify = (_conversations, props) => {
+  let modify = (_conversations, props = {}) => {
     let list = [];
     _conversations = utils.isArray(_conversations) ? _conversations : [_conversations];
     utils.forEach(_conversations, item => {
       let conversation = getPer(item);
       if (!utils.isEmpty(conversation)) {
         utils.extend(conversation, props);
+        if (utils.isEmpty(props)) {
+          utils.extend(conversation, item);
+        }
         let conver = relpace(conversation);
         list.push(conver);
       } else {
@@ -6087,6 +6196,7 @@ function ConversationUtils() {
         conversations[index].latestReadIndex = item.unreadIndex;
         conversations[index].unreadCount = 0;
         conversations[index].mentions = {};
+        conversations[index].unreadTag = UNREAD_TAG.READ;
         _list.push(conversations[index]);
       }
     });
@@ -6316,6 +6426,24 @@ function getClientSession() {
   }
   return clientSession;
 }
+function encrypto(arrs, xors) {
+  let list = [];
+  arrs.forEach((v, index) => {
+    let i = index % 8;
+    let _v = v ^ xors[i];
+    list.push(_v);
+  });
+  return new Uint8Array(list);
+}
+function decrypto(arrs, xors) {
+  let list = [];
+  arrs.forEach((v, index) => {
+    let i = index % 8;
+    let _v = v ^ xors[i];
+    list.push(_v);
+  });
+  return new Uint8Array(list);
+}
 var common = {
   check,
   getNum,
@@ -6338,8 +6466,36 @@ var common = {
   formatProvider,
   isDesktop,
   getSessionId,
-  getClientSession
+  getClientSession,
+  encrypto,
+  decrypto
 };
+
+function getConnectBody ({
+  data
+}) {
+  let {
+    appkey,
+    token,
+    deviceId,
+    platform,
+    clientSession
+  } = data;
+  let protoId = 'jug9le1m';
+  let codec = $root.lookup('codec.ConnectMsgBody');
+  let message = codec.create({
+    appkey,
+    token,
+    platform,
+    deviceId,
+    clientSession,
+    protoId
+  });
+  let buffer = codec.encode(message).finish();
+  return {
+    buffer
+  };
+}
 
 function getPublishBody ({
   data,
@@ -6498,10 +6654,6 @@ function getPublishBody ({
     targetId = chatId;
     buffer = codec.encode(message).finish();
   }
-  if (utils.isEqual(COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES, topic)) ;
-  if (utils.isEqual(COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES, topic)) ;
-  if (utils.isEqual(COMMAND_TOPICS.GET_ALL_CHATROOM_ATTRIBUTES, topic)) ;
-  if (utils.isEqual(COMMAND_TOPICS.GET_CHATROOM_ATTRIBUTES, topic)) ;
   if (utils.isEqual(COMMAND_TOPICS.INSERT_CONVERSATION, topic)) {
     let {
       conversation,
@@ -6602,13 +6754,16 @@ function getPublishBody ({
     targetId = _targetId;
     buffer = codec.encode(message).finish();
   }
+  let codec = $root.lookup('codec.PublishMsgBody');
+  let message = codec.create({
+    index,
+    targetId,
+    topic,
+    data: buffer
+  });
+  let _buffer = codec.encode(message).finish();
   return {
-    publishMsgBody: {
-      index,
-      targetId,
-      topic,
-      data: buffer
-    }
+    buffer: _buffer
   };
 }
 
@@ -6619,12 +6774,15 @@ function getPublishAckBody ({
     msgIndex,
     ackIndex
   } = data;
+  let codec = $root.lookup('codec.PublishAckMsgBody');
+  let message = codec.create({
+    index: ackIndex,
+    msgIndex,
+    code: 0
+  });
+  let buffer = codec.encode(message).finish();
   return {
-    pubAckMsgBody: {
-      index: ackIndex,
-      msgIndex,
-      code: 0
-    }
+    buffer
   };
 }
 
@@ -6730,7 +6888,7 @@ function getQueryBody({
       syncTime,
       chatroomId
     } = data;
-    let codec = $root.lookup('codec.SyncChatroomMsgReq');
+    let codec = $root.lookup('codec.SyncChatroomReq');
     let message = codec.create({
       syncTime,
       chatroomId
@@ -6981,13 +7139,64 @@ function getQueryBody({
     targetId = userId;
     buffer = codec.encode(message).finish();
   }
-  return {
-    qryMsgBody: {
-      index,
-      topic,
-      targetId,
-      data: buffer
+  if (utils.isEqual(COMMAND_TOPICS.MARK_CONVERSATION_UNREAD, topic)) {
+    let {
+      userId,
+      conversations
+    } = data;
+    conversations = utils.map(conversations, item => {
+      let {
+        conversationId,
+        conversationType,
+        unreadTag
+      } = item;
+      return {
+        channelType: conversationType,
+        targetId: conversationId,
+        unreadTag
+      };
+    });
+    let codec = $root.lookup('codec.ConversationsReq');
+    let message = codec.create({
+      conversations
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isInclude([COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES, COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES], topic)) {
+    let {
+      chatroom: {
+        id: chatId,
+        attributes,
+        options
+      }
+    } = data;
+    let {
+      notify
+    } = options;
+    let codec = $root.lookup('codec.ChatAttBatchReq');
+    let _msg = {
+      atts: attributes
+    };
+    if (!utils.isUndefined(notify)) {
+      utils.extend(_msg, {
+        msg: new TextEncoder().encode(notify)
+      });
     }
+    let message = codec.create(_msg);
+    targetId = chatId;
+    buffer = codec.encode(message).finish();
+  }
+  let codec = $root.lookup('codec.QueryMsgBody');
+  let message = codec.create({
+    index,
+    topic,
+    targetId,
+    data: buffer
+  });
+  let _buffer = codec.encode(message).finish();
+  return {
+    buffer: _buffer
   };
 }
 
@@ -7056,7 +7265,13 @@ function Encoder(cache) {
         break;
     }
     cache.set(index, memory);
-    utils.extend(payload, body);
+    if (body.buffer) {
+      let xors = cache.get(STORAGE.CRYPTO_RANDOM);
+      let _buffer = common.encrypto(body.buffer, xors);
+      utils.extend(payload, {
+        payload: _buffer
+      });
+    }
     let message = imsocket.create(payload);
     let buffer = imsocket.encode(message).finish();
     return buffer;
@@ -7110,30 +7325,33 @@ function Decoder(cache, io) {
     let result = {},
       name = '';
     let {
-      cmd
+      cmd,
+      payload
     } = msg;
+    let xors = cache.get(STORAGE.CRYPTO_RANDOM);
+    let stream = common.decrypto(msg.payload, xors);
+    let codec = null;
     switch (cmd) {
       case SIGNAL_CMD.CONNECT_ACK:
-        let {
-          ConnectAckMsgBody
-        } = msg;
+        codec = $root.lookup('codec.ConnectAckMsgBody');
+        let connectAckMsg = codec.decode(stream);
         result = utils.extend(result, {
-          ack: ConnectAckMsgBody,
+          ack: connectAckMsg,
           index: CONNECT_ACK_INDEX,
-          extra: ConnectAckMsgBody.ext
+          extra: connectAckMsg.ext
         });
         name = SIGNAL_NAME.S_CONNECT_ACK;
         break;
       case SIGNAL_CMD.PUBLISH_ACK:
+        codec = $root.lookup('codec.PublishAckMsgBody');
+        let pubAckMsgBody = codec.decode(stream);
         let {
-          pubAckMsgBody: {
-            index,
-            msgId: messageId,
-            timestamp: sentTime,
-            code,
-            msgIndex
-          }
-        } = msg;
+          index,
+          msgId: messageId,
+          timestamp: sentTime,
+          code,
+          msgIndex
+        } = pubAckMsgBody;
         result = {
           messageId,
           sentTime,
@@ -7147,12 +7365,12 @@ function Decoder(cache, io) {
         let {
           _msg,
           _name
-        } = publishHandler(msg);
+        } = publishHandler(stream);
         name = _name;
         result = _msg;
         break;
       case SIGNAL_CMD.QUERY_ACK:
-        result = queryAckHandler(msg);
+        result = queryAckHandler(stream);
         name = SIGNAL_NAME.S_QUERY_ACK;
         break;
       case SIGNAL_CMD.PONG:
@@ -7162,9 +7380,8 @@ function Decoder(cache, io) {
         name = SIGNAL_NAME.S_PONG;
         break;
       case SIGNAL_CMD.DISCONNECT:
-        let {
-          disconnectMsgBody
-        } = msg;
+        codec = $root.lookup('codec.DisconnectMsgBody');
+        let disconnectMsgBody = codec.decode(stream);
         result = utils.extend(result, {
           extra: disconnectMsgBody.ext,
           code: disconnectMsgBody.code
@@ -7177,16 +7394,16 @@ function Decoder(cache, io) {
       name
     };
   };
-  function publishHandler(msg) {
+  function publishHandler(stream) {
+    let codec = $root.lookup('codec.PublishMsgBody');
+    let publishMsgBody = codec.decode(stream);
     let {
-      publishMsgBody: {
-        targetId,
-        data,
-        topic,
-        timestamp,
-        index
-      }
-    } = msg;
+      targetId,
+      data,
+      topic,
+      timestamp,
+      index
+    } = publishMsgBody;
     let _msg = {};
     let _name = SIGNAL_NAME.CMD_RECEIVED;
 
@@ -7219,15 +7436,15 @@ function Decoder(cache, io) {
       _name
     };
   }
-  function queryAckHandler(msg) {
+  function queryAckHandler(stream) {
+    let codec = $root.lookup('codec.QueryAckMsgBody');
+    let qryAckMsgBody = codec.decode(stream);
     let {
-      qryAckMsgBody: {
-        index,
-        data,
-        code,
-        timestamp
-      }
-    } = msg;
+      index,
+      data,
+      code,
+      timestamp
+    } = qryAckMsgBody;
     let {
       topic,
       targetId
@@ -7265,12 +7482,49 @@ function Decoder(cache, io) {
     if (utils.isEqual(topic, COMMAND_TOPICS.GET_ALL_DISTURB)) {
       result = getAllDisturb(index, data);
     }
+    if (utils.isInclude([COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES, COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES], topic)) {
+      result = getChatroomSetAttrs(index, data);
+    }
     result = utils.extend(result, {
       code,
       timestamp,
       index
     });
     return result;
+  }
+  function getChatroomSetAttrs(index, data) {
+    let payload = $root.lookup('codec.ChatAttBatchResp');
+    let {
+      attResps
+    } = payload.decode(data);
+    let success = [],
+      fail = [];
+    utils.forEach(attResps, attr => {
+      let {
+        code = 0,
+        key,
+        attTime: updateTime,
+        msgTime: messageTime
+      } = attr;
+      let _attr = {
+        code,
+        key,
+        updateTime,
+        messageTime
+      };
+      if (utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+        success.push(_attr);
+      } else {
+        let error = common.getError(code);
+        utils.extend(_attr, error);
+        fail.push(_attr);
+      }
+    });
+    return {
+      index,
+      success,
+      fail
+    };
   }
   function getMentionMessages(index, data) {
     let payload = $root.lookup('codec.QryMentionMsgsResp');
@@ -7413,12 +7667,14 @@ function Decoder(cache, io) {
         channelType: conversationType,
         latestReadIndex,
         latestUnreadIndex,
-        isTop
+        isTop,
+        unreadTag
       } = conversation;
       utils.extend(msg, {
         targetId
       });
       unreadCount = unreadCount || 0;
+      unreadTag = unreadTag || 0;
       mentions = mentions || {};
       if (!utils.isEmpty(mentions)) {
         let {
@@ -7513,6 +7769,7 @@ function Decoder(cache, io) {
         undisturbType: undisturbType || 0,
         latestReadIndex,
         latestUnreadIndex,
+        unreadTag,
         isTop: !!isTop
       };
     });
@@ -7546,7 +7803,7 @@ function Decoder(cache, io) {
     };
   }
   function getChatroomMsgsHandler(index, data) {
-    let payload = $root.lookup('codec.SyncChatroomResp');
+    let payload = $root.lookup('codec.SyncChatroomMsgResp');
     let result = payload.decode(data);
     let {
       isFinished,
@@ -7903,6 +8160,24 @@ function Decoder(cache, io) {
         clearTime: content.clear_time
       };
     }
+    if (utils.isEqual(MESSAGE_TYPE.COMMAND_MARK_UNREAD, msgType)) {
+      let list = content.conversations;
+      let conversations = utils.map(list, item => {
+        let {
+          unread_tag,
+          channel_type,
+          target_id
+        } = item;
+        return {
+          conversationId: target_id,
+          conversationType: channel_type,
+          unreadTag: unread_tag
+        };
+      });
+      content = {
+        conversations
+      };
+    }
     utils.extend(_message, {
       content
     });
@@ -8124,9 +8399,42 @@ function Syncer(send, emitter, io) {
         queryNormal(item, next);
       } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM)) {
         queryChatroom(item, next);
+      } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_ATTR)) {
+        queryChatroomAttr(item, next);
       } else {
         next();
       }
+    }
+    function queryChatroomAttr(item, next) {
+      let {
+        user,
+        msg,
+        name
+      } = item;
+      let chatroomId = msg.targetId;
+      let syncTime = getChatroomAttrSyncTime(chatroomId);
+      if (syncTime >= msg.receiveTime) {
+        return next();
+      }
+      let data = {
+        syncTime: syncTime,
+        chatroomId: chatroomId,
+        topic: COMMAND_TOPICS.SYNC_CHATROOM_ATTRS
+      };
+      //TODO: 解析&存储
+      send(SIGNAL_CMD.QUERY, data, ({
+        attrs,
+        code
+      }) => {
+        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+          return next();
+        }
+        utils.forEach(messages, message => {
+          setChatRoomSyncTime(message.conversationId, message.sentTime);
+          emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message]);
+        });
+        next();
+      });
     }
     function queryChatroom(item, next) {
       let {
@@ -8279,6 +8587,11 @@ function Syncer(send, emitter, io) {
         time
       });
     }
+    function getChatroomAttrSyncTime(chatroomId) {
+      let key = `${STORAGE.SYNC_CHATROOM_ATTR_TIME}_${chatroomId}`;
+      let syncInfo = chatroomCacher.get(key);
+      return syncInfo.time || 0;
+    }
   };
   return {
     exec
@@ -8384,11 +8697,12 @@ function IO(config) {
     } = result;
     if (!isUserDisconnected && !utils.isInclude(reconnectErrors, code) && !utils.isEqual(connectionState, CONNECT_STATE.DISCONNECTED)) {
       let user = getCurrentUser();
-      updateState({
-        state: CONNECT_STATE.RECONNECTING
-      });
       clearHeart();
-      return reconnect(user, utils.noop);
+      return reconnect(user, ({
+        next
+      }) => {
+        next();
+      });
     }
     if (!utils.isEqual(connectionState, CONNECT_STATE.DISCONNECTED)) {
       let user = getCurrentUser();
@@ -8413,6 +8727,11 @@ function IO(config) {
     deviceId,
     _isReconnect = false
   }, callback) => {
+    cache.set(STORAGE.CRYPTO_RANDOM, utils.getRandoms(8));
+    let _state = _isReconnect ? CONNECT_STATE.RECONNECTING : CONNECT_STATE.CONNECTING;
+    updateState({
+      state: _state
+    });
     function smack({
       servers,
       userId
@@ -8672,15 +8991,17 @@ function IO(config) {
             exts,
             updatedTime: _user.updatedTime
           });
-          updateState({
-            state,
-            user: currentUserInfo
-          });
 
           // 首先返回连接方法回调，确保 PC 端本地数据库同步信息时间戳优先更新至 localStorage 中
           _callback({
             user: currentUserInfo,
-            error
+            error,
+            next: () => {
+              updateState({
+                state,
+                user: currentUserInfo
+              });
+            }
           });
 
           // 同步会话和同步消息顺序不能调整，保证先同步会话再同步消息，规避会话列表最后一条消息不是最新的
@@ -8990,6 +9311,17 @@ function Conversation$1 (io, emitter) {
         });
       }
       return;
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_MARK_UNREAD)) {
+      let {
+        content: {
+          conversations
+        }
+      } = message;
+      let list = conversationUtils.modify(conversations);
+      return emitter.emit(EVENT.CONVERSATION_CHANGED, {
+        conversations: list
+      });
     }
     if (utils.isEqual(message.name, MESSAGE_TYPE.MODIFY)) {
       let conversation = conversationUtils.getPer(message);
@@ -9622,11 +9954,58 @@ function Conversation$1 (io, emitter) {
       });
     });
   };
+  let markUnread = conversation => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, conversation, FUNC_PARAM_CHECKER.MARK_UNREAD);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      conversation = utils.clone(conversation);
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let conversations = utils.isArray(conversation) ? conversation : [conversation];
+      let data = {
+        topic: COMMAND_TOPICS.MARK_CONVERSATION_UNREAD,
+        userId,
+        conversations
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          timestamp,
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          common.updateSyncTime({
+            isSender: true,
+            sentTime: timestamp,
+            io
+          });
+          let config = io.getConfig();
+          if (!config.isPC) {
+            let msg = {
+              name: MESSAGE_TYPE.COMMAND_MARK_UNREAD,
+              content: {
+                conversations
+              }
+            };
+            io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, msg);
+          }
+          resolve();
+        } else {
+          reject({
+            code
+          });
+        }
+      });
+    });
+  };
   return {
     getConversations,
     removeConversation,
     insertConversation,
     getConversation,
+    markUnread,
     disturbConversation,
     setTopConversation,
     getTopConversations,
@@ -9728,6 +10107,11 @@ function Message$1 (io, emitter, logger) {
         conversationType,
         messages
       });
+    }
+
+    // 消息监听无需处理标记未读消息
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_MARK_UNREAD)) {
+      return;
     }
     // 消息监听无需处理清理总数消息
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CLEAR_TOTALUNREAD)) {
@@ -10803,15 +11187,22 @@ function Socket$1 (io, emitter, logger) {
       });
       io.connect(user, ({
         error,
-        user
+        user,
+        next
       }) => {
         let {
           code,
           msg
         } = error;
         if (utils.isEqual(code, ErrorType.CONNECT_SUCCESS.code)) {
+          let config = io.getConfig();
+          if (!config.isPC) {
+            next();
+            return resolve(user);
+          }
           utils.extend(user, {
-            code
+            code,
+            next
           });
           return resolve(user);
         }
@@ -10911,19 +11302,16 @@ function Chatroom$1 (io, emitter, logger) {
   /* 
     let chatroom = {
       id: 'chatroomId',
-      attributes: {
-        key1: 'value1',
-        key2: 'value2'
-      },
+      attributes: [
+        { key: 'name', value: 'xiaoshan', isForce: true, isAutoDel: true },
+      ],
       options: {
-        isNotify: false,
-        isForce: true,
-        isAutoDelete: true,
-        notifyContent: '',
+        notify: '',
       }
     }
   */
   let setChatroomAttributes = chatroom => {
+    chatroom = utils.clone(chatroom);
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.SET_CHATROOM_ATTRS);
       if (!utils.isEmpty(error)) {
@@ -10935,6 +11323,72 @@ function Chatroom$1 (io, emitter, logger) {
       if (!utils.isObject(options)) {
         options = {};
       }
+      let {
+        notify
+      } = options;
+      if (!utils.isUndefined(notify) && !utils.isString(notify)) {
+        let _error = ErrorType.ILLEGAL_TYPE_PARAMS;
+        return reject({
+          code: _error.code,
+          msg: `notify ${_error.msg}，必须是 String 类型`
+        });
+      }
+      chatroom = utils.extend(chatroom, {
+        options
+      });
+      let data = {
+        topic: COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES,
+        chatroom
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          success,
+          fail
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve({
+            success,
+            fail
+          });
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+
+  /* 
+   let chatroom = {
+     id: 'chatroomId',
+     attributeKeys: [{ key: 'key1' }],
+     options: {
+       notify: ''
+     }
+   };
+  */
+  let removeChatroomAttributes = chatroom => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.REMOVE_CHATROOM_ATTRS);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        options
+      } = chatroom;
+      if (!utils.isObject(options)) {
+        options = {};
+      }
+      let {
+        notify
+      } = options;
+      if (!utils.isUndefined(notify) && !utils.isString(notify)) {
+        let _error = ErrorType.ILLEGAL_TYPE_PARAMS;
+        return reject({
+          code: _error.code,
+          msg: `notify ${_error.msg}，必须是 String 类型`
+        });
+      }
       chatroom = utils.extend(chatroom, {
         options
       });
@@ -10942,11 +11396,17 @@ function Chatroom$1 (io, emitter, logger) {
         topic: COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES,
         chatroom
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
-        code
-      }) => {
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          success,
+          fail
+        } = result;
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return resolve();
+          return resolve({
+            success,
+            fail
+          });
         }
         let error = common.getError(code);
         reject(error);
@@ -10957,7 +11417,7 @@ function Chatroom$1 (io, emitter, logger) {
   /* 
     let chatroom = {
       id: 'chatroomId',
-      attributeKeys: ['key1', 'key2'],
+      attributeKeys: [{ key: 'key1' }],
     };
   */
   let getChatroomAttributes = chatroom => {
@@ -10982,48 +11442,6 @@ function Chatroom$1 (io, emitter, logger) {
       });
     });
   };
-
-  /* 
-    let chatroom = {
-      id: 'chatroomId',
-      attributeKeys: ['key1', 'key2'],
-      options: {
-        isNotify: false,
-        notifyContent: '',
-      }
-    };
-  */
-  let removeChatroomAttributes = chatroom => {
-    return utils.deferred((resolve, reject) => {
-      let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.REMOVE_CHATROOM_ATTRS);
-      if (!utils.isEmpty(error)) {
-        return reject(error);
-      }
-      let {
-        options
-      } = chatroom;
-      if (!utils.isObject(options)) {
-        options = {};
-      }
-      chatroom = utils.extend(chatroom, {
-        options
-      });
-      let data = {
-        topic: COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES,
-        chatroom
-      };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
-        code
-      }) => {
-        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return resolve();
-        }
-        let error = common.getError(code);
-        reject(error);
-      });
-    });
-  };
-
   /* 
   let chatroom = {
     id: 'chatroomId',
@@ -11184,7 +11602,8 @@ let formatConversation = ({
     latestReadCount,
     latestReadIndex,
     latestUnreadIndex,
-    latestMentionInfo
+    latestMentionInfo,
+    unreadTag
   } = conversation;
   mentions = mentions || '{}';
   let sender = utils.filter(users, user => {
@@ -11242,7 +11661,8 @@ let formatConversation = ({
     },
     sortTime: Number(sortTime) || 0,
     unreadCount: unreadCount || 0,
-    mentions: utils.parse(mentions)
+    mentions: utils.parse(mentions),
+    unreadTag: unreadTag || UNREAD_TAG.READ
   };
   if (utils.isEmpty(latestMessageId)) {
     _conversation.latestMessage = {};
@@ -11317,7 +11737,7 @@ function Conversation ($conversation, {
   conversationUtils,
   webAgent
 }) {
-  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'setTopConversation', 'getTopConversations', 'setAllDisturb', 'getAllDisturb', '_batchInsertConversations'];
+  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'markUnread', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'setTopConversation', 'getTopConversations', 'setAllDisturb', 'getAllDisturb', 'getAllDisturb', '_batchInsertConversations'];
   let invokes = common.formatProvider(funcs, $conversation);
   invokes.getConversations = (params = {}) => {
     return $conversation.getConversations(params).then(({
@@ -11942,7 +12362,8 @@ let init = config => {
     MentionOrder: MENTION_ORDER,
     FileType: FILE_TYPE,
     UndisturbType: UNDISTURB_TYPE,
-    SentState: MESSAGE_SENT_STATE
+    SentState: MESSAGE_SENT_STATE,
+    UnreadTag: UNREAD_TAG
   };
 };
 var client = {
@@ -11958,7 +12379,8 @@ var client = {
   MentionOrder: MENTION_ORDER,
   FileType: FILE_TYPE,
   UndisturbType: UNDISTURB_TYPE,
-  SentState: MESSAGE_SENT_STATE
+  SentState: MESSAGE_SENT_STATE,
+  UnreadTag: UNREAD_TAG
 };
 
 var index = {

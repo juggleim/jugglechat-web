@@ -1,4 +1,4 @@
-import JuggleChat from "../libs/juggleim-es-1.4.0";
+import JuggleChat from "../libs/juggleim-es-1.5.0";
 import { CONFIG } from "../config";
 import utils from "./utils";
 import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
@@ -30,13 +30,10 @@ function connect(user, callbacks){
 
   let { id, token } = user;
   juggle.connect({ userId: id, token }).then((user) => {
-    let { code } = user;
-    if(ErrorType.CONNECT_SUCCESS.code == code){
-      let _user = Storage.get(STORAGE.USER_TOKEN);
-      utils.extend(_user, user);
-      Storage.set(STORAGE.USER_TOKEN, _user);
-      callbacks.success(user);
-    }
+    let _user = Storage.get(STORAGE.USER_TOKEN);
+    utils.extend(_user, user);
+    Storage.set(STORAGE.USER_TOKEN, _user);
+    callbacks.success(user);
   }, () => {
     callbacks.error(juggle);
   });
