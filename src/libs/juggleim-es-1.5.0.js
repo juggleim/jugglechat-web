@@ -8866,13 +8866,16 @@ function IO(config) {
   };
   let PingTimeouts = [];
   let disconnect = () => {
-    isUserDisconnected = true;
     if (ws) {
       ws.close && ws.close();
     }
     timer.pause();
     syncTimer.pause();
     PingTimeouts.length = 0;
+  };
+  let userDisconnect = () => {
+    isUserDisconnected = true;
+    disconnect();
   };
   let sendCommand = (cmd, data, callback) => {
     callback = callback || utils.noop;
@@ -9105,7 +9108,7 @@ function IO(config) {
     getConfig,
     setConfig,
     connect,
-    disconnect,
+    disconnect: userDisconnect,
     sendCommand,
     isConnected,
     getCurrentUser,
@@ -9382,6 +9385,16 @@ function Conversation$1 (io, emitter) {
       };
       utils.extend(_params, params);
       io.sendCommand(SIGNAL_CMD.QUERY, _params, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         if (!utils.isUndefined(conversationType)) {
           let list = utils.map(result.conversations, item => {
             let {

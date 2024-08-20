@@ -16,6 +16,7 @@ const router = useRouter();
 let { currentRoute: { _rawValue: { query } } } = router;
 
 let juggle = im.getCurrent();
+let { UnreadTag } = juggle;
 let { Event, ConnectionState, MentionType, MessageType } = juggle;
 
 let state = reactive({
@@ -178,7 +179,7 @@ juggle.on(Event.STATE_CHANGED, ({ state: status }) => {
   }
 });
 function formatMention(conversation) {
-  let { mentions } = conversation;
+  let { mentions = {} } = conversation;
   let f_mentionContent = '';
   if (mentions.isMentioned) {
     f_mentionContent = '有人@我';
@@ -247,11 +248,33 @@ function insertTempConversation() {
       });
       state.conversations.unshift(conversation);
       utils.extend(state, { currentConversation: conversation })
-      // juggle.insertConversation(conversation);
     });
   }
 }
 insertTempConversation();
+
+function onMarkUnread(index){
+  let conversation = state.conversations[index];
+  let { unreadTag } = conversation;
+  utils.extend(conversation, {
+    isShowDrop: false,
+    unreadTag: UnreadTag.UNREAD,
+  });
+
+  if(utils.isEqual(unreadTag, UnreadTag.UNREAD)){
+    return clearUnreadCount(conversation, index)
+  }
+  let { conversationId, conversationType } = conversation;
+  juggle.markUnread({
+    conversationId: conversationId,
+    conversationType: conversationType,
+    unreadTag: UnreadTag.UNREAD,
+  }).then(() => {
+    console.log('markunread successfully')
+  }, (error) => {
+    console.log(error)
+  });
+}
 function onRemoveConversation(index) {
   let conversation = state.conversations[index];
   conversation.isShowDrop = false;
@@ -324,6 +347,8 @@ function onDraft(conversation) {
                       :style="{ 'background-image': 'url(' + item.conversationPortrait + ')' }">
                       <div class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
                         v-if="item.unreadCount > 0">{{ item.unreadCount }}</div>
+                      <div class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
+                        v-if="item.unreadCount == 0 && item.unreadTag">1</div>
                     </div>
                   </div>
                   <div class="tyn-media-col">
@@ -350,12 +375,12 @@ function onDraft(conversation) {
                         <div class="dropdown-menu dropdown-menu-end" :class="{ 'show jg-cndrop-show': item.isShowDrop }"
                           @mouseleave="onHideDrop(item)">
                           <ul class="tyn-list-links">
-                            <!-- <li>
-                              <a href="#" class="wr wr-read">
-                                <span>标为已读</span>
+                            <li>
+                              <a class="wr wr-read" @click.stop="onMarkUnread(index)">
+                                <span>{{ item.unreadTag ? '清理未读' : '标记未读' }}</span>
                               </a>
-                            </li> -->
-                            <!-- <li class="dropdown-divider"></li> -->
+                            </li>
+                            <li class="dropdown-divider"></li>
                             <li>
                               <a class="wr wr-delete" data-bs-toggle="modal" @click.stop="onRemoveConversation(index)">
                                 <span>删除会话</span>

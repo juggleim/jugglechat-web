@@ -5,8 +5,6 @@ import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
 import emitter from "../common/emmit";
 import Storage from "../common/storage";
 
-console.log(JuggleChat)
-
 let juggle = JuggleChat.init({ appkey: CONFIG.appkey, upload: OSS });
 juggle.registerMessage([
   { name: MSG_NAME.GROUP_NTF,  isCount: true, isStorage: true },
@@ -26,15 +24,16 @@ function connect(user, callbacks){
     if (ConnectionState.DISCONNECTED == state) {
       console.log('im is disconnected');
     }
+    if (ConnectionState.CONNECTED == state) {
+      let _user = Storage.get(STORAGE.USER_TOKEN);
+      utils.extend(_user, user);
+      Storage.set(STORAGE.USER_TOKEN, _user);
+      callbacks.success(user);
+    }
   });
 
   let { id, token } = user;
-  juggle.connect({ userId: id, token }).then((user) => {
-    let _user = Storage.get(STORAGE.USER_TOKEN);
-    utils.extend(_user, user);
-    Storage.set(STORAGE.USER_TOKEN, _user);
-    callbacks.success(user);
-  }, () => {
+  juggle.connect({ userId: id, token }).then((user) => {}, () => {
     callbacks.error(juggle);
   });
 }
@@ -95,10 +94,15 @@ function mentionShortFormat(message){
   }
   return names;
 }
+let { UnreadTag } = juggle;
+function isUnreadTag(conversation){
+  return conversation.unreadTag == UnreadTag.UNREAD;
+}
 export default {
   getCurrent,
   isConnected,
   connect,
   msgShortFormat,
   mentionShortFormat,
+  isUnreadTag,
 }
