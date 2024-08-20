@@ -201,6 +201,10 @@ function getConversationInfo(params, callback){
   return isGroup ? Group.get(params, callback) : Friend.get(params, callback);
 }
 
+function htmlToContent(content){
+  return content.replace(/<[^>]+>/gi, '');
+}
+
 export default {
  isElementTop,
  getAvatar,
@@ -208,4 +212,5 @@ export default {
  getTextAvatar,
  createGroupAvatar,
  getConversationInfo,
+ htmlToContent,
 }

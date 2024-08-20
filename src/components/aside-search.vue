@@ -2,6 +2,7 @@
 import im from "../common/im";
 import { reactive, watch } from "vue";
 import utils from "../common/utils";
+import common from "../common/common";
 
 let juggle = im.getCurrent();
 const emit = defineEmits(["onnav"]);
@@ -28,6 +29,8 @@ function onSearch(){
 function search({ content }){
   let params = {
     keywords: [content],
+    offset: 1,
+    limit: 200,
   };
   juggle.searchMessages(params).then(({ isFinished, total, list }) => {
     console.log(isFinished, total, list)
@@ -61,6 +64,13 @@ function onNavChat(){
   emit('onnav', { conversationType, conversationId  });
   state.content = '';
 }
+
+function getContent(item){
+  let content = im.msgShortFormat(item);
+  content = common.htmlToContent(content);
+  content = content.replaceAll(state.content, `<span class="jg-keyword">${state.content}<span>`);
+  return content;
+}
 watch(() => state.content, (val) => {
   if(utils.isEqual(val.length, 0)){
     onShowResult(false);
@@ -73,7 +83,7 @@ watch(() => state.content, (val) => {
     <div class="form-group">
       <div class="form-control-wrap form-control-solid">
         <div class="jg-search-icon wr wr-search"></div>
-        <input type="text" class="form-control" v-model="state.content" placeholder="Search Chat" autocomplete="off"  @keydown.enter="onSearch"/>
+        <input type="text" class="form-control" v-model="state.content" placeholder="Search Chat" autocomplete="off"  @keydown.enter="onSearch" @input="onSearch"/>
       </div>
     </div>
 
@@ -132,9 +142,7 @@ watch(() => state.content, (val) => {
                       <h6 class="name">{{  item.sender.name }}</h6>
                     </div>
                     <div class="tyn-media-row has-dot-sap between">
-                      <p class="content">
-                        {{ im.msgShortFormat(item) }}
-                      </p>
+                      <p class="content" v-html="getContent(item)"></p>
                       <span class="meta">{{ getConversationTime(item.sentTime) }}</span>
                     </div>
                   </div>
