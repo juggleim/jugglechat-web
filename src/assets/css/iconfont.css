@@ -118,6 +118,9 @@
 .wr-right:before {
   content: '\e63a';
 }
+.wr-right-af:after {
+  content: '\e63a';
+}
 .wr-share:before {
   content: '\e631';
 }

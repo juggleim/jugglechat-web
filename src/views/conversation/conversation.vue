@@ -88,15 +88,6 @@ juggle.once(Event.MESSAGE_UPDATED, (notify) => {
   }
 });
 
-juggle.once(Event.MESSAGE_RECALLED, (notify) => {
-  if (conversationTools.isSameConversation(notify, state)) {
-    let index = utils.find(state.messages, (msg) => {
-      return utils.isEqual(msg.messageId, notify.content.messageId)
-    });
-    state.messages.splice(index, 1, notify);
-  }
-});
-
 juggle.once(Event.MESSAGE_READ, (notify) => {
   if (conversationTools.isSameConversation(notify, state)) {
     let { messages } = notify;

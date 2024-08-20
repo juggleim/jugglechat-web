@@ -2,6 +2,7 @@
 const props = defineProps(['title']);
 import { reactive, getCurrentInstance } from "vue";
 import ModalFriendAdd from "../components/modal-friend-add.vue";
+import AisdeSearch from './aside-search.vue';
 import utils from "../common/utils";
 import commcon from "../common/common";
 import { STORAGE, RESPONSE, EVENT_NAME } from "../common/enum";
@@ -9,10 +10,14 @@ import Storage from "../common/storage";
 import { Friend } from "../services";
 import emitter from "../common/emmit";
 import im from "../common/im";
+
+const emit = defineEmits(["onnav"]);
+
 let juggle = im.getCurrent();
 
 let state = reactive({
-  isShowAddFriend: false
+  isShowAddFriend: false,
+  isDesktop: juggle.isDesktop()
 });
 const context = getCurrentInstance();
 
@@ -48,15 +53,22 @@ function onFriendAddConfirm(friend){
     emitter.$emit(EVENT_NAME.ON_ADDED_FRIEND, _friend);
   });
 }
+
+function onNavChat(args){
+  emit('onnav', args)
+}
 </script>
 
 <template>
-  <div class="tyn-aside-head">
-    <div class="tyn-aside-head-text">
+  <div class="tyn-aside-head" :class="{ 'tyn-aside-desktop': state.isDesktop }">
+    <div class="tyn-aside-head-text" v-if="!state.isDesktop">
       <h4 class="tyn-aside-title tyn-title">{{ props.title }}</h4>
     </div>
     <div class="tyn-aside-head-tools">
-      <ul class="tyn-list-inline gap gap-3">
+      <ul class="tyn-list-inline gap gap-3 jg-asider-tools">
+        <li v-if="state.isDesktop">
+          <AisdeSearch @onnav="onNavChat"></AisdeSearch>
+        </li>
         <li>
           <button class="btn btn-icon btn-light btn-md wr wr-plus" @click="onShowFriendAdd(true)"></button>
         </li>

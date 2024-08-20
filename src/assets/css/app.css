@@ -300,9 +300,12 @@ dl {
 .tyn-aside-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content:space-between;
   padding: 1rem;
   -webkit-app-region: drag;
+}
+.tyn-aside-desktop{
+  justify-content: center;
 }
 .tyn-aside-foot {
   padding: var(--aside-head-gap-y) var(--aside-gap-x);
@@ -1024,6 +1027,7 @@ dl {
   background: var(--reply-bg);
   position: relative;
   word-wrap: break-word;
+  user-select: text;
 }
 .wr-bubble-a::after,
 .wr-bubble-b::before{
@@ -1756,5 +1760,7 @@ dl {
   --tyn-size: var(--bs-size-4xl);
   --tyn-icon-size: var(--bs-icon-size-4xl);
 }
-
+.fz-9{
+  font-size: 9px;
+}
 /*! END */

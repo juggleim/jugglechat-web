@@ -330,11 +330,35 @@ function onDraft(conversation) {
   }
 }
 
+function onNavChat(item){
+  juggle.getConversation(item).then(({ conversation }) => {
+    let { conversationId, conversationType, latestMessage, unreadCount } = conversation;
+    let index = utils.find(state.conversations, (item) => {
+      return utils.isEqual(item.conversationType, conversationType) && utils.isEqual(item.conversationId, conversationId);
+    });
+    if(utils.isEqual(index, -1)){
+      formatMention(conversation);
+      getConversationTime
+      let shortName = im.msgShortFormat(latestMessage);
+      let { sentTime } = latestMessage;
+      let f_time = getConversationTime(sentTime);
+      if (!sentTime) {
+        f_time = '';
+      }
+      utils.extend(conversation, { f_time, isShowDrop: false, shortName, latestMessage: latestMessage, unreadCount });
+    }else{
+      conversation = state.conversations.splice(index, 1)[0];
+    }
+    conversation = utils.clone(conversation);
+    state.conversations.unshift(conversation);
+    onConversation(conversation, 0)
+  });
+}
 </script>
 <template>
   <div class="tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside">
-      <AisdeHeader :title="'消息'"></AisdeHeader>
+      <AisdeHeader :title="'消息'" @onnav="onNavChat"></AisdeHeader>
       <div class="tyn-aside-body" data-simplebar>
         <div class="tab-content">
           <div class="tab-pane show active">

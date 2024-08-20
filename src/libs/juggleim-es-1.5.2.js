@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.5.0
+* JuggleChat.js v1.5.1
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -11903,11 +11903,28 @@ function Message ($message, {
           senders,
           groups
         });
+        let params = {
+          conversation: {
+            id: conversationId,
+            type: conversationType
+          },
+          users: senders,
+          groups
+        };
+        let _conversation = tools.formatConversation(params);
+        let {
+          conversationTitle,
+          conversationPortrait,
+          conversationExts
+        } = _conversation;
         return {
           matchedList: _msgs,
           matchedCount,
           conversationType,
-          conversationId
+          conversationId,
+          conversationTitle,
+          conversationPortrait,
+          conversationExts
         };
       });
       return {
