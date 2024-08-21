@@ -470,6 +470,13 @@ function isMacBrowser() {
   let hasTouch = 'ontouchend' in document;
   return isMac && !hasTouch;
 }
+function formatTimetoHM(time) {
+  var date = new Date(time);
+  var hours = date.getHours().toString().padStart(2, '0');
+  var minutes = date.getMinutes().toString().padStart(2, '0');
+  return hours + ':' + minutes;
+}
+
 export default {
   Prosumer,
   Observer,
@@ -523,4 +530,5 @@ export default {
   isBase64,
   toBase64,
   isMacBrowser,
+  formatTimetoHM,
 }

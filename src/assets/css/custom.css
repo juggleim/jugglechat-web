@@ -75,6 +75,18 @@
   border-radius: 2px;
   width: fit-content;
 }
+.jg-message-senttime{
+  text-align: right;
+  font-size: 10px;
+  font-style: italic;
+  position: relative;
+  font-weight: 500;
+  color: #8389a0;
+  right: 6px;
+}
+.tyn-reply-text .jg-message-senttime{
+  right: -8px;
+}
 .tyn-reply-media,
 .tyn-reply-file{
   position: relative;

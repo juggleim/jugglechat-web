@@ -68,6 +68,7 @@ function onShowReadDetail(isShow) {
           <div class="modal-backdrop fade show modal-tp-backdrop" @click.stop="onShowReadDetail(false)"
             v-if="state.isShowGroupDetail" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"></div>
         </div>
+        <div class="jg-message-senttime" v-if="props.message.sentTime">{{ utils.formatTimetoHM(props.message.sentTime) }}</div>
       </div>
 
       <ul class="tyn-reply-tools">

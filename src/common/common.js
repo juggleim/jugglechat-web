@@ -204,7 +204,6 @@ function getConversationInfo(params, callback){
 function htmlToContent(content){
   return content.replace(/<[^>]+>/gi, '');
 }
-
 export default {
  isElementTop,
  getAvatar,
