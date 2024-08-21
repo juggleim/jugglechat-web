@@ -1022,7 +1022,7 @@ dl {
 .tyn-reply-text {
   font-size: 0.833rem;
   padding: 0.3rem 1rem;
-  border-radius: 2px 1rem 1rem 0.8rem;
+  border-radius: 2px 16px 16px 10px;
   color: var(--reply-text);
   background: var(--reply-bg);
   position: relative;
