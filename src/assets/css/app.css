@@ -938,7 +938,7 @@ dl {
 }
 .tyn-reply-item {
   display: flex;
-  align-items: flex-end;
+  /* align-items: flex-end; */
   padding: var(--content-gap-y) var(--content-gap-x);
   padding-right: 0.5rem;
   padding-left: 2rem;
@@ -1022,7 +1022,7 @@ dl {
 .tyn-reply-text {
   font-size: 0.833rem;
   padding: 0.3rem 1rem;
-  border-radius: 1rem 1.4rem 1.4rem 0rem;
+  border-radius: 2px 1rem 1rem 0.8rem;
   color: var(--reply-text);
   background: var(--reply-bg);
   position: relative;
@@ -1046,7 +1046,7 @@ dl {
 .outgoing .tyn-reply-text {
   color: #394039;
   background: #effcde;
-  border-radius: 1.4rem 1rem 0.3rem 1.4rem;
+  border-radius: 1.2rem 2px 1rem 1.2rem;
 }
 .tyn-reply-link {
   display: flex;

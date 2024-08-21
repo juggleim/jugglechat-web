@@ -65,7 +65,16 @@
   justify-content: center;
   font-size: 20px;
 }
-
+.jg-sender-name{
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px !important;
+  background: #4a8e3a33;
+  padding: 1px 6px;
+  border-radius: 2px;
+  width: fit-content;
+}
 .tyn-reply-media,
 .tyn-reply-file{
   position: relative;

@@ -77,6 +77,7 @@ function onShowReadDetail(isShow) {
     </div>
   </div>
   <div class="tyn-reply-group">
+    <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble" :messageid="props.message.messageId" :tid="props.message.tid">
       <div class="tyn-reply-text" v-if="state.isModify">
         <div>

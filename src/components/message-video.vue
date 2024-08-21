@@ -56,6 +56,7 @@ function onShowReadDetail(isShow) {
     </div>
   </div>
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
+    <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
       <div class="tyn-reply-media wr" :messageid="props.message.messageId">
         <a class="glightbox" data-gallery="media-video" @click="onPlay">
