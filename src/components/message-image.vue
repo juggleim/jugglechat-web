@@ -42,7 +42,7 @@ function onShowReadDetail(isShow) {
 
 <template>
   <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md tyn-circle">
+    <div class="tyn-media tyn-size-md">
       <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
     </div>
   </div>

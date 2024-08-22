@@ -4,7 +4,7 @@ const props = defineProps(["message"]);
 
 <template>
     <div class="tyn-reply-avatar" v-if="!props.message.isSender">
-      <div class="tyn-media tyn-size-md tyn-circle">
+      <div class="tyn-media tyn-size-md">
         <img src="../assets/images/avatar/2.jpg" alt />
       </div>
     </div>
