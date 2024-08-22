@@ -109,9 +109,7 @@ function getConversationTime(sentTime) {
 juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
   utils.forEach(conversations, (conversation) => {
     console.log('conversation', conversation)
-    if(conversationTools.isSameConversation(conversation, state)){
-      utils.extend(state.currentConversation, conversation);
-    }
+   
     formatMention(conversation);
     let { conversations } = state;
     let { conversationId, conversationType, latestMessage, unreadCount } = conversation;
@@ -121,10 +119,15 @@ juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
     if (!utils.isEqual(index, -1)) {
       let oldConversation = state.conversations[index];
       let { isActive } = oldConversation;
-
+      
       if(!conversation.conversationTitle){
-        let { conversationPortrait, conversationTitle } = oldConversation;
-        utils.extend(conversation, { conversationPortrait, conversationTitle  });
+        let { conversationTitle } = oldConversation;
+        utils.extend(conversation, { conversationTitle  });
+      }
+
+      if(!conversation.conversationPortrait){
+        let { conversationPortrait } = oldConversation;
+        utils.extend(conversation, { conversationPortrait  });
       }
 
       if(latestMessage.sentTime >= oldConversation.latestMessage.sentTime){
@@ -146,6 +149,11 @@ juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
       }else{
         state.conversations.splice(index, 1, conversation);
       }
+
+    }
+
+    if(conversationTools.isSameConversation(conversation, state)){
+      utils.extend(state.currentConversation, conversation);
     }
   });
 });
