@@ -113,16 +113,16 @@ function getTextAvatar(name, option = {}){
     text = text.substr(textLen - 2);
   }
   let { height = 100, width = 100 } = option;
-  let colors = [utils.random(), utils.random(), utils.random()];
+  let colors = [20, text.charCodeAt(0), 100];
   let cvs = document.createElement("canvas");
   cvs.setAttribute('width', width);
   cvs.setAttribute('height', height);
   let ctx = cvs.getContext("2d");
   ctx.fillStyle = `rgb(${colors.join(',')})`;
   ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = 'rgb(255,255,255)';
+  ctx.fillStyle = '#FFF';
   let isZH = utils.isChinese(text);
-  let size = isZH ? 0.38 : 0.5;
+  let size = isZH ? 0.38 : 0.4;
   ctx.font = `${ width * size }px Arial`;
   ctx.textBaseline = "middle";
   ctx.textAlign = "center";

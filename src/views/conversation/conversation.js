@@ -2,6 +2,7 @@ import utils from "../../common/utils";
 import im from "../../common/im";
 import messageUtils from "../../components/message-utils";
 import { TRANSFER_TYPE } from "../../common/enum";
+import common from "../../common/common";
 
 let juggle = im.getCurrent();
 let { MessageType, ConversationType, MentionType } = juggle;
@@ -44,7 +45,13 @@ function getMessages(isFirst, callback, state, props) {
           readPercent: messageUtils.getGroupReadPercent(message)
         })
       }
-      utils.extend(message, { isSelected: false })
+      let { sender } = message;
+      if(!sender.portrait){
+        let name = sender.name || '默认';
+        sender.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
+      }
+
+      utils.extend(message, { isSelected: false, sender })
       state.messages.push(message);
       
       if(isGroup(message)){
