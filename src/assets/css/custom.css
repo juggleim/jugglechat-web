@@ -792,3 +792,7 @@
 .jg-keyword *{
   color: #565a60;
 }
+
+.img-preview img{
+  zoom: 0.4;
+}
