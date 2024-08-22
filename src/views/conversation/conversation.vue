@@ -148,6 +148,29 @@ nextTick(() => {
   });
 })
 
+emitter.$on(EVENT_NAME.ON_GROUP_MEMBER_ADDED, ({ members }) => {
+  let { mentionMembers } = state;
+  utils.forEach(members, (member) => {
+    let _member = utils.clone(member);
+    _member = utils.rename(_member, { 
+      user_id: 'id',
+      nickname: 'name',
+      avatar: 'portrait'
+    });
+    mentionMembers.push(_member);
+  });
+});
+
+emitter.$on(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, ({ members }) => {
+  let { mentionMembers } = state;
+  utils.forEach(members, (member) => {
+    let index = utils.find(mentionMembers, (_member) => {
+      return utils.isEqual(_member.id, member.id);
+    });
+    mentionMembers.splice(index, 1);
+  });
+});
+
 watch(() => props.conversation, (newConversation, oldConversation) => {
   let { conversationId, conversationType } = oldConversation;
   emit('ondraft', { conversationType, conversationId, draft: state.content });
@@ -474,6 +497,9 @@ function getMembers() {
     members = utils.map(members, (member) => {
       let { user_id: id, nickname: name, avatar: portrait } = member;
       let item = { id, name, portrait };
+      if(!portrait){
+        item.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
+      }
       mentionMembers.push(item);
       return item;
     });

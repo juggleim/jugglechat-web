@@ -156,7 +156,7 @@ function onConfirmRemoveGroupMember({ members }) {
       let group = { group_id: conversationId, group_name: name, group_portrait: avatar };
       Group.update(group).then(() => {
         let conversation = { conversationId, conversationPortrait: avatar, conversationTitle: name };
-        emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, { conversation })
+        emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, { conversation, members })
         onCancelRemoveGroupMember();
       });
     });
@@ -201,7 +201,7 @@ function onConfirmGroupCreate({ friends }) {
         let group = { group_id: conversationId, group_name: name, group_portrait: avatar };
         Group.update(group).then(() => {
           let conversation = { conversationId, conversationPortrait: avatar, conversationTitle: name };
-          emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_ADDED, { conversation })
+          emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_ADDED, { conversation, members })
           next(group);
         });
       });
