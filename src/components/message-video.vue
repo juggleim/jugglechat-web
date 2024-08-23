@@ -60,7 +60,7 @@ function onShowReadDetail(isShow) {
     <div class="tyn-reply-bubble">
       <div class="tyn-reply-media wr" :messageid="props.message.messageId">
         <a class="glightbox" data-gallery="media-video" @click="onPlay">
-          <video :src="props.message.localUrl || props.message.content.url" ref="video" class="tyn-image"></video>
+          <video :src="props.message.content.url || props.message.localUrl" ref="video" class="tyn-image"></video>
           <div class="tyn-video-icon wr wr-video" v-if="!state.isPlaying"></div>
         </a>
         <div class="wr message-state" @click.stop="onShowReadDetail(true)"

@@ -76,19 +76,20 @@ function sendVideo(file, message, callback, state){
   let content = { 
     file: file
   };  
-  utils.extend(message, { content, localUrl: URL.createObjectURL(file) });
+  utils.extend(message, { content, localUrl: URL.createObjectURL(file), name: MessageType.VIDEO });
   state.messages.unshift(message);
 
   let propMsg = state.messages.filter((msg) => {
-    return utils.isEqual(msg.uuid, message.uuid);
+    return utils.isEqual(msg.tid, message.tid);
   })[0];
 
   juggle.sendVideoMessage(message, {
     onprogress: ({ percent }) => {
       utils.extend(propMsg, { percent });
     }
-  }).then(({ messageId, sentTime }) => {
-    utils.extend(propMsg, { messageId, sentTime });
+  }).then((result) => {
+    let { messageId, sentTime, content } = result;
+    utils.extend(propMsg, { messageId, sentTime, content });
     callback();
   }, (error) => {
     console.log(error)
@@ -105,7 +106,7 @@ function sendFile(file, message, callback, state){
   state.messages.unshift(message);
 
   let propMsg = state.messages.filter((msg) => {
-    return utils.isEqual(msg.uuid, message.uuid);
+    return utils.isEqual(msg.tid, message.tid);
   })[0];
   juggle.sendFileMessage(message, {
     onprogress: ({ percent }) => {
