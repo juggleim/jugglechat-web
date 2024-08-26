@@ -180,11 +180,11 @@ function converationHandler({ conversations }){
     }
   });
 }
-juggle.on(Event.STATE_CHANGED, ({ state: status }) => {
-  if (ConnectionState.DISCONNECTED == status) {
-    utils.extend(state, { conversations: [], currentUser: {}, currentConversation: {} })
-  }
-});
+// juggle.on(Event.STATE_CHANGED, ({ state: status }) => {
+//   if (ConnectionState.DISCONNECTED == status) {
+//     utils.extend(state, { conversations: [], currentUser: {}, currentConversation: {} })
+//   }
+// });
 function formatMention(conversation) {
   let { mentions = {} } = conversation;
   let f_mentionContent = '';
