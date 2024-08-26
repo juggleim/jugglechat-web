@@ -295,6 +295,7 @@ function onSend() {
   scrollBottom();
   juggle.sendMessage(msg,  {
     onbefore: (message) => {
+      message.sentTime = Date.now();
       state.messages.unshift(message);
     }
   }).then(({ sentTime, messageId }) => {
