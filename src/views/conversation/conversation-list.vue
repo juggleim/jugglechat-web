@@ -106,7 +106,20 @@ function getConversationTime(sentTime) {
 //     }
 //   })
 // });
-juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
+juggle.once(Event.CONVERSATION_CHANGED, converationHandler);
+juggle.once(Event.CONVERSATION_ADDED, converationHandler);
+
+juggle.once(Event.CONVERSATION_REMOVED, ({ conversations }) => {
+  utils.forEach(conversations, (conversation) => {
+    let { conversations } = state;
+    let { conversationId, conversationType, latestMessage, unreadCount } = conversation;
+    let index = utils.find(conversations, (item) => {
+      return utils.isEqual(item.conversationType, conversationType) && utils.isEqual(item.conversationId, conversationId);
+    });
+    state.conversations.splice(index, 1)[0];
+  });
+});
+function converationHandler({ conversations }){
   utils.forEach(conversations, (conversation) => {
     console.log('conversation', conversation)
    
@@ -150,37 +163,23 @@ juggle.once(Event.CONVERSATION_CHANGED, ({ conversations }) => {
         state.conversations.splice(index, 1, conversation);
       }
 
+    }else{
+      let { latestMessage } = conversation;
+      let shortName = im.msgShortFormat(latestMessage);
+      let { sentTime } = latestMessage;
+      let f_time = getConversationTime(sentTime);
+      if (!sentTime) {
+        f_time = '';
+      }
+      utils.extend(conversation, { f_time, isShowDrop: false, shortName });
+      state.conversations.unshift(conversation);
     }
 
     if(conversationTools.isSameConversation(conversation, state)){
       utils.extend(state.currentConversation, conversation);
     }
   });
-});
-juggle.once(Event.CONVERSATION_ADDED, ({ conversations }) => {
-  utils.forEach(conversations, (conversation) => {
-    formatMention(conversation);
-    let { latestMessage } = conversation;
-    let shortName = im.msgShortFormat(latestMessage);
-    let { sentTime } = latestMessage;
-    let f_time = getConversationTime(sentTime);
-    if (!sentTime) {
-      f_time = '';
-    }
-    utils.extend(conversation, { f_time, isShowDrop: false, shortName });
-    state.conversations.unshift(conversation);
-  });
-});
-juggle.once(Event.CONVERSATION_REMOVED, ({ conversations }) => {
-  utils.forEach(conversations, (conversation) => {
-    let { conversations } = state;
-    let { conversationId, conversationType, latestMessage, unreadCount } = conversation;
-    let index = utils.find(conversations, (item) => {
-      return utils.isEqual(item.conversationType, conversationType) && utils.isEqual(item.conversationId, conversationId);
-    });
-    state.conversations.splice(index, 1)[0];
-  });
-});
+}
 juggle.on(Event.STATE_CHANGED, ({ state: status }) => {
   if (ConnectionState.DISCONNECTED == status) {
     utils.extend(state, { conversations: [], currentUser: {}, currentConversation: {} })
@@ -254,6 +253,7 @@ function insertTempConversation() {
         item.isActive = false;
         return item;
       });
+      console.log('insert new converation', conversation)
       state.conversations.unshift(conversation);
       utils.extend(state, { currentConversation: conversation })
     });
