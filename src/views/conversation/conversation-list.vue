@@ -123,6 +123,9 @@ function converationHandler({ conversations }){
   utils.forEach(conversations, (conversation) => {
     console.log('conversation', conversation)
    
+    if(!conversation.latestMessage){
+      return;
+    }
     formatMention(conversation);
     let { conversations } = state;
     let { conversationId, conversationType, latestMessage, unreadCount } = conversation;

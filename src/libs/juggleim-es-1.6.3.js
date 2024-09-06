@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.5.3
+* JuggleChat.js v1.6.3
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -610,17 +610,21 @@ let CONNECT_ACK_INDEX = 'c_conn_ack_index';
 let PONG_INDEX = 'c_pong_index';
 let SIGNAL_NAME = {
   CMD_RECEIVED: 'cmd_inner_receive',
+  CMD_CHATROOM_ATTR_RECEIVED: 'cmd_inner_chatroom_attr_receive',
+  CMD_CHATROOM_DESTROY: 'cmd_inner_chatroom_destroy',
   CMD_SYNC_CONVERSATIONS_PROGRESS: 'cmd_inner_sync_conversations_progress',
   CMD_SYNC_CONVERSATION_FINISHED: 'cmd_inner_sync_conversations_finished',
   CMD_CONVERSATION_CHANGED: 'cmd_inner_conversation_changed',
   CONN_CHANGED: 'conn_inner_changed',
-  CHATROOM_EVENT: 'cmd_inner_chatroom_event',
+  CMD_CHATROOM_EVENT: 'cmd_inner_chatroom_event',
+  CMD_CHATROOM_REJOIN: 'cmd_inner_chatroom_rejoin',
   // 与下行信令进行匹配，在 io.js 中进行派发
   S_CONNECT_ACK: 's_connect_ack',
   S_DISCONNECT: 's_disconnect',
   S_PUBLICH_ACK: 's_publish_ack',
   S_QUERY_ACK: 's_query_ack',
   S_NTF: 's_ntf',
+  S_CHATROOM_USER_NTF: 's_c_user_ntf',
   // PC 端自定义通知
   S_SYNC_CONVERSATION_NTF: 's_sync_conversation_ntf',
   S_PONG: 's_pong',
@@ -761,6 +765,12 @@ let FUNC_PARAM_CHECKER = {
     name: 'attribute',
     type: 'String'
   }],
+  SET_MESSAGE_SEARCH_CONTENT: [{
+    name: 'tid'
+  }, {
+    name: 'content',
+    type: 'String'
+  }],
   GET_FILE_TOKEN: [{
     name: 'type'
   }],
@@ -798,6 +808,11 @@ let FUNC_PARAM_CHECKER = {
   }],
   GET_MERGE_MESSAGES: [{
     name: 'messageId'
+  }],
+  GET_FIRST_UNREAD_MSG: [{
+    name: 'conversationType'
+  }, {
+    name: 'conversationId'
   }],
   GETCONVERSATIONS: [{
     name: 'limit'
@@ -945,10 +960,13 @@ let COMMAND_TOPICS = {
   RECALL: 'recall_msg',
   GET_MENTION_MSGS: 'qry_mention_msgs',
   NTF: 'ntf',
+  MSG: 'msg',
+  CHATROOM_USER_NTF: 'c_user_ntf',
   SEND_GROUP: 'g_msg',
   SEND_PRIVATE: 'p_msg',
   SEND_CHATROOM: 'c_msg',
   GET_MERGE_MSGS: 'qry_merged_msgs',
+  GET_FIRST_UNREAD_MSG: 'qry_first_unread_msg',
   CLEAR_UNREAD: 'clear_unread',
   REMOVE_CONVERSATION: 'del_convers',
   INSERT_CONVERSATION: 'add_conver',
@@ -981,7 +999,9 @@ let NOTIFY_TYPE = {
   DEFAULT: 0,
   MSG: 1,
   CHATROOM: 2,
-  CHATROOM_ATTR: 3
+  CHATROOM_ATTR: 3,
+  CHATROOM_EVENT: 4,
+  CHATROOM_DESTORY: 5
 };
 let CONNECT_TOOL = {
   START_TIME: 'connect_start_time',
@@ -1030,12 +1050,31 @@ let LOG_MODULE = {
   MSG_SEND_FILE: 'MSG-ST-FILE',
   MSG_RECEIVE: 'MSG-ST-RECEIVE',
   MSG_UPDATE: 'MSG-UPDATE',
+  CHATROOM_ATTR_RECEIVE: 'CHATROOM_ATTR_RECEIVE',
+  CHATROOM_ATTR_SET: 'CHATROOM_ATTR_SET',
+  CHATROOM_ATTR_REMOVE: 'CHATROOM_ATTR_REMOVE',
+  CHATROOM_USER_REJOIN: 'CHATROOM_USER_REJOIN',
+  CHATROOM_USER_JOIN: 'CHATROOM_USER_JOIN',
+  CHATROOM_USER_QUIT: 'CHATROOM_USER_QUIT',
+  CHATROOM_SERVER_EVENT: 'CHATROOM_SERVER_EVENT',
+  CHATROOM_DESTORYED: 'CHATROOM_DESTORYED',
   CONV_SYNC: 'CONV-Sync',
   CONV_DELETE: 'CONV-Delete',
   CONV_CLEAR_UNREAD: 'CONV-ClearUnread',
   CONV_CLEAR_TOTAL: 'CONV-ClearTotal',
   CONV_MUTE: 'CONV-Mute',
   CONV_TOP: 'CONV-Top'
+};
+let CHATROOM_ATTR_OP_TYPE = {
+  NONE: 0,
+  ADD: 1,
+  DEL: 2
+};
+let CHATROOM_EVENT_TYPE = {
+  JOIN: 0,
+  QUIT: 1,
+  KICK: 2,
+  FALLOUT: 3
 };
 
 // 以下是对外暴露枚举
@@ -1055,7 +1094,12 @@ let EVENT = {
   CLEAR_TOTAL_UNREADCOUNT: 'conversation_total_unreadcount',
   CONVERSATION_CHANGED: 'conversation_changed',
   CONVERSATION_ADDED: 'conversation_added',
-  CONVERSATION_REMOVED: 'conversation_removed'
+  CONVERSATION_REMOVED: 'conversation_removed',
+  CHATROOM_ATTRIBUTE_UPDATED: 'chatroom_attr_updated',
+  CHATROOM_ATTRIBUTE_DELETED: 'chatroom_attr_deleted',
+  CHATROOM_DESTROYED: 'chatroom_destroyed',
+  CHATROOM_USER_QUIT: 'chatroom_user_quit',
+  CHATROOM_USER_KICKED: 'chatroom_user_kicked'
 };
 let CONNECT_STATE = {
   CONNECTED: 0,
@@ -1161,7 +1205,7 @@ let ErrorMessages = [{
   name: 'CHATROOM_ATTR_EXCEED_LIMIT'
 }, {
   code: 14003,
-  msg: '聊天室属性已存在，如需覆盖设置请设置 isForce 为 true',
+  msg: '不可操作其它成员设置的聊天室属性',
   name: 'CHATROOM_ATTR_EXISTS'
 }, {
   code: 14005,
@@ -1217,7 +1261,7 @@ let ErrorMessages = [{
   name: 'DATABASE_NOT_OPENED'
 }, {
   code: 25010,
-  msg: '方法未实现，请确定 SDK 版本',
+  msg: 'Web SDK 方法未实现，请确定使用 PC SDK 调用',
   name: 'SDK_FUNC_NOT_DEFINED'
 }, {
   code: 25011,
@@ -1231,6 +1275,10 @@ let ErrorMessages = [{
   code: 25013,
   msg: '参数不可为空，请检查传入参数',
   name: 'ILLEGAL_PARAMS_EMPTY'
+}, {
+  code: 25014,
+  msg: 'SDK 内部正在连接，无需重复调用 connect 方法',
+  name: 'REPREAT_CONNECTION'
 }, {
   code: 21200,
   msg: '消息撤回成功',
@@ -1277,6 +1325,7 @@ let MESSAGE_TYPE = {
   COMMAND_ADD_CONVER: 'jg:addconver',
   COMMAND_CLEAR_TOTALUNREAD: 'jg:cleartotalunread',
   COMMAND_MARK_UNREAD: 'jg:markunread',
+  COMMAND_LOG_REPORT: 'jg:logcmd',
   // CLIENT_* 约定为客户端定义适用
   CLIENT_REMOVE_MSGS: 'jgc:removemsgs',
   CLIENT_REMOVE_CONVERS: 'jgc:removeconvers',
@@ -1311,6 +1360,10 @@ let UNREAD_TAG = {
   READ: 0,
   UNREAD: 1
 };
+let SET_SEARCH_CONTENT_TYPE = {
+  APPEND: 1,
+  REPLACE: 2
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1329,6 +1382,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   CONNECT_TOOL: CONNECT_TOOL,
   LOG_LEVEL: LOG_LEVEL,
   LOG_MODULE: LOG_MODULE,
+  CHATROOM_ATTR_OP_TYPE: CHATROOM_ATTR_OP_TYPE,
+  CHATROOM_EVENT_TYPE: CHATROOM_EVENT_TYPE,
   EVENT: EVENT,
   CONNECT_STATE: CONNECT_STATE,
   CONVERATION_TYPE: CONVERATION_TYPE,
@@ -1344,7 +1399,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   FILE_TYPE: FILE_TYPE,
   MESSAGE_SENT_STATE: MESSAGE_SENT_STATE,
   DISCONNECT_TYPE: DISCONNECT_TYPE,
-  UNREAD_TAG: UNREAD_TAG
+  UNREAD_TAG: UNREAD_TAG,
+  SET_SEARCH_CONTENT_TYPE: SET_SEARCH_CONTENT_TYPE
 });
 
 function Cache () {
@@ -1361,11 +1417,15 @@ function Cache () {
   let clear = () => {
     caches = {};
   };
+  let getAll = () => {
+    return caches;
+  };
   return {
     set,
     get,
     remove,
-    clear
+    clear,
+    getAll
   };
 }
 
@@ -4900,7 +4960,11 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
       NotifyType: {
         values: {
           Default: 0,
-          Msg: 1
+          Msg: 1,
+          ChatroomMsg: 2,
+          ChatroomAtt: 3,
+          ChatroomEvent: 4,
+          ChatroomDestroy: 5
         }
       },
       RecallMsgReq: {
@@ -5125,7 +5189,7 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
         fields: {
           mentionMsgs: {
             rule: "repeated",
-            type: "QMentionMsg",
+            type: "DownMsg",
             id: 1
           },
           isFinished: {
@@ -5522,6 +5586,46 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "int64",
             id: 14
           }
+        }
+      },
+      QryFirstUnreadMsgReq: {
+        fields: {
+          targetId: {
+            type: "string",
+            id: 1
+          },
+          channelType: {
+            type: "ChannelType",
+            id: 2
+          }
+        }
+      },
+      ChrmEvent: {
+        fields: {
+          eventType: {
+            type: "ChrmEventType",
+            id: 1
+          },
+          chatId: {
+            type: "string",
+            id: 2
+          },
+          userId: {
+            type: "string",
+            id: 3
+          },
+          eventTime: {
+            type: "int64",
+            id: 4
+          }
+        }
+      },
+      ChrmEventType: {
+        values: {
+          Join: 0,
+          Quit: 1,
+          Kick: 2,
+          Fallout: 3
         }
       }
     }
@@ -6444,6 +6548,14 @@ function decrypto(arrs, xors) {
   });
   return new Uint8Array(list);
 }
+function reportLogs({
+  logger,
+  params
+}) {
+  return logger.report({
+    ...params
+  });
+}
 var common = {
   check,
   getNum,
@@ -6468,7 +6580,8 @@ var common = {
   getSessionId,
   getClientSession,
   encrypto,
-  decrypto
+  decrypto,
+  reportLogs
 };
 
 function getConnectBody ({
@@ -6571,187 +6684,6 @@ function getPublishBody ({
       mergedMsgs: mergeMsg,
       msgContent: new TextEncoder().encode(content)
     });
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.REMOVE_CONVERSATION, topic)) {
-    let {
-      conversations,
-      userId
-    } = data;
-    conversations = utils.isArray(conversations) ? conversations : [conversations];
-    let list = utils.map(conversations, ({
-      conversationType,
-      conversationId
-    }) => {
-      return {
-        channelType: conversationType,
-        targetId: conversationId
-      };
-    });
-    let codec = $root.lookup('codec.DelConversationReq');
-    let message = codec.create({
-      conversations: list
-    });
-    targetId = userId;
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.UPDATE_MESSAGE, topic)) {
-    let {
-      conversationId: targetId,
-      conversationType: channelType,
-      messageId: msgId,
-      content,
-      sentTime: msgTime
-    } = data;
-    let codec = $root.lookup('codec.ModifyMsgReq');
-    content = utils.toJSON(content);
-    let message = codec.create({
-      channelType,
-      targetId,
-      msgId,
-      msgTime,
-      msgContent: new TextEncoder().encode(content)
-    });
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.CLEAR_MESSAGE, topic)) {
-    let {
-      conversationId: targetId,
-      conversationType: channelType,
-      time: cleanMsgTime
-    } = data;
-    let codec = $root.lookup('codec.CleanHisMsgReq');
-    let message = codec.create({
-      channelType,
-      targetId,
-      cleanMsgTime
-    });
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.JOIN_CHATROOM, topic)) {
-    let {
-      chatroom: {
-        id: chatId
-      }
-    } = data;
-    let codec = $root.lookup('codec.ChatRoomReq');
-    let message = codec.create({
-      chatId
-    });
-    targetId = chatId;
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.QUIT_CHATROOM, topic)) {
-    let {
-      chatroom: {
-        id: chatId
-      }
-    } = data;
-    let codec = $root.lookup('codec.ChatRoomReq');
-    let message = codec.create({
-      chatId
-    });
-    targetId = chatId;
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.INSERT_CONVERSATION, topic)) {
-    let {
-      conversation,
-      userId
-    } = data;
-    let {
-      conversationId,
-      conversationType
-    } = conversation;
-    let codec = $root.lookup('codec.Conversation');
-    let message = codec.create({
-      channelType: conversationType,
-      targetId: conversationId
-    });
-    targetId = userId;
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.MUTE_CONVERSATION, topic)) {
-    let {
-      userId,
-      conversations
-    } = data;
-    let items = utils.isArray(conversations) ? conversations : [conversations];
-    items = utils.map(items, item => {
-      let {
-        conversationType,
-        conversationId,
-        undisturbType
-      } = item;
-      return {
-        targetId: conversationId,
-        channelType: conversationType,
-        undisturbType
-      };
-    });
-    let codec = $root.lookup('codec.UndisturbConversReq');
-    let message = codec.create({
-      userId: userId,
-      items: items
-    });
-    targetId = userId;
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.TOP_CONVERSATION, topic)) {
-    let {
-      userId,
-      conversations
-    } = data;
-    let items = utils.isArray(conversations) ? conversations : [conversations];
-    items = utils.map(items, item => {
-      let {
-        conversationType,
-        conversationId,
-        isTop
-      } = item;
-      return {
-        targetId: conversationId,
-        channelType: conversationType,
-        isTop
-      };
-    });
-    let codec = $root.lookup('codec.ConversationsReq');
-    let message = codec.create({
-      conversations: items
-    });
-    targetId = userId;
-    buffer = codec.encode(message).finish();
-  }
-  if (utils.isEqual(COMMAND_TOPICS.REMOVE_MESSAGE, topic)) {
-    let {
-      userId,
-      messages
-    } = data;
-    let msgs = [],
-      _targetId = '',
-      channelType = CONVERATION_TYPE.PRIVATE;
-    utils.forEach(messages, message => {
-      let {
-        conversationType,
-        conversationId,
-        messageIndex,
-        sentTime,
-        messageId
-      } = message;
-      _targetId = conversationId;
-      channelType = conversationType, msgs.push({
-        msgId: messageId,
-        msgIndex: messageIndex,
-        msgTime: sentTime
-      });
-    });
-    let codec = $root.lookup('codec.DelHisMsgsReq');
-    let message = codec.create({
-      channelType,
-      targetId: _targetId,
-      msgs: msgs
-    });
-    targetId = _targetId;
     buffer = codec.encode(message).finish();
   }
   let codec = $root.lookup('codec.PublishMsgBody');
@@ -6884,6 +6816,19 @@ function getQueryBody({
     buffer = codec.encode(message).finish();
   }
   if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES)) {
+    let {
+      syncTime,
+      chatroomId
+    } = data;
+    let codec = $root.lookup('codec.SyncChatroomReq');
+    let message = codec.create({
+      syncTime,
+      chatroomId
+    });
+    targetId = chatroomId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_ATTRS)) {
     let {
       syncTime,
       chatroomId
@@ -7051,6 +6996,19 @@ function getQueryBody({
     });
     buffer = codec.encode(message).finish();
   }
+  if (utils.isEqual(COMMAND_TOPICS.GET_FIRST_UNREAD_MSG, topic)) {
+    let {
+      conversationType,
+      conversationId
+    } = data;
+    targetId = conversationId;
+    let codec = $root.lookup('codec.QryFirstUnreadMsgReq');
+    let message = codec.create({
+      channelType: conversationType,
+      targetId: conversationId
+    });
+    buffer = codec.encode(message).finish();
+  }
   if (utils.isEqual(COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS, topic)) {
     let {
       time,
@@ -7185,6 +7143,188 @@ function getQueryBody({
     }
     let message = codec.create(_msg);
     targetId = chatId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.REMOVE_CONVERSATION, topic)) {
+    let {
+      conversations,
+      userId
+    } = data;
+    conversations = utils.isArray(conversations) ? conversations : [conversations];
+    let list = utils.map(conversations, ({
+      conversationType,
+      conversationId
+    }) => {
+      return {
+        channelType: conversationType,
+        targetId: conversationId
+      };
+    });
+    let codec = $root.lookup('codec.DelConversationReq');
+    let message = codec.create({
+      conversations: list
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.UPDATE_MESSAGE, topic)) {
+    let {
+      conversationId: targetId,
+      conversationType: channelType,
+      messageId: msgId,
+      content,
+      sentTime: msgTime
+    } = data;
+    let codec = $root.lookup('codec.ModifyMsgReq');
+    content = utils.toJSON(content);
+    let message = codec.create({
+      channelType,
+      targetId,
+      msgId,
+      msgTime,
+      msgContent: new TextEncoder().encode(content)
+    });
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.CLEAR_MESSAGE, topic)) {
+    let {
+      conversationId,
+      conversationType: channelType,
+      time: cleanMsgTime
+    } = data;
+    let codec = $root.lookup('codec.CleanHisMsgReq');
+    let message = codec.create({
+      channelType,
+      targetId: conversationId,
+      cleanMsgTime
+    });
+    targetId = conversationId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.JOIN_CHATROOM, topic)) {
+    let {
+      chatroom: {
+        id: chatId
+      }
+    } = data;
+    let codec = $root.lookup('codec.ChatRoomReq');
+    let message = codec.create({
+      chatId
+    });
+    targetId = chatId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.QUIT_CHATROOM, topic)) {
+    let {
+      chatroom: {
+        id: chatId
+      }
+    } = data;
+    let codec = $root.lookup('codec.ChatRoomReq');
+    let message = codec.create({
+      chatId
+    });
+    targetId = chatId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.INSERT_CONVERSATION, topic)) {
+    let {
+      conversation,
+      userId
+    } = data;
+    let {
+      conversationId,
+      conversationType
+    } = conversation;
+    let codec = $root.lookup('codec.Conversation');
+    let message = codec.create({
+      channelType: conversationType,
+      targetId: conversationId
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.MUTE_CONVERSATION, topic)) {
+    let {
+      userId,
+      conversations
+    } = data;
+    let items = utils.isArray(conversations) ? conversations : [conversations];
+    items = utils.map(items, item => {
+      let {
+        conversationType,
+        conversationId,
+        undisturbType
+      } = item;
+      return {
+        targetId: conversationId,
+        channelType: conversationType,
+        undisturbType
+      };
+    });
+    let codec = $root.lookup('codec.UndisturbConversReq');
+    let message = codec.create({
+      userId: userId,
+      items: items
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.TOP_CONVERSATION, topic)) {
+    let {
+      userId,
+      conversations
+    } = data;
+    let items = utils.isArray(conversations) ? conversations : [conversations];
+    items = utils.map(items, item => {
+      let {
+        conversationType,
+        conversationId,
+        isTop
+      } = item;
+      return {
+        targetId: conversationId,
+        channelType: conversationType,
+        isTop
+      };
+    });
+    let codec = $root.lookup('codec.ConversationsReq');
+    let message = codec.create({
+      conversations: items
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.REMOVE_MESSAGE, topic)) {
+    let {
+      userId,
+      messages
+    } = data;
+    let msgs = [],
+      _targetId = '',
+      channelType = CONVERATION_TYPE.PRIVATE;
+    utils.forEach(messages, message => {
+      let {
+        conversationType,
+        conversationId,
+        messageIndex,
+        sentTime,
+        messageId
+      } = message;
+      _targetId = conversationId;
+      channelType = conversationType, msgs.push({
+        msgId: messageId,
+        msgIndex: messageIndex,
+        msgTime: sentTime
+      });
+    });
+    let codec = $root.lookup('codec.DelHisMsgsReq');
+    let message = codec.create({
+      channelType,
+      targetId: _targetId,
+      msgs: msgs
+    });
+    targetId = _targetId;
     buffer = codec.encode(message).finish();
   }
   let codec = $root.lookup('codec.QueryMsgBody');
@@ -7423,10 +7563,26 @@ function Decoder(cache, io) {
         targetId: chatroomId
       };
       _name = SIGNAL_NAME.S_NTF;
-    } else {
+    } else if (utils.isEqual(topic, COMMAND_TOPICS.MSG)) {
       let payload = $root.lookup('codec.DownMsg');
       let message = payload.decode(data);
       _msg = msgFormat(message);
+    } else if (utils.isEqual(topic, COMMAND_TOPICS.CHATROOM_USER_NTF)) {
+      let payload = $root.lookup('codec.ChrmEvent');
+      let message = payload.decode(data);
+      let {
+        chatId,
+        eventTime,
+        eventType
+      } = message;
+      _msg = {
+        chatroomId: chatId,
+        time: eventTime,
+        type: eventType
+      };
+      _name = SIGNAL_NAME.S_CHATROOM_USER_NTF;
+    } else {
+      console.log('unkown topic', topic);
     }
     utils.extend(_msg, {
       ackIndex: index
@@ -7456,6 +7612,11 @@ function Decoder(cache, io) {
     if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES)) {
       result = getChatroomMsgsHandler(index, data);
     }
+    if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_ATTRS)) {
+      result = getChatroomAttrsHandler(index, data, {
+        targetId
+      });
+    }
     if (utils.isInclude([COMMAND_TOPICS.CONVERSATIONS, COMMAND_TOPICS.SYNC_CONVERSATIONS, COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS], topic)) {
       result = getConversationsHandler(index, data, {
         topic
@@ -7484,6 +7645,9 @@ function Decoder(cache, io) {
     }
     if (utils.isInclude([COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES, COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES], topic)) {
       result = getChatroomSetAttrs(index, data);
+    }
+    if (utils.isEqual(topic, COMMAND_TOPICS.GET_FIRST_UNREAD_MSG)) {
+      result = getMessage(index, data);
     }
     result = utils.extend(result, {
       code,
@@ -7533,20 +7697,7 @@ function Decoder(cache, io) {
       isFinished
     } = payload.decode(data);
     let msgs = utils.map(mentionMsgs, msg => {
-      let {
-        mentionType,
-        senderId: senderUserId,
-        msgId: messageId,
-        msgTime: sentTime,
-        msgIndex: messageIndex
-      } = msg;
-      return {
-        mentionType,
-        senderUserId,
-        messageId,
-        sentTime,
-        messageIndex
-      };
+      return msgFormat(msg);
     });
     return {
       index,
@@ -7670,6 +7821,11 @@ function Decoder(cache, io) {
         isTop,
         unreadTag
       } = conversation;
+      if (!msg) {
+        msg = {
+          msgContent: []
+        };
+      }
       utils.extend(msg, {
         targetId
       });
@@ -7802,22 +7958,63 @@ function Decoder(cache, io) {
       index
     };
   }
+  function getChatroomAttrsHandler(index, data, {
+    targetId
+  }) {
+    let payload = $root.lookup('codec.SyncChatroomAttResp');
+    let result = payload.decode(data);
+    let {
+      atts
+    } = result;
+    atts = utils.map(atts, attr => {
+      let {
+        key,
+        value,
+        attTime: updateTime,
+        userId,
+        optType: type
+      } = attr;
+      return {
+        key,
+        value,
+        updateTime,
+        userId,
+        type
+      };
+    });
+    return {
+      attrs: atts,
+      chatroomId: targetId,
+      index
+    };
+  }
   function getChatroomMsgsHandler(index, data) {
     let payload = $root.lookup('codec.SyncChatroomMsgResp');
     let result = payload.decode(data);
     let {
-      isFinished,
-      msgs: {
-        msgs
-      }
+      msgs
     } = result;
     let messages = utils.map(msgs, msg => {
       return msgFormat(msg);
     });
     return {
-      isFinished,
       messages,
       index
+    };
+  }
+  function getMessage(index, data) {
+    let payload = $root.lookup('codec.DownMsg');
+    let _msg = payload.decode(data);
+    if (!_msg.msgId) {
+      return {
+        index,
+        msg: {}
+      };
+    }
+    let msg = msgFormat(_msg);
+    return {
+      index,
+      msg
     };
   }
   function getMessagesHandler(index, data) {
@@ -7871,8 +8068,11 @@ function Decoder(cache, io) {
       targetUserInfo,
       groupInfo
     } = msg;
-    let content = new TextDecoder().decode(msgContent);
-    content = utils.parse(content);
+    let content = '';
+    if (msgContent && msgContent.length > 0) {
+      content = new TextDecoder().decode(msgContent);
+      content = utils.parse(content);
+    }
 
     // 服务端返回数据有 targetUserInfo 和 groupInfo 为 null 情况，此处补充 targetId，方便本地有缓存时获取信息
     targetUserInfo = targetUserInfo || {
@@ -8227,6 +8427,13 @@ let detect = (urls, callback, option = {}) => {
   }
 };
 let getNavis = (urls, option, callback) => {
+  let {
+    logger
+  } = option;
+  logger.info({
+    tag: LOG_MODULE.NAV_START,
+    urls
+  });
   let requests = [],
     isResponsed = false,
     errors = [];
@@ -8244,6 +8451,10 @@ let getNavis = (urls, option, callback) => {
   let key = common.getNaviStorageKey(appkey, userId);
   let navi = Storage.get(key);
   if (!utils.isEmpty(navi)) {
+    logger.info({
+      tag: LOG_MODULE.NAV_REQEST,
+      local: navi
+    });
     return callback(navi);
   }
   utils.forEach(urls, domain => {
@@ -8261,6 +8472,10 @@ let getNavis = (urls, option, callback) => {
     let xhr = utils.requestNormal(url, options, {
       success: function (result, $xhr) {
         if (!isResponsed) {
+          let {
+            responseURL
+          } = $xhr;
+          let goodUrl = responseURL.replace(/(\/navigator\/general)/g, '');
           isResponsed = true;
           let {
             code,
@@ -8275,7 +8490,8 @@ let getNavis = (urls, option, callback) => {
           let nav = {
             servers,
             userId,
-            code
+            code,
+            url: goodUrl
           };
           if (!utils.isEmpty(servers)) {
             // 优先设置本地 AppKey 和 Token 缓存的 UserId
@@ -8287,6 +8503,10 @@ let getNavis = (urls, option, callback) => {
             // 设置导航缓存
             key = common.getNaviStorageKey();
             Storage.set(key, nav);
+            logger.info({
+              tag: LOG_MODULE.NAV_REQEST,
+              remote: nav
+            });
           }
           callback(nav);
           abortAll();
@@ -8348,9 +8568,38 @@ function Consumer() {
   };
 }
 
-function Syncer(send, emitter, io) {
+let chatroomCacher = Cache();
+var chatroomCacher$1 = {
+  set: (id, value) => {
+    let result = chatroomCacher.get(id);
+    let {
+      msgs = []
+    } = value;
+    if (msgs.length >= 200) {
+      msgs.shift(0);
+      value = utils.extend(value, {
+        msgs
+      });
+    }
+    result = utils.extend(result, value);
+    chatroomCacher.set(id, result);
+  },
+  get: id => {
+    let result = chatroomCacher.get(id);
+    return result;
+  },
+  remove: id => {
+    chatroomCacher.remove(id);
+  },
+  getAll: () => {
+    return chatroomCacher.getAll();
+  }
+};
+
+function Syncer(send, emitter, io, {
+  logger
+}) {
   let consumer = Consumer();
-  let chatroomCacher = Cache();
   let exec = data => {
     consumer.produce(data);
     consumer.consume(({
@@ -8392,59 +8641,92 @@ function Syncer(send, emitter, io) {
       next();
     }
     function query(item, next) {
+      logger.info({
+        tag: LOG_MODULE.MSG_SYNC,
+        ...item
+      });
       let {
         msg
       } = item;
+      let _chatroomResult = chatroomCacher$1.get(msg.targetId);
+      let {
+        isJoined
+      } = _chatroomResult;
       if (utils.isEqual(msg.type, NOTIFY_TYPE.MSG)) {
         queryNormal(item, next);
       } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM)) {
-        queryChatroom(item, next);
+        isJoined && queryChatroom(item, next);
       } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_ATTR)) {
-        queryChatroomAttr(item, next);
+        isJoined && queryChatroomAttr(item, next);
+      } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_DESTORY)) {
+        isJoined && broadcastChatroomDestory(item, next);
       } else {
         next();
       }
     }
+    function broadcastChatroomDestory(item, next) {
+      let {
+        msg
+      } = item;
+      let chatroomId = msg.targetId;
+      emitter.emit(SIGNAL_NAME.CMD_CHATROOM_DESTROY, {
+        id: chatroomId
+      });
+      next();
+    }
     function queryChatroomAttr(item, next) {
       let {
-        user,
-        msg,
-        name
+        msg
       } = item;
       let chatroomId = msg.targetId;
       let syncTime = getChatroomAttrSyncTime(chatroomId);
-      if (syncTime >= msg.receiveTime) {
+      if (syncTime >= msg.receiveTime && msg.receiveTime > 0) {
         return next();
       }
       let data = {
         syncTime: syncTime,
         chatroomId: chatroomId,
+        targetId: chatroomId,
         topic: COMMAND_TOPICS.SYNC_CHATROOM_ATTRS
       };
-      //TODO: 解析&存储
-      send(SIGNAL_CMD.QUERY, data, ({
-        attrs,
-        code
-      }) => {
+      send(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          attrs,
+          chatroomId: _chatroomId
+        } = result;
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          data,
+          msg,
+          code,
+          count: attrs.length
+        });
         if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
           return next();
         }
-        utils.forEach(messages, message => {
-          setChatRoomSyncTime(message.conversationId, message.sentTime);
-          emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message]);
+        utils.forEach(attrs, message => {
+          setChatRoomAttrSyncTime(_chatroomId, message.updateTime);
+        });
+        emitter.emit(SIGNAL_NAME.CMD_CHATROOM_ATTR_RECEIVED, {
+          attrs,
+          chatroomId: _chatroomId
         });
         next();
       });
     }
     function queryChatroom(item, next) {
       let {
-        user,
-        msg,
-        name
+        msg
       } = item;
       let chatroomId = msg.targetId;
       let syncTime = getChatroomSyncTime(chatroomId);
-      if (syncTime >= msg.receiveTime) {
+      if (syncTime >= msg.receiveTime && msg.receiveTime > 0) {
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          syncTime,
+          msg
+        });
         return next();
       }
       let data = {
@@ -8453,22 +8735,36 @@ function Syncer(send, emitter, io) {
         topic: COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES
       };
       send(SIGNAL_CMD.QUERY, data, ({
-        isFinished,
         messages,
         code
       }) => {
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          data,
+          msg,
+          code,
+          count: messages.length
+        });
         if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
           return next();
         }
+        let {
+          msgs = []
+        } = chatroomCacher$1.get(chatroomId);
         utils.forEach(messages, message => {
           setChatRoomSyncTime(message.conversationId, message.sentTime);
-          emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message]);
+          let {
+            messageId
+          } = message;
+          let isInclude = utils.isInclude(msgs, messageId);
+          if (!isInclude) {
+            msgs.push(messageId);
+            emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message]);
+          }
         });
-        let isSyncing = !isFinished;
-        if (isSyncing) {
-          // 如果有未拉取，向队列下标最小位置插入消费对象，一次拉取执行完成后再处理它 ntf 或者 msg
-          consumer.produce(item, isSyncing);
-        }
+        chatroomCacher$1.set(chatroomId, {
+          msgs
+        });
         next();
       });
     }
@@ -8483,6 +8779,11 @@ function Syncer(send, emitter, io) {
 
       // 如果本地记录时间戳大于 ntf 中的接收时间，认为消息已被当前端接收过，不再执行拉取动作
       if (syncReceiveTime >= msg.receiveTime) {
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          syncReceiveTime,
+          msg
+        });
         return next();
       }
       let data = {
@@ -8497,6 +8798,13 @@ function Syncer(send, emitter, io) {
         messages,
         code
       }) => {
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          data,
+          msg,
+          code,
+          count: messages.length
+        });
         if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
           return next();
         }
@@ -8527,6 +8835,11 @@ function Syncer(send, emitter, io) {
       } = item;
       let syncTime = Storage.get(STORAGE.SYNC_CONVERSATION_TIME).time || 0;
       if (syncTime > time) {
+        logger.info({
+          tag: LOG_MODULE.CONV_SYNC,
+          syncTime,
+          time
+        });
         return;
       }
       let data = {
@@ -8541,6 +8854,12 @@ function Syncer(send, emitter, io) {
           conversations,
           code
         } = qryResult;
+        logger.info({
+          tag: LOG_MODULE.CONV_SYNC,
+          data,
+          code,
+          count: conversations.length
+        });
         if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
           emitter.emit(SIGNAL_NAME.CMD_SYNC_CONVERSATION_FINISHED, {});
           return next();
@@ -8578,20 +8897,28 @@ function Syncer(send, emitter, io) {
       });
     }
     function getChatroomSyncTime(chatroomId) {
-      let key = `${STORAGE.SYNC_CHATROOM_RECEIVED_MSG_TIME}_${chatroomId}`;
-      let syncInfo = chatroomCacher.get(key);
-      return syncInfo.time || 0;
+      let result = chatroomCacher$1.get(chatroomId);
+      return result.syncMsgTime || 0;
     }
     function setChatRoomSyncTime(chatroomId, time) {
-      let key = `${STORAGE.SYNC_CHATROOM_RECEIVED_MSG_TIME}_${chatroomId}`;
-      chatroomCacher.set(key, {
-        time
-      });
+      let currentTime = getChatroomSyncTime(chatroomId);
+      if (time > currentTime) {
+        chatroomCacher$1.set(chatroomId, {
+          syncMsgTime: time
+        });
+      }
     }
     function getChatroomAttrSyncTime(chatroomId) {
-      let key = `${STORAGE.SYNC_CHATROOM_ATTR_TIME}_${chatroomId}`;
-      let syncInfo = chatroomCacher.get(key);
-      return syncInfo.time || 0;
+      let syncInfo = chatroomCacher$1.get(chatroomId);
+      return syncInfo.syncAttTime || 0;
+    }
+    function setChatRoomAttrSyncTime(chatroomId, time) {
+      let currentTime = getChatroomAttrSyncTime(chatroomId);
+      if (time > currentTime) {
+        chatroomCacher$1.set(chatroomId, {
+          syncAttTime: time
+        });
+      }
     }
   };
   return {
@@ -8652,6 +8979,8 @@ function Counter (_config = {}) {
   };
 }
 
+let VERSION = '1.6.3';
+
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
   config = { appkey, nav, isSync, upload, uploadType, fileCompressLimit }
@@ -8663,7 +8992,8 @@ function IO(config) {
     navList,
     serverList = [],
     isSync = true,
-    reconnectCount = 100
+    reconnectCount = 100,
+    logger
   } = config;
   if (!utils.isArray(navList)) {
     navList = ['https://nav.juggleim.com'];
@@ -8759,6 +9089,9 @@ function IO(config) {
         } = utils.getProtocol();
         let url = `${protocol}//${domain}/im`;
         ws = new WebSocket(url);
+        logger.info({
+          tag: LOG_MODULE.WS_CONNECT
+        });
         ws.onopen = function () {
           let platform = PLATFORM.WEB;
           if (common.isDesktop()) {
@@ -8801,7 +9134,8 @@ function IO(config) {
     }
     return Network.getNavis(navList, {
       appkey,
-      token
+      token,
+      logger
     }, result => {
       let {
         code,
@@ -8834,6 +9168,11 @@ function IO(config) {
     userId,
     deviceId
   }, callback) => {
+    logger.info({
+      tag: LOG_MODULE.CON_RECONNECT,
+      userId,
+      deviceId
+    });
     let rCountObj = cache.get(CONNECT_TOOL.RECONNECT_COUNT);
     let count = rCountObj.count || 1;
     let isTimeout = count > reconnectCount;
@@ -8862,7 +9201,15 @@ function IO(config) {
         userId,
         deviceId,
         _isReconnect: true
-      }, callback);
+      }, result => {
+        let {
+          error
+        } = result;
+        if (utils.isEqual(error.code, ErrorType.COMMAND_SUCCESS.code)) {
+          emitter.emit(SIGNAL_NAME.CMD_CHATROOM_REJOIN, {});
+        }
+        callback(result);
+      });
     }, msec);
   };
   let PingTimeouts = [];
@@ -8897,6 +9244,11 @@ function IO(config) {
       counter
     });
     ws.send(buffer);
+    logger.info({
+      tag: LOG_MODULE.WS_SEND,
+      cmd,
+      ...data
+    });
     if (!utils.isEqual(SIGNAL_CMD.PUBLISH_ACK, cmd)) {
       // 请求发出后开始计时，一定时间内中未响应认为连接异常，断开连接，counter 定时器在收到 ack 后清除
       counter.start(({
@@ -8913,13 +9265,20 @@ function IO(config) {
       });
     }
   };
-  let syncer = Syncer(sendCommand, emitter, io);
+  let syncer = Syncer(sendCommand, emitter, io, {
+    logger
+  });
   let bufferHandler = buffer => {
     let {
       cmd,
       result,
       name
     } = decoder.decode(buffer);
+    logger.info({
+      tag: LOG_MODULE.WS_RECEIVE,
+      cmd,
+      code: result.code
+    });
     let {
       index
     } = result;
@@ -8932,6 +9291,18 @@ function IO(config) {
     if (counter) {
       counter.clear();
       PingTimeouts.length = 0;
+    }
+    if (utils.isEqual(name, SIGNAL_NAME.S_CHATROOM_USER_NTF)) {
+      let {
+        chatroomId,
+        time,
+        type
+      } = result;
+      emitter.emit(SIGNAL_NAME.CMD_CHATROOM_EVENT, {
+        chatroomId,
+        time,
+        type
+      });
     }
     if (utils.isEqual(name, SIGNAL_NAME.S_NTF) || utils.isEqual(name, SIGNAL_NAME.CMD_RECEIVED)) {
       syncer.exec({
@@ -9048,6 +9419,9 @@ function IO(config) {
           }
           timer.resume(() => {
             sendCommand(SIGNAL_CMD.PING, {});
+            logger.info({
+              tag: LOG_MODULE.HB_START
+            });
           });
           syncTimer.resume(() => {
             syncer.exec({
@@ -9082,10 +9456,18 @@ function IO(config) {
         type: DISCONNECT_TYPE.SERVER
       });
     }
+    if (utils.isEqual(name, SIGNAL_NAME.S_PONG)) {
+      logger.info({
+        tag: LOG_MODULE.HB_STOP
+      });
+    }
     cache.remove(index);
   };
   let isConnected = () => {
     return utils.isEqual(connectionState, CONNECT_STATE.CONNECTED);
+  };
+  let isNeedConnect = () => {
+    return utils.isEqual(connectionState, CONNECT_STATE.DISCONNECTED);
   };
   function getCurrentUser() {
     return currentUserInfo;
@@ -9112,7 +9494,17 @@ function IO(config) {
     disconnect: userDisconnect,
     sendCommand,
     isConnected,
+    isNeedConnect,
     getCurrentUser,
+    getVersion: () => {
+      return VERSION;
+    },
+    sync: syncers => {
+      syncers = utils.isArray(syncers) ? syncers : [syncers];
+      utils.forEach(syncers, item => {
+        syncer.exec(item);
+      });
+    },
     ...emitter
   });
   return io;
@@ -9433,7 +9825,7 @@ function Conversation$1 (io, emitter) {
         conversations,
         userId: user.id
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, result => {
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
         let list = utils.isArray(conversations) ? conversations : [conversations];
         let config = io.getConfig();
         let {
@@ -9476,7 +9868,7 @@ function Conversation$1 (io, emitter) {
         conversation,
         userId: user.id
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         code,
         msg,
         timestamp
@@ -9548,7 +9940,7 @@ function Conversation$1 (io, emitter) {
         conversations,
         userId: user.id
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         code,
         msg,
         timestamp
@@ -9591,7 +9983,7 @@ function Conversation$1 (io, emitter) {
         conversations,
         userId: user.id
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         code,
         msg,
         timestamp
@@ -10086,6 +10478,24 @@ function Message$1 (io, emitter, logger) {
       tag: LOG_MODULE.MSG_RECEIVE,
       messageId: message.messageId
     });
+    let isChatroom = utils.isEqual(message.conversationType, CONVERATION_TYPE.CHATROOM);
+    if (isChatroom) {
+      let _chatroomResult = chatroomCacher$1.get(message.conversationId);
+      return _chatroomResult.isJoined && emitter.emit(EVENT.MESSAGE_RECEIVED, [message, true]);
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_LOG_REPORT)) {
+      let {
+        content,
+        messageId
+      } = message;
+      return common.reportLogs({
+        logger,
+        params: {
+          ...content,
+          messageId
+        }
+      });
+    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.MODIFY)) {
       let {
         content: {
@@ -10103,11 +10513,9 @@ function Message$1 (io, emitter, logger) {
         sentTime
       });
     }
-    let isChatroom = utils.isEqual(message.conversationType, CONVERATION_TYPE.CHATROOM);
-    if (!isChatroom) {
-      // 收到非消息一定要更新会话列表
-      io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, utils.clone(message));
-    }
+
+    // 收到非聊天室消息一定要更新会话列表
+    io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, utils.clone(message));
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_DELETE_MSGS)) {
       let {
         content: {
@@ -10313,6 +10721,19 @@ function Message$1 (io, emitter, logger) {
         if (!config.isPC && !utils.isEqual(conversationType, CONVERATION_TYPE.CHATROOM)) {
           io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, message);
         }
+        let isChatroom = utils.isEqual(message.conversationType, CONVERATION_TYPE.CHATROOM);
+        if (isChatroom) {
+          let {
+            conversationId
+          } = message;
+          let {
+            msgs = []
+          } = chatroomCacher$1.get(conversationId);
+          msgs.push(message.messageId);
+          chatroomCacher$1.set(conversationId, {
+            msgs
+          });
+        }
         resolve(message);
       });
     });
@@ -10439,7 +10860,7 @@ function Message$1 (io, emitter, logger) {
         time: 0
       };
       utils.extend(data, params);
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         code,
         timestamp
       }) => {
@@ -10487,7 +10908,7 @@ function Message$1 (io, emitter, logger) {
         messages,
         userId: user.id
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         code,
         timestamp
       }) => {
@@ -10649,7 +11070,7 @@ function Message$1 (io, emitter, logger) {
         topic: COMMAND_TOPICS.UPDATE_MESSAGE,
         ...message
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, result => {
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
         let sender = io.getCurrentUser();
         notify({
           sender,
@@ -11089,6 +11510,31 @@ function Message$1 (io, emitter, logger) {
       });
     });
   };
+  let getFirstUnreadMessage = conversation => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, conversation, FUNC_PARAM_CHECKER.GET_FIRST_UNREAD_MSG);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let data = {
+        ...conversation,
+        topic: COMMAND_TOPICS.GET_FIRST_UNREAD_MSG
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
+        code,
+        msg
+      }) => {
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code
+          });
+        }
+        resolve({
+          message: msg
+        });
+      });
+    });
+  };
   let searchMessages = params => {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, params, FUNC_PARAM_CHECKER.SEARCH_MESSAGES);
@@ -11101,6 +11547,15 @@ function Message$1 (io, emitter, logger) {
   let updateMessageAttr = message => {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, message, FUNC_PARAM_CHECKER.UPDATE_MESSAGE_ATTR);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      return reject(ErrorType.SDK_FUNC_NOT_DEFINED);
+    });
+  };
+  let setSearchContent = message => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.SET_MESSAGE_SEARCH_CONTENT);
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
@@ -11141,6 +11596,7 @@ function Message$1 (io, emitter, logger) {
     updateMessage,
     insertMessage,
     updateMessageAttr,
+    setSearchContent,
     getMentionMessages,
     getFileToken,
     sendFileMessage,
@@ -11149,6 +11605,7 @@ function Message$1 (io, emitter, logger) {
     sendVideoMessage,
     sendMergeMessage,
     getMergeMessages,
+    getFirstUnreadMessage,
     searchMessages,
     _uploadFile
   };
@@ -11176,28 +11633,18 @@ function Socket$1 (io, emitter, logger) {
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
-      logger.info({
-        tag: LOG_MODULE.CON_CONNECT
-      });
-      // 通过 appkye_userid 隔离本地存储 Key
-      // let config = io.getConfig();
-      // let { appkey, token } = config;
-      // let key = common.getTokenKey(appkey, token);
-      // let userId = Storage.get(key);
-
-      // Storage.setPrefix(`${appkey}_${userId}`);
-
-      // let { syncConversationTime } = user;
-      // if(utils.isNumber(syncConversationTime)){
-      //   Storage.set(STORAGE.SYNC_CONVERSATION_TIME,  { time: syncConversationTime })
-      // }
-
       let {
         token = ''
       } = user;
       token = token.trim();
       user = utils.extend(user, {
         token
+      });
+      if (!io.isNeedConnect()) {
+        return reject(ErrorType.REPREAT_CONNECTION);
+      }
+      logger.info({
+        tag: LOG_MODULE.CON_CONNECT
       });
       io.connect(user, ({
         error,
@@ -11254,18 +11701,200 @@ function Socket$1 (io, emitter, logger) {
   };
 }
 
-function Chatroom$1 (io, emitter, logger) {
-  io.on(SIGNAL_NAME.CHATROOM_EVENT, notify => {
-    // 事件说明：
-    // USER_REJOINED: 当前用户断网重新加入
-    // USER_JOINED: 当前用户断网重新加入
-    // USER_QUIT: 当前用户退出 
-    // MEMBER_JOINED: 成员加入
-    // MEMBER_QUIT: 成员退出
-    // ATTRIBUTE_UPDATED: 属性变更
-    // ATTRIBUTE_REMOVED: 属性被删除
-    // CHATROOM_DESTROYED: 聊天室销毁
+let cacher = Cache();
+let heap = ({
+  chatroomId,
+  attrs
+}) => {
+  let dels = [],
+    updates = [];
+  let {
+    attrs: list
+  } = cacher.get(chatroomId);
+  list = list || [];
+  utils.forEach(attrs, attr => {
+    let {
+      key,
+      value,
+      updateTime,
+      userId,
+      type
+    } = attr;
+    let _attr = {
+      key,
+      value,
+      updateTime,
+      userId
+    };
+    let index = utils.find(list, item => {
+      return utils.isEqual(item.key, key);
+    });
+    if (utils.isEqual(index, -1) && utils.isEqual(type, CHATROOM_ATTR_OP_TYPE.ADD)) {
+      list.push(_attr);
+    }
+    if (!utils.isEqual(index, -1) && utils.isEqual(type, CHATROOM_ATTR_OP_TYPE.ADD)) {
+      list.splice(index, 1, _attr);
+    }
+    if (utils.isEqual(type, CHATROOM_ATTR_OP_TYPE.DEL)) {
+      list.splice(index, 1);
+      delete _attr.value;
+      dels.push(_attr);
+    } else {
+      updates.push(_attr);
+    }
   });
+  cacher.set(chatroomId, {
+    attrs: list
+  });
+  return {
+    updates,
+    dels
+  };
+};
+let removeAll = chatroomId => {
+  cacher.remove(chatroomId);
+};
+let getAll = chatroom => {
+  let {
+    id
+  } = chatroom;
+  let result = cacher.get(id);
+  let {
+    attrs = []
+  } = result;
+  return {
+    id,
+    attributes: attrs
+  };
+};
+let removeAttrs = chatroom => {
+  let {
+    id,
+    attributes
+  } = chatroom;
+  let attrs = utils.map(attributes, attr => {
+    return {
+      ...attr,
+      type: CHATROOM_ATTR_OP_TYPE.DEL
+    };
+  });
+  heap({
+    chatroomId: id,
+    attrs
+  });
+};
+let getAttrs = chatroom => {
+  let {
+    id,
+    attributes
+  } = chatroom;
+  let {
+    attrs = []
+  } = cacher.get(id);
+  let list = [];
+  utils.forEach(attrs, attr => {
+    utils.forEach(attributes, item => {
+      if (utils.isEqual(item.key, attr.key)) {
+        list.push(attr);
+      }
+    });
+  });
+  return {
+    id,
+    attributes: list
+  };
+};
+var attrCaher = {
+  heap,
+  removeAll,
+  getAll,
+  getAttrs,
+  removeAttrs
+};
+
+function Chatroom$1 (io, emitter, logger) {
+  // 聊天室全以 Web 通信为主，PC 端只做接口透传，所以未在 desktop/index.js init 方法中卸载 io 相关事件，直接在 Web 端复用 
+  io.on(SIGNAL_NAME.CMD_CHATROOM_ATTR_RECEIVED, result => {
+    logger.info({
+      tag: LOG_MODULE.CHATROOM_ATTR_RECEIVE,
+      ...result
+    });
+    let {
+      dels,
+      updates
+    } = attrCaher.heap(result);
+    let {
+      chatroomId
+    } = result;
+    if (!utils.isEmpty(dels)) {
+      emitter.emit(EVENT.CHATROOM_ATTRIBUTE_DELETED, {
+        id: chatroomId,
+        attributes: dels
+      });
+    }
+    if (!utils.isEmpty(updates)) {
+      emitter.emit(EVENT.CHATROOM_ATTRIBUTE_UPDATED, {
+        id: chatroomId,
+        attributes: updates
+      });
+    }
+  });
+  io.on(SIGNAL_NAME.CMD_CHATROOM_DESTROY, chatroom => {
+    logger.info({
+      tag: LOG_MODULE.CHATROOM_DESTORYED,
+      ...chatroom
+    });
+    emitter.emit(EVENT.CHATROOM_DESTROYED, chatroom);
+  });
+  io.on(SIGNAL_NAME.CMD_CHATROOM_EVENT, notify => {
+    let {
+      type,
+      chatroomId
+    } = notify;
+    logger.info({
+      tag: LOG_MODULE.CHATROOM_SERVER_EVENT,
+      ...notify
+    });
+    if (utils.isEqual(CHATROOM_EVENT_TYPE.FALLOUT, type) || utils.isEqual(CHATROOM_EVENT_TYPE.QUIT, type)) {
+      clearChatroomCache(chatroomId);
+      emitter.emit(EVENT.CHATROOM_USER_QUIT, notify);
+    }
+    if (utils.isEqual(CHATROOM_EVENT_TYPE.KICK, type)) {
+      clearChatroomCache(chatroomId);
+      emitter.emit(EVENT.CHATROOM_USER_KICKED, notify);
+    }
+  });
+
+  // 和 desktop/chatroom.js 复用断网重复加入事件，由于不涉及对外暴露 emitter，SDK 所以内部可共享 io.emit 事件
+  io.on(SIGNAL_NAME.CMD_CHATROOM_REJOIN, () => {
+    let chatrooms = chatroomCacher$1.getAll();
+    let chatroomIds = [];
+    utils.forEach(chatrooms, (value, chatroomId) => {
+      chatroomIds.push(chatroomId);
+    });
+    logger.info({
+      tag: LOG_MODULE.CHATROOM_USER_REJOIN,
+      chatroomIds
+    });
+    utils.iterator(chatroomIds, (id, next, isFinished) => {
+      let chatroom = {
+        id
+      };
+      let _next = () => {
+        if (!isFinished) {
+          next();
+        }
+      };
+      _joinChatroom(chatroom, {
+        success: _next,
+        fail: _next
+      });
+    });
+  });
+  function clearChatroomCache(chatroomId) {
+    chatroomCacher$1.remove(chatroomId);
+    attrCaher.removeAll(chatroomId);
+  }
   let joinChatroom = chatroom => {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.JOINCHATROOM);
@@ -11275,36 +11904,91 @@ function Chatroom$1 (io, emitter, logger) {
       let {
         id
       } = chatroom;
-      let data = {
-        topic: COMMAND_TOPICS.JOIN_CHATROOM,
-        chatroom,
-        conversationId: id
-      };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
-        code
-      }) => {
-        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return resolve();
-        }
-        let error = common.getError(code);
-        reject(error);
+      let chatroomResult = chatroomCacher$1.get(id);
+      if (chatroomResult.isJoined) {
+        return resolve();
+      }
+      logger.info({
+        tag: LOG_MODULE.CHATROOM_USER_JOIN,
+        ...chatroom
+      });
+      _joinChatroom(chatroom, {
+        success: resolve,
+        fail: reject
       });
     });
   };
+  function _joinChatroom(chatroom, callbacks) {
+    let {
+      id
+    } = chatroom;
+    let data = {
+      topic: COMMAND_TOPICS.JOIN_CHATROOM,
+      chatroom,
+      conversationId: id
+    };
+    io.sendCommand(SIGNAL_CMD.QUERY, data, ({
+      code
+    }) => {
+      logger.info({
+        tag: LOG_MODULE.CHATROOM_USER_JOIN,
+        ...chatroom,
+        code
+      });
+      if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+        chatroomCacher$1.set(chatroom.id, {
+          isJoined: true
+        });
+        let syncers = [{
+          name: SIGNAL_NAME.S_NTF,
+          msg: {
+            receiveTime: 0,
+            type: NOTIFY_TYPE.CHATROOM,
+            targetId: id
+          }
+        }, {
+          name: SIGNAL_NAME.S_NTF,
+          msg: {
+            receiveTime: 0,
+            type: NOTIFY_TYPE.CHATROOM_ATTR,
+            targetId: id
+          }
+        }];
+        io.sync(syncers);
+        return callbacks.success();
+      }
+      let error = common.getError(code);
+      callbacks.fail(error);
+    });
+  }
   let quitChatroom = chatroom => {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.QUITCHATROOM);
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
+      let chatroomResult = chatroomCacher$1.get(chatroom.id);
+      if (!chatroomResult.isJoined) {
+        return resolve();
+      }
+      logger.info({
+        tag: LOG_MODULE.CHATROOM_USER_QUIT,
+        ...chatroom
+      });
       let data = {
         topic: COMMAND_TOPICS.QUIT_CHATROOM,
         chatroom
       };
-      io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         code
       }) => {
+        logger.info({
+          tag: LOG_MODULE.CHATROOM_USER_QUIT,
+          ...chatroom,
+          code
+        });
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          clearChatroomCache(chatroom.id);
           return resolve();
         }
         let error = common.getError(code);
@@ -11354,6 +12038,7 @@ function Chatroom$1 (io, emitter, logger) {
         topic: COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES,
         chatroom
       };
+      attrCaher.removeAttrs(chatroom);
       io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
         let {
           code,
@@ -11375,7 +12060,7 @@ function Chatroom$1 (io, emitter, logger) {
   /* 
    let chatroom = {
      id: 'chatroomId',
-     attributeKeys: [{ key: 'key1' }],
+     attributes: [{ key: 'key1' }],
      options: {
        notify: ''
      }
@@ -11417,6 +12102,10 @@ function Chatroom$1 (io, emitter, logger) {
           fail
         } = result;
         if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          attrCaher.removeAttrs({
+            id: chatroom.id,
+            attributes: success
+          });
           return resolve({
             success,
             fail
@@ -11431,7 +12120,7 @@ function Chatroom$1 (io, emitter, logger) {
   /* 
     let chatroom = {
       id: 'chatroomId',
-      attributeKeys: [{ key: 'key1' }],
+      attributes: [{ key: 'key1' }],
     };
   */
   let getChatroomAttributes = chatroom => {
@@ -11440,20 +12129,8 @@ function Chatroom$1 (io, emitter, logger) {
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
-      let data = {
-        topic: COMMAND_TOPICS.GET_CHATROOM_ATTRIBUTES,
-        chatroom
-      };
-      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        code,
-        attributes
-      }) => {
-        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return resolve(attributes);
-        }
-        let error = common.getError(code);
-        reject(error);
-      });
+      let result = attrCaher.getAttrs(chatroom);
+      resolve(result);
     });
   };
   /* 
@@ -11467,20 +12144,8 @@ function Chatroom$1 (io, emitter, logger) {
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
-      let data = {
-        topic: COMMAND_TOPICS.GET_ALL_CHATROOM_ATTRIBUTES,
-        chatroom
-      };
-      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        code,
-        attributes
-      }) => {
-        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return resolve(attributes);
-        }
-        let error = common.getError(code);
-        reject(error);
-      });
+      let result = attrCaher.getAll(chatroom);
+      resolve(result);
     });
   };
   return {
@@ -11501,7 +12166,7 @@ let init$2 = ({
   let socket = Socket$1(io, emitter, logger);
   let conversation = Conversation$1(io, emitter);
   let message = Message$1(io, emitter, logger);
-  let chatroom = Chatroom$1(io);
+  let chatroom = Chatroom$1(io, emitter, logger);
   io.setConfig({
     logger: logger
   });
@@ -11801,7 +12466,7 @@ function Conversation ($conversation, {
 function Message ($message, {
   webAgent
 }) {
-  let funcs = ['sendMessage', 'updateMessageAttr', 'removeMessages', 'sendMassMessage', 'getMessagesByIds', 'clearMessage', 'recallMessage', 'readMessage', 'getMessageReadDetails', 'updateMessage', 'insertMessage', 'getMentionMessages', 'getFileToken', 'sendFileMessage', 'sendImageMessage', 'sendVoiceMessage', 'sendVideoMessage', 'sendMergeMessage', 'getMergeMessages'];
+  let funcs = ['sendMessage', 'updateMessageAttr', 'removeMessages', 'sendMassMessage', 'getMessagesByIds', 'clearMessage', 'recallMessage', 'readMessage', 'getMessageReadDetails', 'updateMessage', 'insertMessage', 'getMentionMessages', 'getFileToken', 'sendFileMessage', 'sendImageMessage', 'sendVoiceMessage', 'sendVideoMessage', 'sendMergeMessage', 'getMergeMessages', 'setSearchContent', 'getFirstUnreadMessage'];
   let invokes = common.formatProvider(funcs, $message);
   invokes.getMessages = conversation => {
     return utils.deferred((resolve, reject) => {
@@ -11826,9 +12491,6 @@ function Message ($message, {
           return utils.isEqual(msg.sentState, MESSAGE_SENT_STATE.SUCCESS);
         });
         let next = () => {
-          // if(utils.isEqual(order, MESSAGE_ORDER.BACKWARD)){
-          //   messages.reverse();
-          // }
           let _msgs = tools.formatMsgs({
             messages,
             senders,
@@ -11842,7 +12504,8 @@ function Message ($message, {
         let isCon = utils.isContinuous(list, 'messageIndex');
         let len = messages.length;
         let isFetch = isFinished && params.count > len;
-        if (isFetch || !isCon) {
+        // 如果首次获取历史消息，从远端拉取历史消息
+        if (isFetch || !isCon || utils.isEqual(params.time, 0)) {
           // 按类型获取历史消息，不再从远端获取，方式 index 断续
           if (!utils.isEmpty(params.names)) {
             return next();
@@ -11944,16 +12607,82 @@ function Socket ($socket) {
   return invokes;
 }
 
-function Chatroom ($chatroom) {
+function Chatroom ($chatroom, {
+  io,
+  emitter,
+  logger
+}) {
+  io.on(SIGNAL_NAME.CMD_CHATROOM_ATTR_RECEIVED, result => {
+    logger.info({
+      tag: LOG_MODULE.CHATROOM_ATTR_RECEIVE,
+      ...result
+    });
+    let {
+      dels,
+      updates
+    } = attrCaher.heap(result);
+    let {
+      chatroomId
+    } = result;
+    if (!utils.isEmpty(dels)) {
+      emitter.emit(EVENT.CHATROOM_ATTRIBUTE_DELETED, {
+        id: chatroomId,
+        attributes: dels
+      });
+    }
+    if (!utils.isEmpty(updates)) {
+      emitter.emit(EVENT.CHATROOM_ATTRIBUTE_UPDATED, {
+        id: chatroomId,
+        attributes: updates
+      });
+    }
+  });
+  io.on(SIGNAL_NAME.CMD_CHATROOM_DESTROY, chatroom => {
+    emitter.emit(EVENT.CHATROOM_DESTROYED, chatroom);
+  });
+  io.on(SIGNAL_NAME.CMD_CHATROOM_EVENT, notify => {
+    let {
+      type,
+      chatroomId
+    } = notify;
+    if (utils.isEqual(CHATROOM_EVENT_TYPE.FALLOUT, type) || utils.isEqual(CHATROOM_EVENT_TYPE.QUIT, type)) {
+      clearChatroomCache(chatroomId);
+      emitter.emit(EVENT.CHATROOM_USER_QUIT, notify);
+    }
+    if (utils.isEqual(CHATROOM_EVENT_TYPE.KICK, type)) {
+      clearChatroomCache(chatroomId);
+      emitter.emit(EVENT.CHATROOM_USER_KICKED, notify);
+    }
+  });
+  function clearChatroomCache(chatroomId) {
+    chatroomCacher$1.remove(chatroomId);
+    attrCaher.removeAll(chatroomId);
+  }
   let joinChatroom = chatroom => {
     return $chatroom.joinChatroom(chatroom);
   };
   let quitChatroom = chatroom => {
     return $chatroom.quitChatroom(chatroom);
   };
+  let setChatroomAttributes = chatroom => {
+    return $chatroom.setChatroomAttributes(chatroom);
+  };
+  let getChatroomAttributes = chatroom => {
+    return $chatroom.getChatroomAttributes(chatroom);
+  };
+  let removeChatroomAttributes = chatroom => {
+    return $chatroom.removeChatroomAttributes(chatroom);
+  };
+  let getAllChatRoomAttributes = chatroom => {
+    return $chatroom.getAllChatRoomAttributes(chatroom);
+  };
   return {
     joinChatroom,
-    quitChatroom
+    quitChatroom,
+    setChatroomAttributes,
+    getChatroomAttributes,
+    removeChatroomAttributes,
+    getAllChatRoomAttributes
   };
 }
 
@@ -11982,8 +12711,10 @@ let init$1 = ({
     common,
     MessageCacher,
     conversationUtils,
+    chatroomCacher: chatroomCacher$1,
     tools,
-    Storage
+    Storage,
+    logger
   });
   let socket = Socket(pc.socket);
   let conversation = Conversation(pc.conversation, {
@@ -11993,7 +12724,10 @@ let init$1 = ({
   let message = Message(pc.message, {
     webAgent: web.message
   });
-  let chatroom = Chatroom(web.chatroom);
+  let chatroom = Chatroom(web.chatroom, {
+    io,
+    emitter
+  });
 
   // 告知 IO 模块当前是 PC 端，做特殊处理，例如：同步会话列表
   io.setConfig({
@@ -12070,6 +12804,7 @@ function DB(option) {
       request.onerror = function (e) {
         reject(e);
       };
+      record = utils.clone(record);
       store.add(record);
     });
   };
@@ -12224,7 +12959,8 @@ function Logger(option = {}) {
     isConsole = true,
     appkey,
     sessionId,
-    io
+    getCurrentUser,
+    getVersion
   } = option;
   let $db = DB({
     name: `JUGGLEIM_${appkey}`,
@@ -12287,26 +13023,28 @@ function Logger(option = {}) {
   let info = content => {
     log(LOG_LEVEL.INFO, content);
   };
-  let report = () => {
-    let starTime = Date.now() - 10000;
-    let endTime = Date.now();
+  let report = ({
+    start,
+    end,
+    messageId
+  }) => {
     let params = {
       name: TABLE_NAME,
       index: {
         name: INDEX.TIME,
         type: 'bound',
-        values: [starTime, endTime, false, false]
+        values: [start, end, false, false]
       }
     };
-    let user = io.getCurrentUser();
-    let key = common.getNaviStorageKey(appkey, user.id);
+    let key = common.getNaviStorageKey();
     let navi = Storage.get(key);
     $db.search(params, result => {
+      let user = getCurrentUser();
       let {
         token
       } = user;
-      let api = navi.logAPI || 'https://imlog.gxjipei.com';
-      let url = `${api}/api/upload-log-plain`;
+      let api = navi.url || '';
+      let url = `${api}/navigator/upload-log-plain`;
       utils.requestNormal(url, {
         method: 'POST',
         headers: {
@@ -12315,6 +13053,7 @@ function Logger(option = {}) {
           'x-token': token
         },
         body: utils.toJSON({
+          msg_id: messageId,
           log: utils.toJSON(result.list)
         })
       });
@@ -12339,13 +13078,13 @@ let init = config => {
     log = {}
   } = config;
   let uploadType = common.checkUploadType(upload);
-  let io = IO(config);
   let sessionId = common.getSessionId();
   let logger = Logger({
     ...log,
     appkey,
     sessionId,
-    io
+    getCurrentUser: getCurrentUser,
+    getVersion: getVersion
   });
 
   // 移除 AppKey 前后空格
@@ -12355,6 +13094,13 @@ let init = config => {
     logger,
     appkey
   });
+  let io = IO(config);
+  function getCurrentUser() {
+    return io.getCurrentUser();
+  }
+  function getVersion() {
+    return io.getVersion();
+  }
   let web = Web.init({
     io,
     emitter,
