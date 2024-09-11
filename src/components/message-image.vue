@@ -57,8 +57,8 @@ function onShowReadDetail(isShow) {
             <div class="jg-progress-stacked" :style="{ 'width': props.message.percent + '%' }"></div>
           </div>
         </a>
-        <div class="wr message-state" @click.stop="onShowReadDetail(true)"
-        :class="{ 'wr-dui': props.message.isRead, 'wr-circle': !props.message.isRead, 'message-read': props.message.isRead || props.message.readCount > 0 }"
+        <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
+        :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"
           v-if="props.message.isSender">
           <div v-if="messageUtils.isGroup(props.message) && props.message.readCount > 0 && props.message.unreadCount > 0"
             class="message-group-state"

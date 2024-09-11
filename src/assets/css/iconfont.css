@@ -107,7 +107,7 @@
   content: '\e62e';
 }
 .wr-dui:before {
-  content: '\e62f';
+  content: '\e62f' !important;
 }
 .wr-circle:before {
   content: '\e669';

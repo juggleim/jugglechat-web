@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.6.3
+* JuggleChat.js v1.6.6
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -4272,6 +4272,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           msgIndex: {
             type: "int64",
             id: 5
+          },
+          memberCount: {
+            type: "int32",
+            id: 6
           }
         }
       },
@@ -6592,7 +6596,8 @@ function getConnectBody ({
     token,
     deviceId,
     platform,
-    clientSession
+    clientSession,
+    sdkVersion
   } = data;
   let protoId = 'jug9le1m';
   let codec = $root.lookup('codec.ConnectMsgBody');
@@ -6602,7 +6607,8 @@ function getConnectBody ({
     platform,
     deviceId,
     clientSession,
-    protoId
+    protoId,
+    sdkVersion
   });
   let buffer = codec.encode(message).finish();
   return {
@@ -6636,7 +6642,7 @@ function getPublishBody ({
     if (mentionInfo) {
       let {
         members = [],
-        type
+        mentionType
       } = mentionInfo;
       members = utils.map(members, member => {
         return {
@@ -6644,7 +6650,7 @@ function getPublishBody ({
         };
       });
       utils.extend(mention, {
-        mentionType: type,
+        mentionType: mentionType,
         targetUsers: members
       });
     }
@@ -7490,7 +7496,8 @@ function Decoder(cache, io) {
           msgId: messageId,
           timestamp: sentTime,
           code,
-          msgIndex
+          msgIndex,
+          memberCount
         } = pubAckMsgBody;
         result = {
           messageId,
@@ -7498,7 +7505,8 @@ function Decoder(cache, io) {
           index,
           isSender: true,
           code,
-          msgIndex
+          msgIndex,
+          memberCount
         };
         break;
       case SIGNAL_CMD.PUBLISH:
@@ -8133,6 +8141,7 @@ function Decoder(cache, io) {
       });
     }
     let msgFlag = common.formatter.toMsg(flags);
+    let user = io.getCurrentUser();
     let _message = {
       conversationType,
       conversationId,
@@ -8144,7 +8153,7 @@ function Decoder(cache, io) {
       tid: msgId,
       sentTime: msgTime,
       name: msgType,
-      isSender: !!isSend,
+      isSender: utils.isEqual(user.id, senderId),
       messageIndex: msgIndex,
       mentionInfo,
       isRead: !!isRead,
@@ -8158,7 +8167,6 @@ function Decoder(cache, io) {
       flags
     };
     if (_message.isSender) {
-      let user = io.getCurrentUser();
       utils.extend(_message.sender, user);
     }
     if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
@@ -8536,6 +8544,7 @@ var Network = {
 function Consumer() {
   let items = [];
   let isFinished = false;
+  let isExecing = false;
   let produce = (item, isSyncing) => {
     if (isSyncing) {
       return items.unshift(item);
@@ -8544,10 +8553,10 @@ function Consumer() {
   };
   let consume = invoke => {
     // 如果正在执行，终止本次任务，执行任务结束后自动消费队列 ntf, 1 是首次，所以判断大于 1
-    let isDoing = items.length > 1;
-    if (isDoing) {
+    if (isExecing) {
       return;
     }
+    isExecing = true;
 
     // 队列消费结束，标志完成，此处先判断是否完成，再截取数组，避免数组长度为 1 时，最后一次被丢弃
     isFinished = utils.isEqual(items.length, 0);
@@ -8556,9 +8565,12 @@ function Consumer() {
       item
     };
     let next = () => {
+      isExecing = false;
       consume(invoke);
     };
-    if (!isFinished) {
+    if (isFinished) {
+      isExecing = false;
+    } else {
       invoke(result, next);
     }
   };
@@ -8568,35 +8580,7 @@ function Consumer() {
   };
 }
 
-let chatroomCacher = Cache();
-var chatroomCacher$1 = {
-  set: (id, value) => {
-    let result = chatroomCacher.get(id);
-    let {
-      msgs = []
-    } = value;
-    if (msgs.length >= 200) {
-      msgs.shift(0);
-      value = utils.extend(value, {
-        msgs
-      });
-    }
-    result = utils.extend(result, value);
-    chatroomCacher.set(id, result);
-  },
-  get: id => {
-    let result = chatroomCacher.get(id);
-    return result;
-  },
-  remove: id => {
-    chatroomCacher.remove(id);
-  },
-  getAll: () => {
-    return chatroomCacher.getAll();
-  }
-};
-
-function Syncer(send, emitter, io, {
+function MessageSyncer(send, emitter, io, {
   logger
 }) {
   let consumer = Consumer();
@@ -8613,9 +8597,6 @@ function Syncer(send, emitter, io, {
       }
       if (utils.isEqual(name, SIGNAL_NAME.S_NTF)) {
         query(item, next);
-      }
-      if (utils.isEqual(name, SIGNAL_NAME.S_SYNC_CONVERSATION_NTF)) {
-        syncConversations(item, next);
       }
     });
     function publish(item, next) {
@@ -8641,138 +8622,11 @@ function Syncer(send, emitter, io, {
       next();
     }
     function query(item, next) {
-      logger.info({
-        tag: LOG_MODULE.MSG_SYNC,
-        ...item
-      });
-      let {
-        msg
-      } = item;
-      let _chatroomResult = chatroomCacher$1.get(msg.targetId);
-      let {
-        isJoined
-      } = _chatroomResult;
-      if (utils.isEqual(msg.type, NOTIFY_TYPE.MSG)) {
-        queryNormal(item, next);
-      } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM)) {
-        isJoined && queryChatroom(item, next);
-      } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_ATTR)) {
-        isJoined && queryChatroomAttr(item, next);
-      } else if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_DESTORY)) {
-        isJoined && broadcastChatroomDestory(item, next);
-      } else {
-        next();
-      }
-    }
-    function broadcastChatroomDestory(item, next) {
-      let {
-        msg
-      } = item;
-      let chatroomId = msg.targetId;
-      emitter.emit(SIGNAL_NAME.CMD_CHATROOM_DESTROY, {
-        id: chatroomId
-      });
-      next();
-    }
-    function queryChatroomAttr(item, next) {
-      let {
-        msg
-      } = item;
-      let chatroomId = msg.targetId;
-      let syncTime = getChatroomAttrSyncTime(chatroomId);
-      if (syncTime >= msg.receiveTime && msg.receiveTime > 0) {
-        return next();
-      }
-      let data = {
-        syncTime: syncTime,
-        chatroomId: chatroomId,
-        targetId: chatroomId,
-        topic: COMMAND_TOPICS.SYNC_CHATROOM_ATTRS
-      };
-      send(SIGNAL_CMD.QUERY, data, result => {
-        let {
-          code,
-          attrs,
-          chatroomId: _chatroomId
-        } = result;
-        logger.info({
-          tag: LOG_MODULE.MSG_SYNC,
-          data,
-          msg,
-          code,
-          count: attrs.length
-        });
-        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
-          return next();
-        }
-        utils.forEach(attrs, message => {
-          setChatRoomAttrSyncTime(_chatroomId, message.updateTime);
-        });
-        emitter.emit(SIGNAL_NAME.CMD_CHATROOM_ATTR_RECEIVED, {
-          attrs,
-          chatroomId: _chatroomId
-        });
-        next();
-      });
-    }
-    function queryChatroom(item, next) {
-      let {
-        msg
-      } = item;
-      let chatroomId = msg.targetId;
-      let syncTime = getChatroomSyncTime(chatroomId);
-      if (syncTime >= msg.receiveTime && msg.receiveTime > 0) {
-        logger.info({
-          tag: LOG_MODULE.MSG_SYNC,
-          syncTime,
-          msg
-        });
-        return next();
-      }
-      let data = {
-        syncTime: syncTime,
-        chatroomId: chatroomId,
-        topic: COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES
-      };
-      send(SIGNAL_CMD.QUERY, data, ({
-        messages,
-        code
-      }) => {
-        logger.info({
-          tag: LOG_MODULE.MSG_SYNC,
-          data,
-          msg,
-          code,
-          count: messages.length
-        });
-        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
-          return next();
-        }
-        let {
-          msgs = []
-        } = chatroomCacher$1.get(chatroomId);
-        utils.forEach(messages, message => {
-          setChatRoomSyncTime(message.conversationId, message.sentTime);
-          let {
-            messageId
-          } = message;
-          let isInclude = utils.isInclude(msgs, messageId);
-          if (!isInclude) {
-            msgs.push(messageId);
-            emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message]);
-          }
-        });
-        chatroomCacher$1.set(chatroomId, {
-          msgs
-        });
-        next();
-      });
-    }
-    function queryNormal(item, next) {
       let {
         user,
         msg,
-        name
+        name,
+        $message
       } = item;
       let syncReceiveTime = Storage.get(STORAGE.SYNC_RECEIVED_MSG_TIME).time || 1700927161470;
       let syncSentTime = Storage.get(STORAGE.SYNC_SENT_MSG_TIME).time || 1700927161470;
@@ -8808,24 +8662,67 @@ function Syncer(send, emitter, io, {
         if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
           return next();
         }
+        let msgs = [];
         utils.forEach(messages, (message, index) => {
-          let isNewMsg = common.updateSyncTime({
-            ...message,
-            io
-          });
-          if (isNewMsg) {
-            let isFinishedAll = isFinished && utils.isEqual(messages.length - 1, index);
-            emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message, isFinishedAll]);
+          let {
+            flags,
+            sentTime,
+            isSender
+          } = message;
+          let msgFlag = common.formatter.toMsg(flags);
+          if (msgFlag.isStorage) {
+            msgs.push(message);
           }
         });
-        let isSyncing = !isFinished;
-        if (isSyncing) {
-          // 如果有未拉取，向队列下标最小位置插入消费对象，一次拉取执行完成后再处理它 ntf 或者 msg
-          consumer.produce(item, isSyncing);
-        }
-        next();
+        $message.insertBatchMsgs({
+          msgs: utils.clone(msgs)
+        }).then(() => {
+          utils.forEach(messages, (message, index) => {
+            let {
+              sentTime,
+              isSender
+            } = message;
+            let isNewMsg = common.updateSyncTime({
+              sentTime,
+              isSender,
+              io
+            });
+            if (isNewMsg) {
+              let isFinishedAll = isFinished && utils.isEqual(messages.length - 1, index);
+              emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message, isFinishedAll]);
+            }
+          });
+          let isSyncing = !isFinished;
+          if (isSyncing) {
+            // 如果有未拉取，向队列下标最小位置插入消费对象，一次拉取执行完成后再处理它 ntf 或者 msg
+            consumer.produce(item, isSyncing);
+          }
+          next();
+        });
       });
     }
+  };
+  return {
+    exec
+  };
+}
+
+function ConversationSyncer(send, emitter, io, {
+  logger
+}) {
+  let consumer = Consumer();
+  let exec = data => {
+    consumer.produce(data);
+    consumer.consume(({
+      item
+    }, next) => {
+      let {
+        name
+      } = item;
+      if (utils.isEqual(name, SIGNAL_NAME.S_SYNC_CONVERSATION_NTF)) {
+        syncConversations(item, next);
+      }
+    });
     function syncConversations(item, next) {
       let {
         user,
@@ -8840,7 +8737,7 @@ function Syncer(send, emitter, io, {
           syncTime,
           time
         });
-        return;
+        return next();
       }
       let data = {
         userId: user.id,
@@ -8896,6 +8793,138 @@ function Syncer(send, emitter, io, {
         });
       });
     }
+  };
+  return {
+    exec
+  };
+}
+
+let chatroomCacher = Cache();
+var chatroomCacher$1 = {
+  set: (id, value) => {
+    let result = chatroomCacher.get(id);
+    let {
+      msgs = []
+    } = value;
+    if (msgs.length >= 200) {
+      msgs.shift(0);
+      value = utils.extend(value, {
+        msgs
+      });
+    }
+    result = utils.extend(result, value);
+    chatroomCacher.set(id, result);
+  },
+  get: id => {
+    let result = chatroomCacher.get(id);
+    return result;
+  },
+  remove: id => {
+    chatroomCacher.remove(id);
+  },
+  getAll: () => {
+    return chatroomCacher.getAll();
+  }
+};
+
+function ChatroomSyncer(send, emitter, io, {
+  logger
+}) {
+  let consumer = Consumer();
+  let exec = data => {
+    consumer.produce(data);
+    consumer.consume(({
+      item
+    }, next) => {
+      let {
+        name
+      } = item;
+      if (utils.isEqual(name, SIGNAL_NAME.S_NTF)) {
+        query(item, next);
+      }
+    });
+    function query(item, next) {
+      logger.info({
+        tag: LOG_MODULE.MSG_SYNC,
+        ...item
+      });
+      let {
+        msg
+      } = item;
+      let _chatroomResult = chatroomCacher$1.get(msg.targetId);
+      let {
+        isJoined
+      } = _chatroomResult;
+      if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM)) {
+        isJoined && queryChatroom(item, next);
+      }
+      if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_DESTORY)) {
+        isJoined && broadcastChatroomDestory(item, next);
+      }
+    }
+    function broadcastChatroomDestory(item, next) {
+      let {
+        msg
+      } = item;
+      let chatroomId = msg.targetId;
+      emitter.emit(SIGNAL_NAME.CMD_CHATROOM_DESTROY, {
+        id: chatroomId
+      });
+      next();
+    }
+    function queryChatroom(item, next) {
+      let {
+        msg
+      } = item;
+      let chatroomId = msg.targetId;
+      let syncTime = getChatroomSyncTime(chatroomId);
+      if (syncTime >= msg.receiveTime && msg.receiveTime > 0) {
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          syncTime,
+          msg
+        });
+        return next();
+      }
+      let data = {
+        syncTime: syncTime,
+        chatroomId: chatroomId,
+        topic: COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES
+      };
+      send(SIGNAL_CMD.QUERY, data, ({
+        messages,
+        code
+      }) => {
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          data,
+          msg,
+          code,
+          count: messages.length
+        });
+        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+          return next();
+        }
+        let {
+          msgs = []
+        } = chatroomCacher$1.get(chatroomId);
+        utils.forEach(messages, message => {
+          setChatRoomSyncTime(message.conversationId, message.sentTime);
+          let {
+            messageId
+          } = message;
+          let isInclude = utils.isInclude(msgs, messageId);
+          if (!isInclude) {
+            msgs.push(messageId);
+            emitter.emit(SIGNAL_NAME.CMD_RECEIVED, [message]);
+          }
+        });
+        chatroomCacher$1.set(chatroomId, {
+          msgs
+        });
+        next();
+      });
+    }
     function getChatroomSyncTime(chatroomId) {
       let result = chatroomCacher$1.get(chatroomId);
       return result.syncMsgTime || 0;
@@ -8907,6 +8936,85 @@ function Syncer(send, emitter, io, {
           syncMsgTime: time
         });
       }
+    }
+  };
+  return {
+    exec
+  };
+}
+
+function ChatroomAttSyncer(send, emitter, io, {
+  logger
+}) {
+  let consumer = Consumer();
+  let exec = data => {
+    consumer.produce(data);
+    consumer.consume(({
+      item
+    }, next) => {
+      let {
+        name
+      } = item;
+      if (utils.isEqual(name, SIGNAL_NAME.S_NTF)) {
+        query(item, next);
+      }
+    });
+    function query(item, next) {
+      logger.info({
+        tag: LOG_MODULE.MSG_SYNC,
+        ...item
+      });
+      let {
+        msg
+      } = item;
+      let _chatroomResult = chatroomCacher$1.get(msg.targetId);
+      let {
+        isJoined
+      } = _chatroomResult;
+      if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_ATTR)) {
+        isJoined && queryChatroomAttr(item, next);
+      }
+    }
+    function queryChatroomAttr(item, next) {
+      let {
+        msg
+      } = item;
+      let chatroomId = msg.targetId;
+      let syncTime = getChatroomAttrSyncTime(chatroomId);
+      if (syncTime >= msg.receiveTime && msg.receiveTime > 0) {
+        return next();
+      }
+      let data = {
+        syncTime: syncTime,
+        chatroomId: chatroomId,
+        targetId: chatroomId,
+        topic: COMMAND_TOPICS.SYNC_CHATROOM_ATTRS
+      };
+      send(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          attrs,
+          chatroomId: _chatroomId
+        } = result;
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          data,
+          msg,
+          code,
+          count: attrs.length
+        });
+        if (!utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+          return next();
+        }
+        utils.forEach(attrs, message => {
+          setChatRoomAttrSyncTime(_chatroomId, message.updateTime);
+        });
+        emitter.emit(SIGNAL_NAME.CMD_CHATROOM_ATTR_RECEIVED, {
+          attrs,
+          chatroomId: _chatroomId
+        });
+        next();
+      });
     }
     function getChatroomAttrSyncTime(chatroomId) {
       let syncInfo = chatroomCacher$1.get(chatroomId);
@@ -8979,7 +9087,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.6.3';
+let VERSION = '1.6.6';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -9103,7 +9211,8 @@ function IO(config) {
             token,
             deviceId,
             platform,
-            clientSession
+            clientSession,
+            sdkVerion: VERSION
           });
         };
         ws.onclose = e => {
@@ -9244,10 +9353,12 @@ function IO(config) {
       counter
     });
     ws.send(buffer);
+    let _data = utils.clone(data);
+    delete _data.messages;
     logger.info({
       tag: LOG_MODULE.WS_SEND,
       cmd,
-      ...data
+      ..._data
     });
     if (!utils.isEqual(SIGNAL_CMD.PUBLISH_ACK, cmd)) {
       // 请求发出后开始计时，一定时间内中未响应认为连接异常，断开连接，counter 定时器在收到 ack 后清除
@@ -9265,7 +9376,16 @@ function IO(config) {
       });
     }
   };
-  let syncer = Syncer(sendCommand, emitter, io, {
+  let messageSyncer = MessageSyncer(sendCommand, emitter, io, {
+    logger
+  });
+  let conversationSyncer = ConversationSyncer(sendCommand, emitter, io, {
+    logger
+  });
+  let chatroomSyncer = ChatroomSyncer(sendCommand, emitter, io, {
+    logger
+  });
+  let chatroomAttrSyncer = ChatroomAttSyncer(sendCommand, emitter, io, {
     logger
   });
   let bufferHandler = buffer => {
@@ -9304,14 +9424,40 @@ function IO(config) {
         type
       });
     }
-    if (utils.isEqual(name, SIGNAL_NAME.S_NTF) || utils.isEqual(name, SIGNAL_NAME.CMD_RECEIVED)) {
-      syncer.exec({
+    if (utils.isEqual(name, SIGNAL_NAME.CMD_RECEIVED)) {
+      messageSyncer.exec({
         msg: result,
         name: name,
+        $message: config.$message,
         user: {
           id: currentUserInfo.id
         }
       });
+      // 连接成功后会开始计时 3 分钟拉取逻辑，如果收到直发或者 NTF 重新开始计算时长，连接断开后会清空计时
+      syncTimer.reset();
+    }
+    if (utils.isEqual(name, SIGNAL_NAME.S_NTF)) {
+      let {
+        type
+      } = result;
+      let _invokeItem = {
+        msg: result,
+        name: name,
+        $message: config.$message,
+        user: {
+          id: currentUserInfo.id
+        }
+      };
+      if (utils.isEqual(type, NOTIFY_TYPE.MSG)) {
+        messageSyncer.exec(_invokeItem);
+      }
+      if (utils.isEqual(type, NOTIFY_TYPE.CHATROOM) || utils.isEqual(type, NOTIFY_TYPE.CHATROOM_DESTORY)) {
+        chatroomSyncer.exec(_invokeItem);
+      }
+      if (utils.isEqual(type, NOTIFY_TYPE.CHATROOM_ATTR)) {
+        chatroomAttrSyncer.exec(_invokeItem);
+      }
+
       // 连接成功后会开始计时 3 分钟拉取逻辑，如果收到直发或者 NTF 重新开始计算时长，连接断开后会清空计时
       syncTimer.reset();
     }
@@ -9382,7 +9528,7 @@ function IO(config) {
           // 同步会话和同步消息顺序不能调整，保证先同步会话再同步消息，规避会话列表最后一条消息不是最新的
           if (config.isPC) {
             let syncNext = () => {
-              syncer.exec({
+              conversationSyncer.exec({
                 time: Storage.get(STORAGE.SYNC_CONVERSATION_TIME).time || 0,
                 name: SIGNAL_NAME.S_SYNC_CONVERSATION_NTF,
                 user: {
@@ -9407,11 +9553,12 @@ function IO(config) {
             }
           }
           if (isSync) {
-            syncer.exec({
+            messageSyncer.exec({
               msg: {
                 type: NOTIFY_TYPE.MSG
               },
               name: SIGNAL_NAME.S_NTF,
+              $message: config.$message,
               user: {
                 id: currentUserInfo.id
               }
@@ -9424,11 +9571,12 @@ function IO(config) {
             });
           });
           syncTimer.resume(() => {
-            syncer.exec({
+            messageSyncer.exec({
               msg: {
                 type: NOTIFY_TYPE.MSG
               },
               name: SIGNAL_NAME.S_NTF,
+              $message: config.$message,
               user: {
                 id: currentUserInfo.id
               }
@@ -9501,8 +9649,23 @@ function IO(config) {
     },
     sync: syncers => {
       syncers = utils.isArray(syncers) ? syncers : [syncers];
+      let config = getConfig();
       utils.forEach(syncers, item => {
-        syncer.exec(item);
+        let _item = {
+          ...item,
+          $message: config.$message
+        };
+        let {
+          msg: {
+            type
+          }
+        } = item;
+        if (utils.isEqual(type, NOTIFY_TYPE.CHATROOM)) {
+          chatroomSyncer.exec(_item);
+        }
+        if (utils.isEqual(type, NOTIFY_TYPE.CHATROOM_ATTR)) {
+          chatroomAttrSyncer.exec(_item);
+        }
       });
     },
     ...emitter
@@ -10694,7 +10857,8 @@ function Message$1 (io, emitter, logger) {
         sentTime,
         code,
         msg,
-        msgIndex
+        msgIndex,
+        memberCount
       }) => {
         let sender = io.getCurrentUser() || {};
         utils.extend(message, {
@@ -10732,6 +10896,13 @@ function Message$1 (io, emitter, logger) {
           msgs.push(message.messageId);
           chatroomCacher$1.set(conversationId, {
             msgs
+          });
+        }
+        let isGroup = utils.isEqual(message.conversationType, CONVERATION_TYPE.GROUP);
+        if (isGroup) {
+          message = utils.extend(message, {
+            unreadCount: memberCount,
+            readCount: 0
           });
         }
         resolve(message);
@@ -12168,7 +12339,12 @@ let init$2 = ({
   let message = Message$1(io, emitter, logger);
   let chatroom = Chatroom$1(io, emitter, logger);
   io.setConfig({
-    logger: logger
+    logger: logger,
+    $message: {
+      insertBatchMsgs: params => {
+        return Promise.resolve();
+      }
+    }
   });
   return {
     socket,
@@ -12367,6 +12543,44 @@ let createMentions = (mentions, message, user) => {
   let {
     mentionInfo
   } = message;
+  let {
+    senders = [],
+    msgs = []
+  } = mentions;
+  if (utils.isEqual(message.name, MESSAGE_TYPE.RECALL_INFO)) {
+    let {
+      content: {
+        messageId
+      },
+      sender
+    } = message;
+    let msgIndex = utils.find(msgs, msg => {
+      return utils.isEqual(msg.messageId, messageId);
+    });
+    if (msgIndex > -1) {
+      msgs.splice(msgIndex, 1);
+    }
+
+    // 如果没有消息撤回发送人的消息，移除 senders 中的发送人信息
+    let isIncludeSender = utils.find(msgs, msg => {
+      return utils.isEqual(msg.senderId, sender.id);
+    }) > -1;
+    if (!isIncludeSender) {
+      let senderIndex = utils.find(senders, member => {
+        return utils.isEqual(message.sender.id, member.id);
+      });
+      if (!utils.isEqual(senderIndex, -1)) {
+        senders.splice(senderIndex, 1);
+      }
+    }
+    let count = msgs.length;
+    return {
+      isMentioned: count > 0,
+      senders,
+      msgs,
+      count: count
+    };
+  }
   if (utils.isEmpty(mentionInfo)) {
     return mentions;
   }
@@ -12378,11 +12592,6 @@ let createMentions = (mentions, message, user) => {
     return utils.isEqual(user.id, member.id);
   });
   if (index > -1 || utils.isEqual(type, MENTION_TYPE.ALL)) {
-    let {
-      isMentioned = true,
-      senders = [],
-      msgs = []
-    } = mentions;
     msgs.push({
       senderId: message.sender.id,
       messageId: message.messageId,
@@ -12394,14 +12603,14 @@ let createMentions = (mentions, message, user) => {
     if (utils.isEqual(senderIndex, -1)) {
       senders.push(message.sender);
     }
-    mentions = {
-      isMentioned,
-      senders,
-      msgs,
-      count: msgs.length
-    };
   }
-  return mentions;
+  let count = msgs.length;
+  return {
+    isMentioned: count > 0,
+    senders,
+    msgs,
+    count: count
+  };
 };
 var tools = {
   isGroup,
@@ -12511,8 +12720,7 @@ function Message ($message, {
             return next();
           }
           return webAgent.getMessages(conversation).then(result => {
-            let newMsgs = [],
-              existMsgs = [];
+            let newMsgs = [];
             utils.forEach(result.messages, newMsg => {
               let index = utils.find(messages, msg => {
                 return utils.isEqual(msg.messageId, newMsg.messageId);
@@ -12520,15 +12728,14 @@ function Message ($message, {
               if (utils.isEqual(index, -1)) {
                 newMsgs.push(newMsg);
               } else {
-                let eMsg = messages[index];
-                existMsgs.push(eMsg);
+                messages[index];
               }
             });
             $message.insertBatchMsgs({
-              msgs: newMsgs
+              msgs: utils.clone(newMsgs)
             });
             let _msgs = tools.formatMsgs({
-              messages: existMsgs,
+              messages: messages,
               senders,
               groups
             });

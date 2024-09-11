@@ -24,7 +24,9 @@ function getMessages(isFirst, callback, state, props) {
   callback = callback || utils.noop;
   let { conversationType, conversationId, latestMessage } = props.conversation;
   let params = { time: 0 };
-  if (!isFirst) {
+  if (isFirst) {
+    params.time = 0;
+  }else{
     let message = state.messages[state.messages.length - 1];
     utils.extend(params, { time: message.sentTime });
   }
@@ -193,6 +195,7 @@ function sendMerge(conversations, msgs, state){
       if(isSameConversation(conversation, state)){
         state.messages.unshift(msg);
       }
+      console.log(msg)
       next();
     }, (error) => {
       console.log(error);
