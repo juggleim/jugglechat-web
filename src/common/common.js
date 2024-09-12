@@ -107,13 +107,16 @@ function getTextAvatar(name, option = {}){
   if(avatar){
     return avatar;
   }
+  if(name.length == 0){
+    name = 'JG'
+  }
   let textLen = name.length;
   let text = name;
   if(textLen > 2){
     text = text.substr(textLen - 2);
   }
   let { height = 100, width = 100 } = option;
-  let colors = [20, text.charCodeAt(0), 100];
+  let colors = [150, text.charCodeAt(0), 120];
   let cvs = document.createElement("canvas");
   cvs.setAttribute('width', width);
   cvs.setAttribute('height', height);
