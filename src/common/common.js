@@ -7,7 +7,7 @@ function isElementTop(message){
   var chatNode = document.querySelector('.tyn-chat-body');
   var messageNode = document.querySelector(`div[messageid="${message.messageId}"]`);
   if(!messageNode){
-    messageNode = document.querySelector(`div[tid="${message.tid}"]`);
+    messageNode = document.querySelector(`div[messageid="${message.tid}"]`);
   }
   let num = chatNode.offsetTop-messageNode.getBoundingClientRect().bottom;
   return num > -200;
