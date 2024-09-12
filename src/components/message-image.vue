@@ -70,7 +70,7 @@ function calc(){
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
       <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
-        <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId">
+        <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId" v-if="!props.message.localUrl">
           <div class="jg-img-loader"></div>
         </div>
         <a class="glightbox" data-gallery="media-photo" @click="onPreview">
