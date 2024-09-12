@@ -374,11 +374,11 @@ function sendImage(e) {
         })[0];
         utils.extend(propMsg, { percent });
       }
-    }).then(({ messageId, sentTime }) => {
+    }).then(({ tid, messageId, sentTime, content }) => {
       let propMsg = state.messages.filter((msg) => {
-        return utils.isEqual(msg.tid, message.tid);
+        return utils.isEqual(msg.tid, tid);
       })[0];
-      utils.extend(propMsg, { messageId, sentTime });
+      utils.extend(propMsg, { messageId, sentTime, content });
       e.target.value = '';
     }, (error) => {
       console.log(error)

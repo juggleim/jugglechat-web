@@ -41,6 +41,9 @@ function onShowReadDetail(isShow) {
 
 nextTick(() => {
   let node = document.querySelector(`#img_msg_${props.message.messageId}`);
+  if(!node){
+    return;
+  }
   node.onload = function(){
     document.querySelector(`div[mid=${node.id}]`).style.display = 'none';
   }

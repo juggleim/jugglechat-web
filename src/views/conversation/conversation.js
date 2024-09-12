@@ -105,17 +105,23 @@ function sendFile(file, message, callback, state){
     size: file.size
   };  
   utils.extend(message, { content });
-  state.messages.unshift(message);
 
-  let propMsg = state.messages.filter((msg) => {
-    return utils.isEqual(msg.tid, message.tid);
-  })[0];
   juggle.sendFileMessage(message, {
-    onprogress: ({ percent }) => {
+    onbefore: (msg) => {
+      console.log('file msg', msg)
+      state.messages.unshift(msg);
+    },
+    onprogress: ({ percent, message }) => {
+      let propMsg = state.messages.filter((msg) => {
+        return utils.isEqual(msg.tid, message.tid);
+      })[0];
       utils.extend(propMsg, { percent });
     }
-  }).then(({ messageId, sentTime, content }) => {
-    utils.extend(propMsg, { messageId, sentTime });
+  }).then(({ tid, messageId, sentTime, content }) => {
+    let propMsg = state.messages.filter((msg) => {
+      return utils.isEqual(msg.tid, tid);
+    })[0];
+    utils.extend(propMsg, { messageId, sentTime, content });
     callback();
   }, (error) => {
     console.log(error)

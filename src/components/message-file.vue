@@ -45,13 +45,13 @@ function onShowReadDetail(isShow) {
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
       <div class="tyn-reply-file wr" :messageid="props.message.messageId">
-        <a :href="props.message.content.url" target="_blank" class="tyn-file">
+        <a :href="props.message.content.url" class="tyn-file" :download="props.message.content.name">
           <div class="tyn-media-group">
             <div class="tyn-media tyn-size-lg text-bg-light wr wr-file tyb-msg-fileicon">
             </div>
             <div class="tyn-media-col">
               <h6 class="name">{{ props.message.content.name }}</h6>
-              <div class="meta">{{ ((props.message.content.size || 0) / 1024).toFixed(2) }} KB</div>
+              <div class="meta">{{ (Number(props.message.content.size) || 0).toFixed(2) }} KB</div>
             </div>
           </div>
         </a>
