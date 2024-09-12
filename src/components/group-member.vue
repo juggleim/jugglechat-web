@@ -7,7 +7,7 @@ let state = reactive({
 </script>
 
 <template>
-  <div class="tyn-media-group tyn-media-group-reads">
+  <div class="tyn-media-group tyn-media-group-reads fadein-o4">
     <div class="tyn-media tyn-size-xs tyn-group-msg-avatar"
       :style="{ 'background-image': 'url(' + (props.member.portrait || state.url ) + ')' }">
     </div>

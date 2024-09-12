@@ -21,7 +21,7 @@ watch(() => props.isShow, (value) => {
 })
 </script>
 <template>
-  <div class="dropdown-menu dropdown-menu-xxs" :class="{ 'show': props.isShow, 'dropdown-menu-xxs-bottom': !state.isTop }">
+  <div class="dropdown-menu dropdown-menu-xxs fadein-o4" :class="{ 'show': props.isShow, 'dropdown-menu-xxs-bottom': !state.isTop }">
     <ul class="tyn-list-links">
       <li>
         <a href="#" class="wr wr-modify" @click="emit('onmodify')" v-if="props.message.isSender && utils.isEqual(props.message.name, MessageType.TEXT)">

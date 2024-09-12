@@ -30,7 +30,7 @@ juggle.getMessageReadDetails(props.message).then((result) => {
 </script>
 
 <template>
-  <div class="dropdown-menu dropdown-menu-xs tyn-group-dropdown show" :class="[state.isTop ? 'tyn-group-dropdown-top' : 'tyn-group-dropdown-bottom']">
+  <div class="dropdown-menu dropdown-menu-xs tyn-group-dropdown show fadeinx " :class="[state.isTop ? 'tyn-group-dropdown-top' : 'tyn-group-dropdown-bottom']">
     <ul class="tyn-list-links tyn-group-reads-links">
       <li>
         <h6 class="name">{{ state.reads.length }} 人已读</h6>
