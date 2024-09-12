@@ -1,6 +1,6 @@
 <script setup>
 import utils from "../../common/utils";
-import { reactive } from "vue";
+import { reactive, getCurrentInstance, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import Conversation from "./conversation.vue";
 import AisdeHeader from "../../components/aside-header.vue";
@@ -196,8 +196,15 @@ function formatMention(conversation) {
   }
   return utils.extend(conversation, { f_mentionContent });
 }
-function getConversations() {
-  juggle.getConversations({}).then((result) => {
+function getConversations(isFirst = false, callback = utils.noop) {
+  let params = {};
+  if(!isFirst){
+    let index = state.conversations.length - 1;
+    let item = state.conversations[index];
+    params = { time: item.sortTime };
+  }
+
+  juggle.getConversations(params).then((result) => {
     let { conversations: _list } = result;
     console.log('conversatoins', _list)
     utils.forEach(_list, (conversation) => {
@@ -220,6 +227,7 @@ function getConversations() {
         state.conversations.splice(index, 1, conversation);
       }
     });
+    callback();
   })
 }
 
@@ -365,12 +373,31 @@ function onNavChat(item){
     onConversation(conversation, 0)
   });
 }
+let context = getCurrentInstance();
+
+let canscroll = true;
+nextTick(() => {
+  let { conversations } = context.refs;
+  conversations.addEventListener("scroll", () => {
+    let scrollTop = conversations.scrollTop;
+    let scrollHeight = conversations.scrollHeight;
+    let rectHeight = conversations.getBoundingClientRect().height;
+    let isNeedLoad = scrollHeight - scrollTop  - rectHeight < 100;
+    if (isNeedLoad && canscroll) {
+      let isFirst = false;
+      getConversations(isFirst, () => {
+        canscroll = true;
+      });
+    }
+  });
+})
+
 </script>
 <template>
   <div class="tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside">
       <AisdeHeader :title="'消息'" @onnav="onNavChat"></AisdeHeader>
-      <div class="tyn-aside-body" data-simplebar>
+      <div class="tyn-aside-body" ref="conversations">
         <div class="tab-content">
           <div class="tab-pane show active">
             <ul class="tyn-aside-list">
