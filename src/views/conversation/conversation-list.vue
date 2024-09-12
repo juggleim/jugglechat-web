@@ -215,6 +215,11 @@ function formatMention(conversation) {
 function getTops(){
   juggle.getTopConversations().then((result) => {
     let { conversations, isFinished } = result;
+    conversations = utils.map(conversations, (item) => {
+      let { conversationPortrait, conversationTitle } = item;
+      item.conversationPortrait = conversationPortrait || common.getTextAvatar(conversationTitle);  
+      return item; 
+    });
     state.tops = conversations;
   })
 }

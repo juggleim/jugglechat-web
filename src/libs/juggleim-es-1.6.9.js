@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.6.8
+* JuggleChat.js v1.6.9
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -9068,7 +9068,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.6.8';
+let VERSION = '1.6.9';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -11349,18 +11349,26 @@ function Message$1 (io, emitter, logger) {
         if (thumbnail) {
           return uploadFile(auth, message);
         }
-        common.uploadThumbnail(upload, params, (error, thumbnail, args) => {
-          let {
-            height,
-            width
-          } = args;
-          utils.extend(message.content, {
-            thumbnail,
-            height,
-            width,
-            type: content.file.type
+        getFileToken({
+          type: fileType,
+          ext
+        }).then(cred => {
+          common.uploadThumbnail(upload, {
+            ...params,
+            ...cred
+          }, (error, thumbnail, args) => {
+            let {
+              height,
+              width
+            } = args;
+            utils.extend(message.content, {
+              thumbnail,
+              height,
+              width,
+              type: content.file.type
+            });
+            uploadFile(auth, message);
           });
-          uploadFile(auth, message);
         });
       }
       if (utils.isEqual(name, MESSAGE_TYPE.VIDEO)) {
@@ -11371,19 +11379,27 @@ function Message$1 (io, emitter, logger) {
         if (snapshotUrl) {
           return uploadFile(auth, message);
         }
-        common.uploadFrame(upload, params, (error, snapshotUrl, args) => {
-          let {
-            height,
-            width,
-            duration
-          } = args;
-          utils.extend(message.content, {
-            snapshotUrl,
-            height,
-            width,
-            duration
+        getFileToken({
+          type: fileType,
+          ext
+        }).then(cred => {
+          common.uploadFrame(upload, {
+            ...params,
+            ...cred
+          }, (error, snapshotUrl, args) => {
+            let {
+              height,
+              width,
+              duration
+            } = args;
+            utils.extend(message.content, {
+              snapshotUrl,
+              height,
+              width,
+              duration
+            });
+            uploadFile(auth, message);
           });
-          uploadFile(auth, message);
         });
       }
       if (utils.isInclude([MESSAGE_TYPE.FILE, MESSAGE_TYPE.VOICE], name)) {

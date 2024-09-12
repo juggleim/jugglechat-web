@@ -363,17 +363,21 @@ function sendImage(e) {
   img.onload = function () {
     let content = { file, height: img.height, width: img.width, type: file.type };
     utils.extend(message, { content });
-    state.messages.unshift(message);
-
-    let propMsg = state.messages.filter((msg) => {
-      return utils.isEqual(msg.tid, message.tid);
-    })[0];
 
     juggle.sendImageMessage(message, {
+      onbefore: (msg) => {
+        state.messages.unshift(msg);
+      },
       onprogress: ({ percent }) => {
+        let propMsg = state.messages.filter((msg) => {
+          return utils.isEqual(msg.tid, message.tid);
+        })[0];
         utils.extend(propMsg, { percent });
       }
     }).then(({ messageId, sentTime }) => {
+      let propMsg = state.messages.filter((msg) => {
+        return utils.isEqual(msg.tid, message.tid);
+      })[0];
       utils.extend(propMsg, { messageId, sentTime });
       e.target.value = '';
     }, (error) => {

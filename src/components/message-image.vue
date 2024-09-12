@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from "vue";
+import { reactive, nextTick } from "vue";
 import GroupReads from "./group-reads.vue";
 import utils from "../common/utils";
 import messageUtils from "./message-utils";
@@ -38,6 +38,26 @@ function onShowReadDetail(isShow) {
   }
   utils.extend(state, { isShowGroupDetail: isShow });
 }
+
+nextTick(() => {
+  let node = document.querySelector(`#img_msg_${props.message.messageId}`);
+  node.onload = function(){
+    document.querySelector(`div[mid=${node.id}]`).style.display = 'none';
+  }
+})
+
+function calc(){
+  let maxWidth = 280;
+  let width = props.message.content.width || maxWidth;
+  let ratio = 1;
+  if(width > maxWidth){
+    ratio = maxWidth / width;
+    width = width * ratio;
+  }
+  let height = props.message.content.height || 200;
+  height = height * ratio + 20;
+  return { width, height }
+}
 </script>
 
 <template>
@@ -49,10 +69,13 @@ function onShowReadDetail(isShow) {
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media" :messageid="props.message.messageId">
+      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
+        <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId">
+          <div class="jg-img-loader"></div>
+        </div>
         <a class="glightbox" data-gallery="media-photo" @click="onPreview">
-          <img v-if="props.message.localUrl" :src="props.message.localUrl" class="tyn-image">
-          <img v-else :src="props.message.content.thumbnail" class="tyn-image" alt />
+          <img v-if="props.message.localUrl" :src="props.message.localUrl" class="tyn-image" >
+          <img v-else :src="props.message.content.thumbnail" class="tyn-image fadein-o" :id="'img_msg_' +props.message.messageId" alt/>
           <div class="jg-progress" v-if="props.message.percent < 99.9">
             <div class="jg-progress-stacked" :style="{ 'width': props.message.percent + '%' }"></div>
           </div>
