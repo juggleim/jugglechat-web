@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.6.6
+* JuggleChat.js v1.6.8
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -8595,6 +8595,9 @@ function MessageSyncer(send, emitter, io, {
       if (utils.isEqual(name, SIGNAL_NAME.CMD_RECEIVED)) {
         publish(item, next);
       }
+      if (utils.isEqual(name, SIGNAL_NAME.S_SYNC_CONVERSATION_NTF)) {
+        syncConversations(item, next);
+      }
       if (utils.isEqual(name, SIGNAL_NAME.S_NTF)) {
         query(item, next);
       }
@@ -8701,28 +8704,6 @@ function MessageSyncer(send, emitter, io, {
         });
       });
     }
-  };
-  return {
-    exec
-  };
-}
-
-function ConversationSyncer(send, emitter, io, {
-  logger
-}) {
-  let consumer = Consumer();
-  let exec = data => {
-    consumer.produce(data);
-    consumer.consume(({
-      item
-    }, next) => {
-      let {
-        name
-      } = item;
-      if (utils.isEqual(name, SIGNAL_NAME.S_SYNC_CONVERSATION_NTF)) {
-        syncConversations(item, next);
-      }
-    });
     function syncConversations(item, next) {
       let {
         user,
@@ -9087,7 +9068,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.6.6';
+let VERSION = '1.6.8';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -9379,9 +9360,6 @@ function IO(config) {
   let messageSyncer = MessageSyncer(sendCommand, emitter, io, {
     logger
   });
-  let conversationSyncer = ConversationSyncer(sendCommand, emitter, io, {
-    logger
-  });
   let chatroomSyncer = ChatroomSyncer(sendCommand, emitter, io, {
     logger
   });
@@ -9528,7 +9506,7 @@ function IO(config) {
           // 同步会话和同步消息顺序不能调整，保证先同步会话再同步消息，规避会话列表最后一条消息不是最新的
           if (config.isPC) {
             let syncNext = () => {
-              conversationSyncer.exec({
+              messageSyncer.exec({
                 time: Storage.get(STORAGE.SYNC_CONVERSATION_TIME).time || 0,
                 name: SIGNAL_NAME.S_SYNC_CONVERSATION_NTF,
                 user: {
@@ -9536,6 +9514,7 @@ function IO(config) {
                 },
                 $conversation: config.$conversation
               });
+              syncMsgs();
             };
 
             // PC 中先连接后打开数据库，优先将本地数据库中的同步时间更新至 LocalStorage 中，避免换 Token 不换用户 Id 重复同步会话
@@ -9551,18 +9530,8 @@ function IO(config) {
             } else {
               syncNext();
             }
-          }
-          if (isSync) {
-            messageSyncer.exec({
-              msg: {
-                type: NOTIFY_TYPE.MSG
-              },
-              name: SIGNAL_NAME.S_NTF,
-              $message: config.$message,
-              user: {
-                id: currentUserInfo.id
-              }
-            });
+          } else {
+            syncMsgs();
           }
           timer.resume(() => {
             sendCommand(SIGNAL_CMD.PING, {});
@@ -9611,6 +9580,20 @@ function IO(config) {
     }
     cache.remove(index);
   };
+  function syncMsgs() {
+    if (isSync) {
+      messageSyncer.exec({
+        msg: {
+          type: NOTIFY_TYPE.MSG
+        },
+        name: SIGNAL_NAME.S_NTF,
+        $message: config.$message,
+        user: {
+          id: currentUserInfo.id
+        }
+      });
+    }
+  }
   let isConnected = () => {
     return utils.isEqual(connectionState, CONNECT_STATE.CONNECTED);
   };
