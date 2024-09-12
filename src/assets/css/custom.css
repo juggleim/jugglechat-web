@@ -796,3 +796,45 @@
 .img-preview img{
   zoom: 0.4;
 }
+
+/* Top Conversations */
+.tyn-aside-toplist{
+  display: flex;
+  padding: 0 16px;
+  flex-wrap: wrap;
+}
+.tyn-aside-topitem{
+  margin: 6px;
+  width: 50px;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.tyn-topitem-avatar{
+  height: 40px;
+  width: 40px;
+  background-color: #d4d4d869;
+}
+.jg-topmenu-show{
+  left: -20px;
+  top: -26px;
+  width: 120px;
+  min-width: unset;
+  border-radius: 4px;
+  z-index: 9999;
+}
+.jg-topmenu-show .tyn-list-links{
+  padding: 0;
+  margin: 0;
+}
+.tyn-topitem-name{
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  width: 100%;
+  overflow: hidden;
+  text-align: center;
+}

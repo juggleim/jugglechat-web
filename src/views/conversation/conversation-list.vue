@@ -21,6 +21,7 @@ let { Event, ConnectionState, MentionType, MessageType } = juggle;
 
 let state = reactive({
   conversations: [],
+  tops: [],
   currentConversation: {},
   currentUser: {}
 });
@@ -31,11 +32,25 @@ function onShowDropmenu(index) {
 function onHideDrop(conversation) {
   conversation.isShowDrop = false;
 }
+function onShowTopDropmenu(index) {
+  let conversation = state.tops[index];
+  conversation.isShowTopDrop = true;
+}
+function onHideTopDrop(conversation) {
+  if(conversation){
+    return conversation.isShowTopDrop = false;
+  }
+  let tops = state.tops;
+  tops.map((item) => {
+    item.isShowTopDrop = false;
+  });
+}
 function onConversation(item, index) {
-  state.conversations.map((conversation) => {
+  state.conversations.map((conversation, i) => {
     let isActive = utils.isEqual(item.conversationId, conversation.conversationId);
     if(isActive){
       conversation.f_mentionContent = '';
+      index = i;
     }
     conversation.isActive = isActive;
     return conversation;
@@ -79,6 +94,7 @@ im.connect(user, {
     console.log('conversation connect success', _user)
     let isFirst = true;
     getConversations(isFirst);
+    getTops();
     utils.extend(state.currentUser, user);
   },
   error: () => {
@@ -195,6 +211,12 @@ function formatMention(conversation) {
     f_mentionContent = '有人@我';
   }
   return utils.extend(conversation, { f_mentionContent });
+}
+function getTops(){
+  juggle.getTopConversations().then((result) => {
+    let { conversations, isFinished } = result;
+    state.tops = conversations;
+  })
 }
 function getConversations(isFirst = false, callback = utils.noop) {
   let params = {};
@@ -349,6 +371,37 @@ function onDraft(conversation) {
   }
 }
 
+function onSetConversationTop(item, isTop){
+  let { tops, conversations } = state;
+  let topIndex = utils.find(tops, (top) => {
+    return utils.isEqual(top.conversationId, item.conversationId)
+  });
+  if(topIndex > -1){
+    tops[topIndex].isShowTopDrop = false;
+    tops.splice(topIndex, 1);
+  }else{
+    tops.push(item);
+  }
+
+  let conversationIndex = utils.find(conversations, (conver) => {
+    return utils.isEqual(conver.conversationId, item.conversationId)
+  });
+
+  if(conversationIndex > -1){
+    conversations[conversationIndex].isShowDrop = false;
+    conversations[conversationIndex].isTop = isTop;
+  }
+  
+  let _item = {
+    conversationType: item.conversationType,
+    conversationId: item.conversationId,
+    isTop
+  };
+  juggle.setTopConversation(_item).then(() => {
+    console.log('set conversation top successfully', _item);
+  });
+}
+
 function onNavChat(item){
   juggle.getConversation(item).then(({ conversation }) => {
     let { conversationId, conversationType, latestMessage, unreadCount } = conversation;
@@ -397,12 +450,34 @@ nextTick(() => {
   <div class="tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside">
       <AisdeHeader :title="'消息'" @onnav="onNavChat"></AisdeHeader>
+      <div class="tyn-aside-toplist">
+        <div class="tyn-aside-topitem" v-for="(item, index) in state.tops" @mouseleave="onHideTopDrop()" @click="onConversation(item)">
+          <div 
+          class="tyn-avatar tyn-topitem-avatar" :style="{'background-image': 'url(' + item.conversationPortrait + ')'}"
+           @click.right.prevent="onShowTopDropmenu(index)"
+          ></div>
+          <div class="tyn-topitem-name">{{ item.conversationTitle || 'JG' }}</div>
+          <ul class="tyn-media-option-list">
+            <li class="dropdown">
+              <div class="dropdown-menu" :class="{ 'show jg-topmenu-show': item.isShowTopDrop }">
+                <ul class="tyn-list-links">
+                  <li>
+                    <a class="wr wr-untop" @click.stop="onSetConversationTop(item, false)">
+                      <span>取消置顶</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
       <div class="tyn-aside-body" ref="conversations">
         <div class="tab-content">
           <div class="tab-pane show active">
             <ul class="tyn-aside-list">
               <li class="tyn-aside-item js-toggle-main" v-for="(item, index) in state.conversations"
-                :class="{ 'active': item.isActive }" @click="onConversation(item, index)">
+                :class="{ 'active': item.isActive }" @click="onConversation(item, index)" @click.right.prevent="onShowDropmenu(index)"  @mouseleave="onHideDrop(item)">
                 <div class="tyn-media-group">
                   <div class="tyn-media tyn-size-lg">
                     <div class="tyn-avatar tyn-s-avatar position-relative tyn-circle"
@@ -430,16 +505,17 @@ nextTick(() => {
                   <div class="tyn-media-option tyn-aside-item-option">
                     <ul class="tyn-media-option-list">
                       <li class="dropdown">
-                        <button class="btn btn-icon btn-white btn-pill dropdown-toggle wr wr-category"
-                          data-bs-toggle="dropdown" data-bs-offset="0,0" data-bs-auto-close="outside"
-                          @click.stop="onShowDropmenu(index)">
-                        </button>
                         <div class="dropdown-menu dropdown-menu-end" :class="{ 'show jg-cndrop-show': item.isShowDrop }"
                           @mouseleave="onHideDrop(item)">
                           <ul class="tyn-list-links">
                             <li>
                               <a class="wr wr-read" @click.stop="onMarkUnread(index)">
                                 <span>{{ item.unreadTag ? '清理未读' : '标记未读' }}</span>
+                              </a>
+                            </li>
+                            <li>
+                              <a class="wr wr-top" :class="{'wr-untop': item.isTop}" data-bs-toggle="modal" @click.stop="onSetConversationTop(item, !item.isTop)">
+                                <span>{{ item.isTop ? '取消置顶' : '置顶会话' }}</span>
                               </a>
                             </li>
                             <li class="dropdown-divider"></li>

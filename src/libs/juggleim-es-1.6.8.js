@@ -10124,6 +10124,7 @@ function Conversation$1 (io, emitter) {
         return reject(error);
       }
       let user = io.getCurrentUser();
+      conversations = utils.isArray(conversations) ? conversations : [conversations];
       let data = {
         topic: COMMAND_TOPICS.TOP_CONVERSATION,
         conversations,
