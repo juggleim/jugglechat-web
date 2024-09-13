@@ -4,6 +4,7 @@ import GroupReads from "./group-reads.vue";
 import utils from "../common/utils";
 import messageUtils from "./message-utils";
 import Dropdownmenu from "./message-menu.vue";
+import common from "../common/common";
 
 const props = defineProps(["message"]);
 const emit = defineEmits(["onpreview", "onrecall", "ontransfer", "onreply"]);
@@ -50,16 +51,7 @@ nextTick(() => {
 })
 
 function calc(){
-  let maxWidth = 280;
-  let width = props.message.content.width || maxWidth;
-  let ratio = 1;
-  if(width > maxWidth){
-    ratio = maxWidth / width;
-    width = width * ratio;
-  }
-  let height = props.message.content.height || 200;
-  height = height * ratio + 20;
-  return { width, height }
+  return common.calcSize(props.message.content);
 }
 </script>
 

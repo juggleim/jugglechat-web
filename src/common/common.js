@@ -207,6 +207,31 @@ function getConversationInfo(params, callback){
 function htmlToContent(content){
   return content.replace(/<[^>]+>/gi, '');
 }
+function calcSize(params, patch = 20){
+  let { width, height } = params;
+  let maxWidth = 280;
+  let maxHeight = 240;
+
+  width = width || maxWidth;
+  height = height || maxHeight;
+
+  let isWidth = true;
+  if(height > width){
+    isWidth = false;
+  }
+
+  let ratio = 1;
+  if(width > maxWidth && isWidth){
+    ratio = maxWidth / width;
+  }
+
+  if( height > maxHeight && !isWidth){
+    ratio = maxHeight / height;
+  }
+  width = width * ratio;
+  height = height * ratio + patch;
+  return { width, height }
+}
 export default {
  isElementTop,
  getAvatar,
@@ -215,4 +240,5 @@ export default {
  createGroupAvatar,
  getConversationInfo,
  htmlToContent,
+ calcSize,
 }

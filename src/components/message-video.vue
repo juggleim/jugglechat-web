@@ -4,6 +4,7 @@ import utils from "../common/utils";
 import GroupReads from "./group-reads.vue";
 import messageUtils from "./message-utils";
 import Dropdownmenu from "./message-menu.vue";
+import common from "../common/common";
 
 const props = defineProps(["message"]);
 const emit = defineEmits(["onrecall", "ontransfer", "onreply"]);
@@ -47,6 +48,10 @@ function onShowReadDetail(isShow) {
   }
   utils.extend(state, { isShowGroupDetail: isShow });
 }
+
+function calc(){
+  return common.calcSize(props.message.content, 25);
+}
 </script>
 
 <template>
@@ -58,10 +63,10 @@ function onShowReadDetail(isShow) {
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media wr" :messageid="props.message.messageId">
+      <div class="tyn-reply-media wr" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
         <a class="glightbox" data-gallery="media-video" @click="onPlay">
-          <video :src="props.message.content.url || props.message.localUrl" ref="video" class="tyn-image"></video>
-          <div class="tyn-video-icon wr wr-video" v-if="!state.isPlaying"></div>
+          <video :src="props.message.content.url || props.message.localUrl" ref="video" class="tyn-image" controls></video>
+          <!-- <div class="tyn-video-icon wr wr-video" v-if="!state.isPlaying"></div> -->
         </a>
         <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
         :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"
