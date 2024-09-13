@@ -4,6 +4,7 @@ const emit = defineEmits(["ondraft"]);
 
 import Search from "./search.vue";
 import ModalTransfer from "../../components/modal-transfer.vue";
+import ModalImgSender from "../../components/modal-img-sender.vue";
 import ModalMergeMsgs from "../../components/modal-merge-msgs.vue";
 import Mention from "../../components/mention.vue";
 import Transfer from "../../components/transfer-panel.vue";
@@ -65,6 +66,7 @@ let state = reactive({
   mentions: [],
   transferMsgs: [],
   currentMergeMessage: {},
+  imgSender: {},
 });
 
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
@@ -488,6 +490,27 @@ function onReply(message){
   utils.extend(state, { currentReplyMessage: message, isShowReply: true });
   messageInput.focus();
 }
+
+function onPaste(){
+  if(typeof JuggleIMDesktop != 'undefined'){
+    var img = JuggleIMDesktop.readImage();
+    if(!img.isEmpty()){
+      let previewUrl = img.toDataURL();
+      let imgData = img.toPNG();
+      onShowImgSender({ previewUrl, imgData });
+    }
+  }
+}
+function onShowImgSender(img){
+  state.imgSender = img;
+}
+function onConfirmImgSender(){
+  let { imgSender } = state;
+  let file = new window.File([imgSender.imgData], 'screenshot.png', { type: 'image/png' });
+  let e = { target: { files: [file] } };
+  sendImage(e);
+  onShowImgSender({});
+}
 function getMembers() {
   let { conversationType, conversationId, conversationTitle, conversationPortrait } = state.currentConversation;
   if (utils.isEqual(conversationType, ConversationType.PRIVATE)) {
@@ -516,6 +539,19 @@ getMembers();
 watch(() => state.currentConversation, () => {
   getMembers();
 });
+
+watch(() => props.conversation.conversationTitle, () => {
+  inputFocus()
+});
+
+nextTick(() => {
+  inputFocus()
+})
+
+function inputFocus(){
+  let { messageInput } = context.refs;
+  messageInput.focus();
+}
 
 watch(() => state.content, (val) => {
   let str = val.split('')[val.length - 1]
@@ -604,7 +640,7 @@ watch(() => state.content, (val) => {
           </li>
         </ul>
         <input class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" @keydown.esc="onInputEsc"
-          @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" placeholder="Write a message" @blur="onInputBlur" ref="messageInput"/>
+          @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" @paste="onPaste" placeholder="Write a message" @blur="onInputBlur" ref="messageInput"/>
         <ul class="tyn-list-inline me-n2 my-1">
           <li class="d-none d-sm-block tyn-input-block">
             <button :class="{'tyn-chat-has-content': state.content.length > 0}" class="btn btn-icon btn-light btn-md btn-pill  wr wr-send" @click="onSend()"></button>
@@ -616,6 +652,7 @@ watch(() => state.content, (val) => {
     <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members"></Aside>
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
     <ModalMergeMsgs :is-show="!utils.isEmpty(state.currentMergeMessage)" :message="state.currentMergeMessage" @oncancel="onCancelMergeDetail"></ModalMergeMsgs>
+    <ModalImgSender :is-show="!utils.isEmpty(state.imgSender)" :img="state.imgSender" :conversation="state.currentConversation" @oncancel="onShowImgSender({})" @onconfirm="onConfirmImgSender"></ModalImgSender>
     <div class="modal-backdrop fade show" v-if="state.isShowAside" @click="onShowAside()"></div>  
   </div>
 </template>

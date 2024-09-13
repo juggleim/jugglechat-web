@@ -881,3 +881,22 @@
 @keyframes l12 { 
   100%{transform: rotate(.5turn)}
 }
+
+/* Send ScreenShot */
+.jg-snshot-box{
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  background: #00000005;
+  margin-bottom: 10px;
+}
+.jg-snshot-wrap{
+  display: flex;
+  justify-content: end;
+}
+.jg-snshot-preview{
+  height: 300px;
+  border-radius: 2px;
+  width: 100%;
+  object-fit: contain;
+}
