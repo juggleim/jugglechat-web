@@ -17,6 +17,7 @@ function onPreview() {
 let state = reactive({
   isShowDrop: false,
   isShowGroupDetail: false,
+  dropRectX: 0,
 });
 function onTransfer(){
   emit('ontransfer', {})
@@ -48,10 +49,14 @@ nextTick(() => {
   node.onload = function(){
     document.querySelector(`div[mid=${node.id}]`).style.display = 'none';
   }
-})
+}) 
 
 function calc(){
   return common.calcSize(props.message.content);
+}
+function onClickRight(e){
+  onShowDrop(true);
+  state.dropRectX = e.x - e.target.getBoundingClientRect().x
 }
 </script>
 
@@ -64,7 +69,7 @@ function calc(){
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
+      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}"  @click.right.prevent="onClickRight">
         <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId" v-if="!props.message.localUrl">
           <div class="jg-img-loader"></div>
         </div>
@@ -90,10 +95,8 @@ function calc(){
       </div>
 
       <ul class="tyn-reply-tools">
-        <li class="dropup-center">
-          <button class="btn btn-icon btn-sm btn-transparent btn-pill wr wr-more" data-bs-toggle="dropdown"
-            @click="onShowDrop(true)"></button>
-            <Dropdownmenu :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
+        <li>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
       <!-- .tyn-reply-tools -->

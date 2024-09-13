@@ -13,6 +13,7 @@ let state = reactive({
   isShowDrop: false,
   isPlaying: false,
   isShowGroupDetail: false,
+  dropRectX: 0,
 });
 
 let context = getCurrentInstance();
@@ -52,8 +53,12 @@ function onShowReadDetail(isShow) {
 function calc(){
   return common.calcSize(props.message.content, 25);
 }
+function onClickRight(e){
+  onShowDrop(true);
+  state.dropRectX = e.x - e.target.getBoundingClientRect().x
+}
 </script>
-
+  
 <template>
   <div class="tyn-reply-avatar">
     <div class="tyn-media tyn-size-md">
@@ -63,7 +68,7 @@ function calc(){
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media wr" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
+      <div class="tyn-reply-media wr" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}"  @click.right.prevent="onClickRight">
         <a class="glightbox" data-gallery="media-video" @click="onPlay">
           <video :src="props.message.content.url || props.message.localUrl" ref="video" class="tyn-image" controls></video>
           <!-- <div class="tyn-video-icon wr wr-video" v-if="!state.isPlaying"></div> -->
@@ -82,10 +87,8 @@ function calc(){
         <div class="jg-message-senttime" v-if="props.message.sentTime">{{ utils.formatTimetoHM(props.message.sentTime) }}</div>
       </div>
       <ul class="tyn-reply-tools">
-        <li class="dropup-center">
-          <button class="btn btn-icon btn-sm btn-transparent btn-pill wr wr-more" data-bs-toggle="dropdown"
-            @click="onShowDrop(true)"></button>
-            <Dropdownmenu :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
+        <li>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
       <!-- .tyn-reply-tools -->

@@ -18,6 +18,7 @@ let state = reactive({
   errorMsg: '',
   mentionMsgs: im.mentionShortFormat(props.message),
   isShowGroupDetail: false,
+  dropRectX: 0,
 });
 watch(() => props.message, (msg) => {
   state.mentionMsgs = im.mentionShortFormat(msg);
@@ -74,6 +75,10 @@ function onShowReadDetail(isShow) {
   }
   utils.extend(state, { isShowGroupDetail: isShow });
 }
+function onClickRight(e){
+  onShowDrop(true);
+  state.dropRectX = e.x - e.target.getBoundingClientRect().x
+}
 </script>
 
 <template>
@@ -84,7 +89,7 @@ function onShowReadDetail(isShow) {
   </div>
   <div class="tyn-reply-group">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
-    <div class="tyn-reply-bubble" :messageid="props.message.messageId" :tid="props.message.tid">
+    <div class="tyn-reply-bubble" :messageid="props.message.messageId" :messageId="props.message.tid">
       <div class="tyn-reply-text" v-if="state.isModify">
         <div>
           <input class="tyn-chat-form-input" v-model="state.content" type="text" @input="onInput()" />
@@ -93,7 +98,7 @@ function onShowReadDetail(isShow) {
         </div>
         <span class="small ms-2 text-warning" v-if="state.errorMsg">{{ state.errorMsg }}</span>
       </div>
-      <div class="tyn-reply-text wr" v-else>
+      <div class="tyn-reply-text wr" v-else @click.right.prevent="onClickRight">
         <ReplyMessage :message="props.message.referMsg"></ReplyMessage>
         <span class="tyn-msg-mention tyn-mention-me" v-for="msg in state.mentionMsgs">{{ msg }}</span>
         <span v-html="getContent(props.message.content.content)"></span>
@@ -117,10 +122,8 @@ function onShowReadDetail(isShow) {
       </div>
 
       <ul class="tyn-reply-tools">
-        <li class="dropup-center">
-          <button class="btn btn-icon btn-sm btn-transparent btn-pill wr wr-more" data-bs-toggle="dropdown"
-            @click="onShowDrop(true)"></button>
-          <Dropdownmenu :is-show="state.isShowDrop" :message="props.message" @onmodify="onShowModify()" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()" @onhide="onShowDrop(false)"></Dropdownmenu>
+        <li>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onmodify="onShowModify()" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()" @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
     </div>

@@ -4016,6 +4016,8 @@ button {
 
 .dropdown-menu.show {
   display: block;
+  box-shadow: #00000061 0 3px 20px;
+  border: 0;
 }
 
 .dropdown-header {

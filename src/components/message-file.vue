@@ -11,6 +11,7 @@ const emit = defineEmits(["onrecall", "ontransfer", "onreply"]);
 let state = reactive({
   isShowDrop: false,
   isShowGroupDetail: false,
+  dropRectX: 0,
 });
 function onTransfer(){
   emit('ontransfer', {})
@@ -33,8 +34,12 @@ function onShowReadDetail(isShow) {
   }
   utils.extend(state, { isShowGroupDetail: isShow });
 }
+function onClickRight(e){
+  onShowDrop(true);
+  state.dropRectX = e.x - e.target.getBoundingClientRect().x
+}
 </script>
-
+ 
 <template>
   <div class="tyn-reply-avatar">
     <div class="tyn-media tyn-size-md">
@@ -44,7 +49,7 @@ function onShowReadDetail(isShow) {
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-file wr" :messageid="props.message.tid">
+      <div class="tyn-reply-file wr" :messageid="props.message.tid"  @click.right.prevent="onClickRight">
         <a :href="props.message.content.url" class="tyn-file" :download="props.message.content.name">
           <div class="tyn-media-group">
             <div class="tyn-media tyn-size-lg text-bg-light wr wr-file tyb-msg-fileicon">
@@ -74,10 +79,8 @@ function onShowReadDetail(isShow) {
       </div>
 
       <ul class="tyn-reply-tools">
-        <li class="dropup-center">
-          <button class="btn btn-icon btn-sm btn-transparent btn-pill wr wr-more" data-bs-toggle="dropdown"
-            @click="onShowDrop(true)"></button>
-            <Dropdownmenu :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
+        <li>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
     </div>

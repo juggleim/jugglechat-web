@@ -12,6 +12,7 @@ let state = reactive({
   isShowDrop: false,
   isPlaying: false,
   isShowGroupDetail: false,
+  dropRectX: 0,
 });
 
 let context = getCurrentInstance();
@@ -41,7 +42,11 @@ function onShowReadDetail(isShow) {
 function onDeatail(){
   emit('ondetail', props.message);
 }
-</script>
+function onClickRight(e){
+  onShowDrop(true);
+  state.dropRectX = e.x - e.target.getBoundingClientRect().x
+}
+</script> 
 
 <template>
   <div class="tyn-reply-avatar">
@@ -52,7 +57,7 @@ function onDeatail(){
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble wr" :messageid="props.message.messageId">
-      <div class="tyn-reply-text tyn-reply-merge"  @click.stop="onDeatail">
+      <div class="tyn-reply-text tyn-reply-merge"  @click.stop="onDeatail"  @click.right.prevent="onClickRight">
         <div class="tyn-media-row">
           <span class="tyn-msg-mergetitle">{{ props.message.content.title }}</span>
         </div>
@@ -73,10 +78,8 @@ function onDeatail(){
         </div>
       </div>
       <ul class="tyn-reply-tools">
-        <li class="dropup-center">
-          <button class="btn btn-icon btn-sm btn-transparent btn-pill wr wr-more" data-bs-toggle="dropdown"
-            @click="onShowDrop(true)"></button>
-            <Dropdownmenu :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
+        <li>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
       <!-- .tyn-reply-tools -->
