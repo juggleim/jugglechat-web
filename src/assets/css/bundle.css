@@ -6088,6 +6088,7 @@ button {
   border: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
   border-radius: var(--bs-modal-border-radius);
   outline: 0;
+  box-shadow: #00000042 0 3px 20px;
 }
 
 .modal-backdrop {
@@ -6133,6 +6134,9 @@ button {
   position: relative;
   flex: 1 1 auto;
   padding: var(--bs-modal-padding);
+  height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-footer {

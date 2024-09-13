@@ -747,6 +747,8 @@ dl {
 .tyn-media-list {
   display: flex;
   flex-direction: column;
+  flex: 1 auto;
+  overflow-y: auto;
 }
 
 .tyn-media-1x1_1 {
