@@ -9,6 +9,7 @@ import ReplyMessage from "./message-reply.vue";
 import utils from "../common/utils";
 import im from "../common/im";
 import messageUtils from "./message-utils";
+import { REG_EXP } from "../common/enum";
 
 let state = reactive({
   isShowDrop: false,
@@ -61,7 +62,12 @@ function onCancelModify() {
 function onInput() {
   state.errorMsg = '';
 }
-
+function getContent(content){
+  content = content.replace(REG_EXP.LINK, (current, match) => {
+    return `<a href="${match}" target="_blank" >${match}</a>`;
+  });
+  return content;
+}
 function onShowReadDetail(isShow) {
   if (!messageUtils.isGroup(props.message)) {
     return;
@@ -90,7 +96,7 @@ function onShowReadDetail(isShow) {
       <div class="tyn-reply-text wr" v-else>
         <ReplyMessage :message="props.message.referMsg"></ReplyMessage>
         <span class="tyn-msg-mention tyn-mention-me" v-for="msg in state.mentionMsgs">{{ msg }}</span>
-        {{ props.message.content.content }}
+        <span v-html="getContent(props.message.content.content)"></span>
         <span class="tyn-text-modify" v-if="props.message.isUpdated">（已修改）</span>
 
         <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"

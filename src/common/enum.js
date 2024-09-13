@@ -36,4 +36,7 @@ let GROUP_CHANGE_TYPE = {
 let MSG_NAME = {
   GROUP_NTF: 'jgd:grpntf'
 };
-export { EVENT_NAME, TRANSFER_TYPE, CONTACT_TAB_TYPE, RESPONSE, GROUP_CHANGE_TYPE, MSG_NAME }
+let REG_EXP = {
+  LINK: /(([^:]+:)\/\/(([^:\/\?#]+)(:\d+)?))(\/[^?#]*)?(\?[^#]*)?(#.*)?/g,
+}
+export { EVENT_NAME, TRANSFER_TYPE, CONTACT_TAB_TYPE, RESPONSE, GROUP_CHANGE_TYPE, MSG_NAME, REG_EXP }
