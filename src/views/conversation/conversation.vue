@@ -289,7 +289,7 @@ function onSend() {
       mentionType = MentionType.ALL_SOMEONE;
     }
     if (mentionType > -1) {
-      utils.extend(msg, { mentionInfo: { type: mentionType, members }, content: { content: newContent }, readCount: 0, unreadCount: 1 });
+      utils.extend(msg, { mentionInfo: { mentionType: mentionType, members }, content: { content: newContent }, readCount: 0, unreadCount: 1 });
     }
   }
   
