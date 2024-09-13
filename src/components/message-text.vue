@@ -77,7 +77,12 @@ function onShowReadDetail(isShow) {
 }
 function onClickRight(e){
   onShowDrop(true);
-  state.dropRectX = e.x - e.target.getBoundingClientRect().x
+  let rect = e.target.getBoundingClientRect();
+  let x = e.x - rect.x;
+  if(props.message.isSender){
+    x = rect.right - e.x
+  }
+  state.dropRectX = x;
 }
 </script>
 
