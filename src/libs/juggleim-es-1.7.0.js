@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.6.9
+* JuggleChat.js v1.7.0
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -6634,7 +6634,8 @@ function getPublishBody ({
       mentionInfo,
       flag,
       mergeMsg,
-      referMsg
+      referMsg,
+      push
     } = data;
     content = utils.toJSON(content);
     let codec = $root.lookup('codec.UpMsg');
@@ -6682,14 +6683,31 @@ function getPublishBody ({
       };
     }
 
-    let message = codec.create({
+    let _msg = {
       msgType: name,
       mentionInfo: mention,
       flags: flag,
       referMsg: referMsg,
       mergedMsgs: mergeMsg,
       msgContent: new TextEncoder().encode(content)
-    });
+    };
+    if (push) {
+      let {
+        text,
+        title
+      } = push;
+      let pushData = {
+        title,
+        pushText: text
+      };
+      pushData = utils.clone(pushData);
+      if (!utils.isEmpty(pushData)) {
+        _msg = utils.extend(_msg, {
+          pushData
+        });
+      }
+    }
+    let message = codec.create(_msg);
     buffer = codec.encode(message).finish();
   }
   let codec = $root.lookup('codec.PublishMsgBody');
@@ -9068,7 +9086,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.6.9';
+let VERSION = '1.7.0';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -11374,26 +11392,26 @@ function Message$1 (io, emitter, logger) {
       if (utils.isEqual(name, MESSAGE_TYPE.VIDEO)) {
         // 业务层设置封面，传入优先，不再执行生成缩略图逻辑
         let {
-          snapshotUrl
+          poster
         } = content;
-        if (snapshotUrl) {
+        if (poster) {
           return uploadFile(auth, message);
         }
         getFileToken({
           type: fileType,
-          ext
+          ext: 'png'
         }).then(cred => {
           common.uploadFrame(upload, {
             ...params,
             ...cred
-          }, (error, snapshotUrl, args) => {
+          }, (error, poster, args) => {
             let {
               height,
               width,
               duration
             } = args;
             utils.extend(message.content, {
-              snapshotUrl,
+              poster,
               height,
               width,
               duration
