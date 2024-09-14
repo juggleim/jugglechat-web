@@ -31,6 +31,20 @@ let state = reactive({
   dropmenuX: 0,
   currentRightIndex: -1,
 });
+emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
+  let { type, id, avatar, name} = friend;
+  let conversation = {
+    conversationType: type,
+    conversationId: id,
+    conversationTitle: name,
+    conversationPortrait: avatar,
+    latestMessage: { sentTime: 0 },
+    f_mentionContent: '',
+    shortName: '新朋友',
+  }
+  state.conversations.unshift(conversation);
+  // state.currentConversation = conversation;
+});
 function onShowDropmenu(e) {
   let current = e.currentTarget;
   let index = current.getAttribute("index");
