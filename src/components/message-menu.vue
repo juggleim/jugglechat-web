@@ -4,7 +4,7 @@ import im from "../common/im";
 import utils from "../common/utils";
 import common from "../common/common";
 const props = defineProps(['isShow', 'message']);
-const emit = defineEmits(["onrecall", "onmodify", "ontransfer", "onreply", "onhide"]);
+const emit = defineEmits(["onrecall", "onmodify", "ontransfer", "onreply", "onhide", "onremove"]);
 
 let juggle = im.getCurrent();
 let { MessageType } = juggle;
@@ -41,6 +41,11 @@ watch(() => props.isShow, (value) => {
       <li class="tyn-list-link">
         <a href="#" class="wr wr-message-square" @click="emit('onreply')">
           <span>消息回复</span>
+        </a>
+      </li>
+      <li class="tyn-list-link">
+        <a href="#" class="wr wr-delete" @click="emit('onremove')">
+          <span>消息删除</span>
         </a>
       </li>
     </ul>

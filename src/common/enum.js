@@ -15,7 +15,8 @@ export let STORAGE = {
 let TRANSFER_TYPE = {
   NONE: -1,
   ONE: 1,
-  MERGE: 2
+  MERGE: 2,
+  DELETE: 3
 }
 
 let CONTACT_TAB_TYPE = {
@@ -39,4 +40,8 @@ let MSG_NAME = {
 let REG_EXP = {
   LINK: /(([^:]+:)\/\/(([^:\/\?#]+)(:\d+)?))(\/[^?#]*)?(\?[^#]*)?(#.*)?/g,
 }
-export { EVENT_NAME, TRANSFER_TYPE, CONTACT_TAB_TYPE, RESPONSE, GROUP_CHANGE_TYPE, MSG_NAME, REG_EXP }
+let MESSAGE_OP_TYPE = {
+  TRANSLATE: 1,
+  REMOVE: 2
+};
+export { EVENT_NAME, TRANSFER_TYPE, CONTACT_TAB_TYPE, RESPONSE, GROUP_CHANGE_TYPE, MSG_NAME, REG_EXP, MESSAGE_OP_TYPE }

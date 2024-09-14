@@ -9,7 +9,7 @@ import ReplyMessage from "./message-reply.vue";
 import utils from "../common/utils";
 import im from "../common/im";
 import messageUtils from "./message-utils";
-import { REG_EXP } from "../common/enum";
+import { REG_EXP, MESSAGE_OP_TYPE } from "../common/enum";
 
 let state = reactive({
   isShowDrop: false,
@@ -49,9 +49,9 @@ function onShowModify() {
   });
   onShowDrop(false);
 }
-function onTransfer(){
+function onTransfer(type){
   onShowDrop(false);
-  emit('ontransfer', {})
+  emit('ontransfer', { type })
 }
 function onReply(){
   onShowDrop(false);
@@ -128,7 +128,7 @@ function onClickRight(e){
 
       <ul class="tyn-reply-tools">
         <li>
-          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onmodify="onShowModify()" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()" @onhide="onShowDrop(false)"></Dropdownmenu>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onmodify="onShowModify()" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onreply="onReply()" @onhide="onShowDrop(false)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)"></Dropdownmenu>
         </li>
       </ul>
     </div>

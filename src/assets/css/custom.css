@@ -928,3 +928,8 @@
     transform: rotate(0);
   }
 }
+
+/* Common */
+.warn{
+  color: #c80606;
+}

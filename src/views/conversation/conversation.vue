@@ -28,7 +28,7 @@ import GroupNtfMessage from '../../components/message-group-notify.vue';
 import utils from "../../common/utils";
 import conversationTools from "./conversation";
 import messageUtils from "../../components/message-utils";
-import { TRANSFER_TYPE, MSG_NAME, EVENT_NAME } from "../../common/enum";
+import { TRANSFER_TYPE, MSG_NAME, EVENT_NAME, MESSAGE_OP_TYPE } from "../../common/enum";
 import common from "../../common/common";
 import emitter from "../../common/emmit";
 import { Group } from "../../services/index";
@@ -58,6 +58,7 @@ let state = reactive({
   isShowReply: false,
   currentReplyMessage: {},
   members: [],
+  msgOpType: MESSAGE_OP_TYPE.TRANSLATE,
   mentionMembers: [
     // { id: 'all', val: '@', isActive: true, name: '所有人', portrait: '', isAll: true },
     // { id: 'userid1', val: '', isActive: false, name: 'Doraemon', portrait: '' },
@@ -435,7 +436,8 @@ function onShowAside() {
   let { isShowAside } = state;
   utils.extend(state, { isShowAside: !isShowAside })
 }
-function onShowTransfer() {
+function onShowTransfer({ type }) {
+  state.msgOpType = type;
   onCancelTransfer(true);
 }
 function onCancelTransfer(isShow){
@@ -458,7 +460,29 @@ function onTransfer({ type }){
   if(utils.isEmpty(transferMsgs)){
     return onCancelTransfer(false);
   }
-  utils.extend(state, { isShowTransferMember: true, transferType: type });
+  if(utils.isEqual(TRANSFER_TYPE.DELETE, type)){
+    removeMessages(transferMsgs);
+  }else{
+    utils.extend(state, { isShowTransferMember: true, transferType: type });
+  }
+}
+function removeMessages(msgs){
+  let _msgs = utils.map(msgs, (msg) => {
+    let { conversationId, conversationType, tid, messageId, messageIndex, sentTime } = msg;
+    return { conversationId, conversationType, tid, messageId, messageIndex, sentTime };
+  });
+  console.log(_msgs)
+  juggle.removeMessages(_msgs).then(() => {
+    utils.forEach(_msgs, (msg) => {
+      let index = utils.find(state.messages, (_msg) => {
+        return utils.isEqual(_msg.tid, msg.tid);
+      });
+      if(index > -1){
+        state.messages.splice(index, 1);
+      }
+    });
+  });
+  onCancelTransfer(false);
 }
 function onSelected(message){
   if(!state.isShowTransfer){
@@ -541,6 +565,7 @@ watch(() => state.currentConversation, () => {
 });
 
 watch(() => props.conversation.conversationTitle, () => {
+  onCancelTransfer(false)
   inputFocus()
 });
 
@@ -647,7 +672,7 @@ watch(() => state.content, (val) => {
           </li>
         </ul>
       </div>
-      <Transfer :is-show="state.isShowTransfer" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
+      <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
     </div>
     <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members"></Aside>
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
