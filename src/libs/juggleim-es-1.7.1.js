@@ -8138,7 +8138,7 @@ function Decoder(cache, io) {
         return user;
       });
       mentionInfo = {
-        type: mentionType,
+        mentionType,
         members
       };
     }

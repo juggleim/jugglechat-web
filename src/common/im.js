@@ -84,11 +84,11 @@ function mentionShortFormat(message){
   let names = [];
   let { mentionInfo } = message;
   if(mentionInfo){
-    let { members, type } = mentionInfo;
+    let { members, mentionType } = mentionInfo;
     utils.forEach(members, (member) => {
       names.push(`@${member.name}`)
     });
-    if(utils.isEqual(type, MentionType.ALL) || utils.isEqual(type, MentionType.ALL_SOMEONE)){
+    if(utils.isEqual(mentionType, MentionType.ALL) || utils.isEqual(mentionType, MentionType.ALL_SOMEONE)){
       names.push('@所有人');
     }
   }
