@@ -117,11 +117,11 @@ function sendFile(file, message, callback, state){
       })[0];
       utils.extend(propMsg, { percent });
     }
-  }).then(({ tid, messageId, sentTime, content }) => {
+  }).then(({ tid, messageId, sentTime, content, messageIndex }) => {
     let propMsg = state.messages.filter((msg) => {
       return utils.isEqual(msg.tid, tid);
     })[0];
-    utils.extend(propMsg, { messageId, sentTime, content });
+    utils.extend(propMsg, { messageId, sentTime, content, messageIndex });
     callback();
   }, (error) => {
     console.log(error)

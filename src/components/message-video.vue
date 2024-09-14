@@ -5,6 +5,7 @@ import GroupReads from "./group-reads.vue";
 import messageUtils from "./message-utils";
 import Dropdownmenu from "./message-menu.vue";
 import common from "../common/common";
+import { MESSAGE_OP_TYPE } from "../common/enum";
 
 const props = defineProps(["message"]);
 const emit = defineEmits(["onrecall", "ontransfer", "onreply"]);
@@ -21,8 +22,9 @@ let context = getCurrentInstance();
 function onReply(){
   emit('onreply', props.message);
 }
-function onTransfer(){
-  emit('ontransfer', {})
+function onTransfer(type){
+  onShowDrop(false);
+  emit('ontransfer', { type })
 }
 function onShowDrop(isShow) {
   state.isShowDrop = isShow;
@@ -88,7 +90,7 @@ function onClickRight(e){
       </div>
       <ul class="tyn-reply-tools">
         <li>
-          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer()" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
       <!-- .tyn-reply-tools -->
@@ -96,3 +98,4 @@ function onClickRight(e){
     <!-- .tyn-reply-bubble -->
   </div>
   <!-- .tyn-reply-group --></template>
+ 
