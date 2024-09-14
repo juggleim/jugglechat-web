@@ -323,6 +323,7 @@ dl {
 .tyn-aside-item {
   padding: var(--aside-item-gap-y) var(--aside-gap-x);
   cursor: pointer;
+  position: relative;
 }
 .tyn-aside-item:hover {
   background: var(--aside-item-active-bg);
@@ -603,7 +604,7 @@ dl {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 8px;
   --media-text: #565a60;
   --media-text-light: #565a60;
   --media-text-lighter: var(--bs-gray-300);
@@ -917,7 +918,7 @@ dl {
   --content-gap-y: .5rem;
   --content-sap-y: .375rem;
   --reply-bg: var(--bs-white);
-  --reply-text: var(--bs-gray-500);
+  --reply-text: #000000;
   --reply-anchor-text: var(--bs-primary-400);
   --reply-anchor-hover: var(--bs-primary);
   --outgoing-message-bg: #316ff3;

@@ -823,14 +823,17 @@
 .jg-topmenu-show{
   left: -20px;
   top: -26px;
-  width: 120px;
+  width: 100px;
   min-width: unset;
   border-radius: 4px;
-  z-index: 9999;
+  z-index: 99;
 }
 .jg-topmenu-show .tyn-list-links{
   padding: 0;
   margin: 0;
+}
+.jg-topmenu-show .tyn-list-links li a{
+  padding: 0.5rem;
 }
 .tyn-topitem-name{
   white-space: nowrap;
@@ -900,4 +903,28 @@
   border-radius: 2px;
   width: 100%;
   object-fit: contain;
+}
+.tyn-list-link:hover,.tyn-list-link:active{
+  background: rgba(0, 0, 0, 0.04);
+  transition: all 0.1s ease-in;
+}
+.tyn-list-link:hover .wr::before{
+  animation: rotate 0.3s ease infinite;
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-15deg);
+  }
+  60% {
+    transform: rotate(0);
+  }
+  80% {
+    transform: rotate(15deg);
+  }
+  100% {
+    transform: rotate(0);
+  }
 }

@@ -3798,7 +3798,7 @@ button {
 
 .dropdown-menu {
   --bs-dropdown-zindex: 1000;
-  --bs-dropdown-min-width: 12.5rem;
+  --bs-dropdown-min-width: 120px;
   --bs-dropdown-padding-x: 0;
   --bs-dropdown-padding-y: 0;
   --bs-dropdown-spacer: 0.125rem;
@@ -4018,6 +4018,7 @@ button {
   display: block;
   box-shadow: #00000061 0 3px 20px;
   border: 0;
+  background: rgb(255 255 255 / 94%);
 }
 
 .dropdown-header {

@@ -1,6 +1,9 @@
 .jg-cndrop-show{
-  position: absolute; inset: 0px 0px auto auto; margin: 0px; transform: translate3d(0px, 40px, 0px);
-  top: -40px;
+  /* position: absolute;  */
+  /* inset: 0px 0px auto auto;  */
+  /* margin: 0px; 
+  transform: translate3d(0px, 40px, 0px); */
+  /* top: -40px; */
 }
 
 .jg-toggle::before{
