@@ -30,7 +30,7 @@ function setWin(type){
 </script>
 
 <template>
-   <div class="tyn-desktop-header" v-if="juggle.isDesktop() && !utils.isMacBrowser()">
+   <div class="tyn-desktop-header" v-if="juggle.isDesktop()">
     <ul class="tyn-desktop-navs" v-if="!utils.isMacBrowser()">
       <li class="tyn-desktop-nav">
         <a class="wr wr-win-hide" @click="setWin('minimize')"></a>

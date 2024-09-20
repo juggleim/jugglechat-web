@@ -67,13 +67,13 @@
   font-size: 20px;
 }
 .jg-sender-name{
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 4px !important;
-  background: #4a8e3a33;
-  padding: 1px 6px;
-  border-radius: 2px;
+  background: #000d044f;
+  padding: 1px 5px;
+  border-radius: 6px;
   width: fit-content;
 }
 .jg-message-senttime{
@@ -590,8 +590,9 @@
 .tyn-desktop-header{
   width: 100%;
   height: 26px;
-  background-color: #FAFAFA;
+  background-color: #f0f2f5;
   -webkit-app-region: drag;
+  border-bottom: 1px solid #0000000d;
 }
 .tyn-desktop-navs{
   display: flex;
@@ -682,7 +683,7 @@
   margin: 0;
   padding: 0;
   text-align: center;
-  border-top: 1px solid #dbeafe;
+  border-top: 1px solid #38353c1f;
   font-size: 10px;
 }
 
@@ -696,25 +697,45 @@
 }
 
 /* jg-asider-tools */
+.tyn-aside-head-tools{
+  width: 100%;
+}
+.jg-asider-tools .btn {
+  background-color: rgb(112 117 121 / 8%);
+  border: none;
+}
+.tyn-header-btn{
+  font-size: 18px;  
+  cursor: pointer;
+  color: rgb(112,117,121);
+}
 .jg-asider-seach-box{
   -webkit-app-region: no-drag;
 }
 .jg-asider-tools{
   display: flex;
   align-items: center;
-  justify-content: right;
+  justify-content: space-between;
 }
 .jg-asider-tools .form-control-wrap{
   display: flex;
   border-radius: 4px;
   align-items: center;
   justify-content: center;
+  border: 1px solid #2e283112;
 }
 .jg-asider-tools .form-control{
   padding: 5px 10px;
-  width: 210px;
+  width: 190px;
   background: transparent !important;
   border: 0;
+  font-size: 12px;
+}
+.jg-asider-tool{
+  margin: 0 2px;
+}
+.jg-asider-tool-search{
+  margin: 0 10px;
 }
 .jg-search-icon{
   margin-left: 6px;
@@ -803,6 +824,7 @@
   display: flex;
   padding: 0 16px;
   flex-wrap: wrap;
+  border-bottom: 1px solid #38353c0a;
 }
 .tyn-aside-topitem{
   margin: 6px;
@@ -907,6 +929,7 @@
 .tyn-list-link:hover,.tyn-list-link:active{
   background: rgba(0, 0, 0, 0.04);
   transition: all 0.1s ease-in;
+  cursor: pointer;
 }
 .tyn-list-link:hover .wr::before{
   animation: rotate 0.3s ease infinite;
@@ -932,4 +955,10 @@
 /* Common */
 .warn{
   color: #c80606;
+}
+.tyn-aside-list{
+  padding: 2px;
+}
+.tyn-header-create-list .dropdown-menu{
+  right: 0;
 }

@@ -10,6 +10,7 @@ import Storage from "../common/storage";
 import { Friend } from "../services";
 import emitter from "../common/emmit";
 import im from "../common/im";
+import HeaderDropMenu from '../components/header-menu.vue';
 
 const emit = defineEmits(["onnav"]);
 
@@ -17,15 +18,26 @@ let juggle = im.getCurrent();
 
 let state = reactive({
   isShowAddFriend: false,
-  isDesktop: juggle.isDesktop()
+  isDesktop: juggle.isDesktop(),
+  isShowAddMenu: false,
+  isShowSettingMenu: false,
 });
 const context = getCurrentInstance();
 
 function onShowFriendAdd(isShow){
   state.isShowAddFriend = isShow;
 }
+function onShowAddMenu(isShow){
+  state.isShowAddMenu = isShow;
+  state.isShowSettingMenu = false;
+}
+function onShowSettingMenu(isShow){
+  state.isShowSettingMenu = isShow;
+  state.isShowAddMenu = false;
+}
 function onFriendAddCancel(){
   onShowFriendAdd(false);
+  onShowSettingMenu(false)
 }
 function onFriendAddConfirm(friend){
   let user = Storage.get(STORAGE.USER_TOKEN);
@@ -54,23 +66,29 @@ function onFriendAddConfirm(friend){
   });
 }
 
+function onHideMenu(){
+  onShowAddMenu(false);
+  onShowSettingMenu(false);
+}
 function onNavChat(args){
   emit('onnav', args)
 }
 </script>
 
 <template>
-  <div class="tyn-aside-head" :class="{ 'tyn-aside-desktop': state.isDesktop }">
-    <div class="tyn-aside-head-text" v-if="!state.isDesktop">
-      <h4 class="tyn-aside-title tyn-title">{{ props.title }}</h4>
-    </div>
+  <div class="tyn-aside-head" :class="{ 'tyn-aside-desktop': state.isDesktop }" @mouseleave="onHideMenu()">
     <div class="tyn-aside-head-tools">
-      <ul class="tyn-list-inline gap gap-3 jg-asider-tools">
-        <li v-if="state.isDesktop">
+      <ul class="tyn-list-inline jg-asider-tools">
+        <li class="jg-asider-tool">
+          <button class="btn btn-icon btn-light btn-md wr wr-more-list" @click="onShowSettingMenu(true)"></button>
+          <HeaderDropMenu :is-show="state.isShowSettingMenu"></HeaderDropMenu>
+        </li>
+        <li v-if="state.isDesktop" class="jg-asider-tool jg-asider-tool-search">
           <AisdeSearch @onnav="onNavChat"></AisdeSearch>
         </li>
-        <li>
-          <button class="btn btn-icon btn-light btn-md wr wr-plus" @click="onShowFriendAdd(true)"></button>
+        <li class="jg-asider-tool">
+          <button class="btn btn-icon btn-light btn-md wr wr-plus" @click="onShowAddMenu(true)"></button>
+          <HeaderDropMenu :is-show="state.isShowAddMenu" :class="'tyn-header-create-list'"></HeaderDropMenu>
         </li>
       </ul>
     </div>

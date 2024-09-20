@@ -602,7 +602,7 @@ watch(() => state.content, (val) => {
         <!-- <div v-if="conversationTools.isGroup(state.currentConversation)" class="tyn-media tyn-size-lg d-none d-sm-inline-flex tyn-group-avatars">
           <div class="tyn-group-avatar" v-for="avatar in state.avatars" :style="{ 'background-image': 'url(' + avatar.url + ')', height: avatar.size + '%', width: avatar.size + '%' }"></div>
         </div> -->
-        <div class="tyn-media tyn-size-lg d-none d-sm-inline-flex tyn-conver-avatar" :style="{ 'background-image': 'url(' + props.conversation.conversationPortrait + ')' }">
+        <div class="tyn-media tyn-size-md d-none d-sm-inline-flex tyn-conver-avatar" :style="{ 'background-image': 'url(' + props.conversation.conversationPortrait + ')' }">
         </div>
         
         <div class="tyn-media-col">

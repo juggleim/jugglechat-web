@@ -11,6 +11,7 @@ import common from "../../common/common";
 import emitter from "../../common/emmit";
 import messageUtils from "../../components/message-utils";
 import conversationTools from "./conversation";
+import JHeader from '../header/header.vue';
 
 const router = useRouter();
 let {
@@ -577,10 +578,11 @@ function isScrollTop(index){
 }
 </script>
 <template>
+  
   <div class="tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside">
       <AisdeHeader :title="'消息'" @onnav="onNavChat"></AisdeHeader>
-      <div class="tyn-aside-toplist">
+      <div class="tyn-aside-toplist" v-if="state.tops.length">
         <div
           class="tyn-aside-topitem"
           v-for="(item, index) in state.tops"

@@ -81,7 +81,7 @@ watch(() => state.content, (val) => {
 <template>
   <div class="jg-asider-seach-box">
     <div class="form-group">
-      <div class="form-control-wrap form-control-solid">
+      <div class="form-control-wrap">
         <div class="jg-search-icon wr wr-search"></div>
         <input type="text" class="form-control" v-model="state.content" placeholder="Search Chat" autocomplete="off"  @keydown.enter="onSearch" @input="onSearch"/>
       </div>
