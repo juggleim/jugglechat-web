@@ -16,11 +16,29 @@ const emit = defineEmits(["onnav"]);
 
 let juggle = im.getCurrent();
 
+let ASIDE_MENU_TYPE = {
+  ADD_FRIREND: 1,
+  ADD_GROUP: 2,
+  MESSAGE: 3,
+  CONTACT: 4,
+  LOGOUT: 5,
+};
+
 let state = reactive({
   isShowAddFriend: false,
   isDesktop: juggle.isDesktop(),
   isShowAddMenu: false,
   isShowSettingMenu: false,
+  settingMenus: [
+    { name: '会话', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE },
+    { name: '联系人', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT },
+    { type: 'line', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT },
+    { name: '退出', icon: 'logout', event: ASIDE_MENU_TYPE.LOGOUT },
+  ],
+  addMenus: [
+    { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
+    { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
+  ]
 });
 const context = getCurrentInstance();
 
@@ -76,19 +94,19 @@ function onNavChat(args){
 </script>
 
 <template>
-  <div class="tyn-aside-head" :class="{ 'tyn-aside-desktop': state.isDesktop }" @mouseleave="onHideMenu()">
+  <div class="tyn-aside-head" :class="{ 'tyn-aside-desktop': state.isDesktop }">
     <div class="tyn-aside-head-tools">
       <ul class="tyn-list-inline jg-asider-tools">
         <li class="jg-asider-tool">
           <button class="btn btn-icon btn-light btn-md wr wr-more-list" @click="onShowSettingMenu(true)"></button>
-          <HeaderDropMenu :is-show="state.isShowSettingMenu"></HeaderDropMenu>
+          <HeaderDropMenu :is-show="state.isShowSettingMenu" :menus="state.settingMenus"  @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
         </li>
         <li v-if="state.isDesktop" class="jg-asider-tool jg-asider-tool-search">
           <AisdeSearch @onnav="onNavChat"></AisdeSearch>
         </li>
         <li class="jg-asider-tool">
           <button class="btn btn-icon btn-light btn-md wr wr-plus" @click="onShowAddMenu(true)"></button>
-          <HeaderDropMenu :is-show="state.isShowAddMenu" :class="'tyn-header-create-list'"></HeaderDropMenu>
+          <HeaderDropMenu :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
         </li>
       </ul>
     </div>

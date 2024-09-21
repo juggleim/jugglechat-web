@@ -291,7 +291,7 @@ dl {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
+  padding: 10px;
   background: #f0f2f5;
   -webkit-app-region: drag;
 }
