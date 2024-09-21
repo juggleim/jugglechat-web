@@ -155,7 +155,7 @@
 }
 .message-state::before{
   font-weight: 700;
-  color: #e5e5e5;
+  color: #d0d0d3;
 }
 .message-group-state{
   position: absolute;
