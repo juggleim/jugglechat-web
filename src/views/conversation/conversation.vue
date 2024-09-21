@@ -3,6 +3,7 @@ const props = defineProps(['conversation']);
 const emit = defineEmits(["ondraft"]);
 
 import Search from "./search.vue";
+import Emoji from "../../components/emoji.vue"
 import ModalTransfer from "../../components/modal-transfer.vue";
 import ModalImgSender from "../../components/modal-img-sender.vue";
 import ModalMergeMsgs from "../../components/modal-merge-msgs.vue";
@@ -45,6 +46,7 @@ let context = getCurrentInstance();
 let state = reactive({
   isShowSearch: false,
   isShowAside: false,
+  isShowEmoji: false,
   isShowTransfer: false,
   isShowTransferMember: false,
   transferType: TRANSFER_TYPE.NONE,
@@ -525,6 +527,12 @@ function onPaste(){
     }
   }
 }
+function onShowEmoji(isShow){
+  state.isShowEmoji = isShow;
+}
+function onChoiceEmoji(emoji){
+  state.content += emoji.text;
+}
 function onShowImgSender(img){
   state.imgSender = img;
 }
@@ -652,23 +660,23 @@ watch(() => state.content, (val) => {
     <div class="tyn-chat-form">
       <Mention :is-show="state.isShowMention" :members="state.mentionMembers" @onselected="onMentionSelected" :index="state.selectMentionIndex"/>
       <Reply :is-show="state.isShowReply" @oncancel="onCancelReply" :message="state.currentReplyMessage"></Reply>
+      <Emoji :is-show="state.isShowEmoji" @onhide="onShowEmoji(false)" @onemit="onChoiceEmoji"></Emoji>
       <div class="tyn-chat-form-enter">
         <ul class="tyn-list-inline me-n2 my-1 tyn-chat-file">
-          <!-- <li class="d-none d-sm-block tyn-input-block">
-            <input type="file" class="btn btn-icon btn-light btn-md btn-pill wr wr-image tyn-input-file"
-              accept="image/png, image/jpeg" @change="onImageChange" />
-          </li> -->
-          <li class="d-none d-sm-block tyn-input-block">
+          <li class="d-none d-sm-block">
             <div class="btn btn-icon btn-light btn-md btn-pill wr wr-huixing tyn-input-file" @click="onFileClick"></div>
             <input type="file" style="display: none;"
               @change="onFileChange" />
           </li>
         </ul>
-        <input class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" @keydown.esc="onInputEsc"
+        <input  class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" @keydown.esc="onInputEsc"
           @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" @paste="onPaste" placeholder="Write a message" @blur="onInputBlur" ref="messageInput"/>
         <ul class="tyn-list-inline me-n2 my-1">
+          <li class="d-none d-sm-block">
+            <div type="file" class="btn btn-icon btn-light btn-md btn-pill wr wr-smile j-pointer" @click="onShowEmoji(true)" ></div>
+          </li>
           <li class="d-none d-sm-block tyn-input-block">
-            <button :class="{'tyn-chat-has-content': state.content.length > 0}" class="btn btn-icon btn-light btn-md btn-pill  wr wr-send" @click="onSend()"></button>
+            <button :class="{'tyn-chat-has-content': state.content.length > 0}" class="btn btn-icon btn-light btn-md btn-pill  wr wr-send j-pointer" @click="onSend()"></button>
           </li>
         </ul>
       </div>
