@@ -3938,7 +3938,8 @@ button {
   display: block;
   box-shadow: #00000061 0 3px 20px;
   border: 0;
-  background: rgb(255 255 255 / 94%);
+  background: rgb(255 255 255 / 76%);
+  backdrop-filter: blur(10px);
 }
 
 .dropdown-header {

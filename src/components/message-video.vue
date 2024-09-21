@@ -95,7 +95,7 @@ function onClickRight(e){
       </ul>
       <!-- .tyn-reply-tools -->
     </div>
-    <!-- .tyn-reply-bubble -->
+    <div class="dropmenu-backdrop" :class="{'show-menu-back': state.isShowDrop}" @click="onShowDrop(false)"></div>  
   </div>
-  <!-- .tyn-reply-group --></template>
+</template>
  

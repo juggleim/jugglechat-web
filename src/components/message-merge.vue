@@ -84,9 +84,8 @@ function onClickRight(e){
           <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
-      <!-- .tyn-reply-tools -->
     </div>
-    <!-- .tyn-reply-bubble -->
+    <div class="dropmenu-backdrop" :class="{'show-menu-back': state.isShowDrop}" @click="onShowDrop(false)"></div>  
   </div>
-  <!-- .tyn-reply-group --></template>
+</template>
  

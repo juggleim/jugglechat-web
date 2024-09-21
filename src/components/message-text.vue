@@ -132,5 +132,7 @@ function onClickRight(e){
         </li>
       </ul>
     </div>
+
+    <div class="dropmenu-backdrop" :class="{'show-menu-back': state.isShowDrop}" @click="onShowDrop(false)"></div>  
   </div>
 </template>

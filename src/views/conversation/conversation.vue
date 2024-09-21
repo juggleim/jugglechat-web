@@ -617,7 +617,7 @@ watch(() => state.content, (val) => {
         </div>
       </div>
       <ul class="tyn-list-inline gap gap-3 ms-auto">
-        <li><button class="btn btn-icon btn-light js-toggle-chat-options wr wr-operate" @click="onShowAside"></button>
+        <li><button class="btn btn-icon btn-light js-toggle-chat-options wr wr-more-dot" @click="onShowAside"></button>
         </li>
       </ul>
       <!-- <Search :is-show="state.isShowSearch" @onHideSearch="onHideSearch()"/> -->

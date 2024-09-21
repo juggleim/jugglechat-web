@@ -1194,7 +1194,7 @@ dl {
   box-shadow: #00000017 0 3px 12px;
   transform: translateX(100%);
   z-index: 1200;
-  top: 64px;
+  top: 0;
 }
 .tyn-chat-content-aside.show-aside {
   transform: none;
