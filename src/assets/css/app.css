@@ -129,7 +129,7 @@ dl {
     --appbar-height: 73px;
   }
   .tyn-content.has-aside-base, .tyn-content.has-aside-sticky {
-    --aside-width:300px;
+    --aside-width:320px;
   }
   .tyn-content-inner {
     padding: 2rem 1.25rem;
