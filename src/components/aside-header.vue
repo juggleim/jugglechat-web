@@ -39,7 +39,7 @@ let state = reactive({
   ],
   addMenus: [
     { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
-    { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
+    // { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
   ]
 });
 const context = getCurrentInstance();
