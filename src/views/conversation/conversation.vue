@@ -297,6 +297,7 @@ function onSend() {
   }
   
   utils.extend(state, { content: '', mentions: [] })
+  onShowEmoji(false);
   scrollBottom();
   juggle.sendMessage(msg,  {
     onbefore: (message) => {
@@ -532,6 +533,7 @@ function onShowEmoji(isShow){
 }
 function onChoiceEmoji(emoji){
   state.content += emoji.text;
+  inputFocus();
 }
 function onShowImgSender(img){
   state.imgSender = img;
