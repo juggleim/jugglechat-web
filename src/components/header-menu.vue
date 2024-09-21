@@ -4,7 +4,7 @@ import im from "../common/im";
 import utils from "../common/utils";
 import common from "../common/common";
 const props = defineProps(['isShow', 'menus']);
-const emit = defineEmits(["onhide"]);
+const emit = defineEmits(["onhide", "onemit"]);
 
 let state = reactive({
 });
@@ -14,7 +14,7 @@ let state = reactive({
     <li class="dropdown">
       <div class="dropdown-menu dropdown-menu-end jg-cndrop-show" :class="{'show fadein': props.isShow }">
         <ul class="tyn-list-links">
-          <li v-for="menu in props.menus" :class="[ menu.type == 'line' ? 'dropdown-divider' : 'tyn-list-link' ]">
+          <li @click="emit('onemit', menu)" v-for="menu in props.menus" :class="[ menu.type == 'line' ? 'dropdown-divider' : 'tyn-list-link' ]">
             <a  class="wr " :class="{ ['wr-' + menu.icon]: true }">{{ menu.name }}</a>
           </li>
         </ul>

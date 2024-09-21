@@ -39,7 +39,7 @@ function onConversation(){
         <div class="tyn-media-group">
           <div class="tyn-media-row">
             <div class="tyn-media-col">
-              <div class="wr wr-message btn btn-light tyn-size-md w-100 lower-btn" v-if="utils.isEqual(props.current.type, ConversationType.PRIVATE)" >删除好友</div>
+              <!-- <div class="wr wr-message btn btn-light tyn-size-md w-100 lower-btn" v-if="utils.isEqual(props.current.type, ConversationType.PRIVATE)" >删除好友</div> -->
             </div>
           </div>
         </div>

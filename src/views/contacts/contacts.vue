@@ -141,7 +141,7 @@ getFriends();
   <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside">
       <AisdeHeader :title="'通讯录'"></AisdeHeader>
-      <div class="tyn-aside-row pt-0">
+      <div class="tyn-aside-row pt-1">
         <ul class="nav nav-tabs nav-tabs-line">
           <li class="nav-item" v-for="tab in state.tabs">
             <button class="nav-link wr" :class="{['wr-' + tab.icon]: true, 'active': tab.isActive}" type="button" @click="onTab(tab)">{{ tab.name }}</button>

@@ -1,6 +1,7 @@
 <script setup>
 const props = defineProps(['title']);
 import { reactive, getCurrentInstance } from "vue";
+import { useRouter } from "vue-router";
 import ModalFriendAdd from "../components/modal-friend-add.vue";
 import AisdeSearch from './aside-search.vue';
 import utils from "../common/utils";
@@ -13,6 +14,7 @@ import im from "../common/im";
 import HeaderDropMenu from '../components/header-menu.vue';
 
 const emit = defineEmits(["onnav"]);
+const router = useRouter();
 
 let juggle = im.getCurrent();
 
@@ -91,6 +93,28 @@ function onHideMenu(){
 function onNavChat(args){
   emit('onnav', args)
 }
+function onMenuClick(menu){
+  let { event } = menu;
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.MESSAGE)){
+    router.push({ name: 'ConversationList' });
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.CONTACT)){
+    router.push({ name: 'Contacts' });
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.LOGOUT)){
+    Storage.remove(STORAGE.USER_TOKEN);
+    let juggle = im.getCurrent();
+    juggle.disconnect();
+    router.push({ name: 'Login' });
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_FRIREND)){
+    onShowFriendAdd(true);
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_GROUP)){
+
+  }
+  onHideMenu();
+}
 </script>
 
 <template>
@@ -99,14 +123,14 @@ function onNavChat(args){
       <ul class="tyn-list-inline jg-asider-tools">
         <li class="jg-asider-tool">
           <button class="btn btn-icon btn-light btn-md wr wr-more-list" @click="onShowSettingMenu(true)"></button>
-          <HeaderDropMenu :is-show="state.isShowSettingMenu" :menus="state.settingMenus"  @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
+          <HeaderDropMenu @onemit="onMenuClick" :is-show="state.isShowSettingMenu" :menus="state.settingMenus"  @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
         </li>
         <li v-if="state.isDesktop" class="jg-asider-tool jg-asider-tool-search">
           <AisdeSearch @onnav="onNavChat"></AisdeSearch>
         </li>
         <li class="jg-asider-tool">
           <button class="btn btn-icon btn-light btn-md wr wr-plus" @click="onShowAddMenu(true)"></button>
-          <HeaderDropMenu :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
+          <HeaderDropMenu @onemit="onMenuClick" :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
         </li>
       </ul>
     </div>
