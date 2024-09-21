@@ -49,7 +49,10 @@ nextTick(() => {
     return;
   }
   node.onload = function(){
-    document.querySelector(`div[mid=${node.id}]`).style.display = 'none';
+    let el = document.querySelector(`div[mid=${node.id}]`);
+    if(el){
+      el.style.display = 'none';
+    }
   }
 }) 
 
