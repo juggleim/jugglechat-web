@@ -68,7 +68,7 @@ let state = reactive({
             </path>
         </svg>
         <div class="intro-sub">
-            <h1 class="intro-text">JuggleChat Web</h1>
+            <h1 class="intro-text">JuggleChat by JuggleIM</h1>
         </div>
       </div>
     </div>

@@ -5,18 +5,21 @@ import { useRouter } from "vue-router";
 import ModalFriendAdd from "../components/modal-friend-add.vue";
 import AisdeSearch from './aside-search.vue';
 import utils from "../common/utils";
-import commcon from "../common/common";
+import common from "../common/common";
 import { STORAGE, RESPONSE, EVENT_NAME } from "../common/enum";
 import Storage from "../common/storage";
 import { Friend } from "../services";
 import emitter from "../common/emmit";
 import im from "../common/im";
 import HeaderDropMenu from '../components/header-menu.vue';
+import ModalAddMemberGroup from "../components/modal-add-member-group.vue";
+import { Group } from "../services/index";
 
 const emit = defineEmits(["onnav"]);
 const router = useRouter();
 
 let juggle = im.getCurrent();
+let { ConversationType } = juggle;
 
 let ASIDE_MENU_TYPE = {
   ADD_FRIREND: 1,
@@ -39,8 +42,10 @@ let state = reactive({
   ],
   addMenus: [
     { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
-    // { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
-  ]
+    { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
+  ],
+  isShowCreateGroup: false,
+  isCreateGroupLoading: false,
 });
 const context = getCurrentInstance();
 
@@ -111,9 +116,47 @@ function onMenuClick(menu){
     onShowFriendAdd(true);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_GROUP)){
-
+    onShowGroupCreate(true);
   }
   onHideMenu();
+}
+function onShowGroupCreate(isShow){
+  state.isShowCreateGroup = isShow;
+}
+function onCancelGroupCreate(e){
+  onShowGroupCreate(false);
+}
+function onConfirmGroupCreate({ friends }){
+  if (state.isCreateGroupLoading) {
+    return;
+  }
+  state.isCreateGroupLoading = true;
+
+  let name = utils.map(friends, (friend) => {
+    return friend.nickname;
+  }).join(', ');
+  if(name.length > 20){
+    name = `${name.substr(0, 20)}...`;
+  }
+
+  let members = utils.filter(friends, (friend) => {
+    return !friend.disabled;
+  });
+  common.createGroupAvatar(friends, (avatar) => {
+    Group.create({ name, avatar, members }).then((result) => {
+      let { data: group } = result;
+      let conversation = {
+        conversationType: ConversationType.GROUP,
+        conversationId: group.group_id,
+        conversationTitle: name,
+        conversationPortrait: avatar,
+        latestMessage: {}
+      };
+      emitter.$emit(EVENT_NAME.ON_GROUP_CREATED, { conversation })
+      onCancelGroupCreate();
+      state.isCreateGroupLoading = false;
+    });
+  });
 }
 </script>
 
@@ -135,5 +178,14 @@ function onMenuClick(menu){
       </ul>
     </div>
     <ModalFriendAdd :is-show="state.isShowAddFriend" @oncancel="onFriendAddCancel" @onconfirm="onFriendAddConfirm"></ModalFriendAdd>
+    
+    <ModalAddMemberGroup 
+      :is-show="state.isShowCreateGroup" 
+      :is-loading="state.isCreateGroupLoading"
+      :conversation="{}"
+      :members="[]"
+      @oncancel="onCancelGroupCreate"
+      @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
+
   </div>
 </template>

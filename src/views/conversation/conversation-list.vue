@@ -45,7 +45,7 @@ emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
     shortName: '新朋友',
   }
   state.conversations.unshift(conversation);
-  // state.currentConversation = conversation;
+  state.currentConversation = conversation;
 });
 function onShowDropmenu(e) {
   let current = e.currentTarget;

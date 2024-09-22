@@ -27,7 +27,7 @@ watch(() => props.isShow, () => {
       nickname: user.name,
       avatar: user.portrait
     });
-    let { conversationType, conversationId } = props.conversation;
+    let { conversationType, conversationId } = props.conversation || {};
       items = utils.map(items, (item) => {
         item.isTransferChecked = utils.isEqual(item.user_id, conversationId);
         let index = utils.find(props.members, (member) => {
@@ -100,7 +100,7 @@ function onSelected(item) {
             </li>
           </ul>
         </div>
-        <button @click="onCancel()" class="btn btn-md btn-icon btn-pill btn-white shadow position-absolute top-0 end-0 mt-n3 me-n3 wr wr-close"></button>
+        <!-- <button @click="onCancel()" class="btn btn-md btn-icon btn-pill btn-white shadow position-absolute top-0 end-0 mt-n3 me-n3 wr wr-close"></button> -->
         <div class="modal-body modal-loading" v-if="props.isLoading">
           <div class="loading-content"></div>
         </div>
