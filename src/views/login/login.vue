@@ -16,6 +16,7 @@ let context = getCurrentInstance();
 const router = useRouter();
 let defalutBtnLabel = '发送';
 let state = reactive({
+  isQRLogin: true,
   user: {
     phone: '',
     code: ''
@@ -97,43 +98,61 @@ function onSend(){
 function onInput() {
   utils.extend(state.errorMsg, { phone: '', code: '' });
 }
+function setQrLogin(isQR){
+  state.isQRLogin = isQR;
+}
 </script>
 <template>
   <WinHeader></WinHeader>
-  <div class="tyn-root jg-login-root" :class="{ 'tyn-desktop-root': juggle.isDesktop() && !utils.isMacBrowser(), 'tyn-web-root': !juggle.isDesktop() }">
-      <div class="jg-login-header">
-        <div class="jg-login-logo"></div>
-        <span class="jg-login-appname">JuggleChat</span>
+  <div class="tyn-root jg-login-container" :class="{ 'tyn-desktop-root': juggle.isDesktop(), 'tyn-web-root': !juggle.isDesktop() }">
+    <div class="jg-nlogin-main" v-if="state.isQRLogin">
+      <div class="jg-nlogin-qrbox">
+        <div class="jg-nlogin-icon"></div>
       </div>
-      <div class="jg-login-main">
-        <div class="jg-login-banner"></div>
-        <div class="jg-login-formbox">
-          <div class="form-group">
-            <div class="form-control-wrap">
-              <input type="text" class="form-control" v-model="state.user.phone" placeholder="输入手机号"
-                @input="onInput()" @keydown.enter="onLogin()">
-            </div>
-            <label class="form-label" for="email-address">
-              <span class="small ms-2 text-danger">{{ state.errorMsg.phone }}</span>
-            </label>
+      <div class="jg-nlogin-intro-box">
+        <h2 class="jg-nlogin-intro-title">Log in to JuggleChat by QR Code</h2>
+        <ul class="jg-nlogin-intros">
+          <li class="jg-nlogin-intro wr wr-1">Open JuggleChat on your phone</li>
+          <li class="jg-nlogin-intro wr wr-2">Go to First Page -> QRCode</li>
+          <li class="jg-nlogin-intro wr wr-3">Point your phone at this screen to confirm login</li>
+        </ul>
+        <div class="jg-nlogin-button" @click="setQrLogin(false)"> LOG IN BY PHONE NUMBER </div>
+      </div>
+    </div>
+    <div class="jg-nlogin-main" v-else>
+      <div class="jg-nlogin-normalbox">
+        <div class="jg-nlogin-nlicon"></div>
+        <h2 class="jg-nlogin-nltitle">JuggleChat</h2>
+      </div>
+      <div class="jg-nlogin-intro-box jg-nlogin-btnbox">
+        <div class="form-group">
+          <div class="form-control-wrap">
+            <input type="text" class="form-control" v-model="state.user.phone" placeholder="输入手机号"
+              @input="onInput()" @keydown.enter="onLogin()">
           </div>
-          <div class="form-group">
-            <div class="form-control-wrap jg-login-sms form-control">
-              <input type="text"  v-model="state.user.code" placeholder="万能验证码: 000000"
-                @input="onInput()"  @keydown.enter="onLogin()">
-              <div class="jg-login-sendcode" @click="onSend">{{ state.btnLabel }}</div>
-            </div>
-            <label class="form-label">
-              <span class="small ms-2 text-danger">{{ state.errorMsg.code }}</span>
-            </label>
+          <label class="form-label" for="email-address">
+            <span class="small ms-2 text-danger">{{ state.errorMsg.phone }}</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <div class="form-control-wrap jg-login-sms form-control">
+            <input type="text"  v-model="state.user.code" placeholder="万能验证码: 000000"
+              @input="onInput()"  @keydown.enter="onLogin()">
+            <div class="jg-login-sendcode" @click="onSend">{{ state.btnLabel }}</div>
           </div>
-          <div class="form-group">
-            <div class="form-control-wrap">
-              <a class="btn btn-primary w-100" @click="onLogin()">登录</a>
-            </div>
+          <label class="form-label">
+            <span class="small ms-2 text-danger">{{ state.errorMsg.code }}</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <div class="form-control-wrap">
+            <a class="btn btn-primary w-100" @click="onLogin()">登录</a>
           </div>
         </div>
+
+        <div class="jg-nlogin-button jg-nlogin-num-btn"  @click="setQrLogin(true)"> LOG IN BY QE CODE </div>
       </div>
+    </div>
   </div>
   <JFooter></JFooter>
 </template>

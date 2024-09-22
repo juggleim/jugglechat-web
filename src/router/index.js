@@ -32,11 +32,6 @@ let routes = [{
   name: 'Login',
   component: () => import('@/views/login/login.vue'),
 },
-{
-  path: '/login_new',
-  name: 'LoginN',
-  component: () => import('@/views/login/login-new.vue'),
-},
 // {
 //   path: '/register',
 //   name: 'Register',
@@ -67,7 +62,7 @@ router.beforeEach((to, from, next)=> {
   if(utils.isEqual(to.name, 'Root')){
     return router.push({ name: 'ConversationList' })
   }
-  if (user.id || utils.isEqual(to.name, 'Login') || utils.isEqual(to.name, 'LoginN')) {
+  if (user.id || utils.isEqual(to.name, 'Login')) {
     next();
   }else{
     next({ name: 'Login'})

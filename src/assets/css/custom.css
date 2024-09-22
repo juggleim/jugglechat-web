@@ -1057,13 +1057,14 @@
   text-align: center;
 }
 .intro-text{
-  font-size: 32px;
+  font-size: 26px;
   margin-bottom: 0;
   margin-top: 30px;
   font-weight: 400;
   text-align: center;
-  line-height: 32px;
-  color: #41525d;
+  color: #0000009e;
+  font-style: italic;
+  font-weight: 700;
 }
 
 /* New Login */
