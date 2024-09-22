@@ -634,7 +634,7 @@ watch(() => state.content, (val) => {
     <div class="tyn-chat-body js-scroll-to-end" ref="messages">
       <WithoutMessage v-if="state.isFinished"></WithoutMessage>
       <div class="tyn-reply">
-        <div v-for="message in state.messages" class="fadein-o4">
+        <div v-for="message in state.messages">
           <TimelineMessage v-if="message.name == 'notify'" :message="message"></TimelineMessage>
           <RecallMessage v-else-if="message.name == MessageType.RECALL_INFO" :message="message"></RecallMessage>
           <GroupNtfMessage v-else-if="message.name == MSG_NAME.GROUP_NTF" :message="message"></GroupNtfMessage>

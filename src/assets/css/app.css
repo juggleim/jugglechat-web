@@ -325,7 +325,6 @@ dl {
   background: #cce3ff;
   border-radius: 6px;
   transition: background 0.3s linear;
-
 }
 .tyn-aside-item-bubbly {
   border-radius: var(--aside-item-bubbly-radius);

@@ -995,6 +995,17 @@
 .tyn-aside-list{
   padding: 2px;
 }
+@keyframes leaveleave {
+  0% {
+    letter-spacing: 1em;
+    transform: translateZ(100px);
+    filter: blur(12px) opacity(10%);
+  }
+  100% {
+    transform: translateZ(0);
+    filter: blur(0.01);
+  }
+}
 .tyn-header-create-list .dropdown-menu{
   right: 0;
 }
