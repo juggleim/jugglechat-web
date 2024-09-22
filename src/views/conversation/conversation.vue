@@ -77,6 +77,8 @@ juggle.once(Event.MESSAGE_RECEIVED, (message) => {
   if (conversationTools.isSameConversation(message, state)) {
     state.messages.unshift(message);
     scrollBottom();
+    conversationTools.readMessage([message]);
+    conversationTools.clearUnreadCount(message)
   }
 });
 

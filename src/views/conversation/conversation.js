@@ -17,6 +17,14 @@ function readMessage(messages){
   }
 }
 
+function clearUnreadCount(conversation){
+  juggle.clearUnreadcount(conversation).then(() => {
+    console.log('clearnunread successfully.')
+  }, (error) => {
+    console.log('clearnunread error', error)
+  });
+}
+
 function getMessages(isFirst, callback, state, props) {
   if(!im.isConnected()){
     return;
@@ -231,4 +239,5 @@ export default {
   isGroup,
   isSameConversation,
   transfer,
+  clearUnreadCount,
 }
