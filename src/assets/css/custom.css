@@ -1074,6 +1074,7 @@
   -webkit-app-region: drag;
   align-items: center;
   justify-content: center;
+  user-select: none;
 }
 .jg-login-container::before,
 .jg-login-container::after{
@@ -1090,8 +1091,8 @@
   align-items: center;  
 }
 .jg-nlogin-qrbox{
-  height: 280px;
-  width: 280px;
+  height: 260px;
+  width: 260px;
   box-shadow: #0000001c 0 3px 20px;
   border-radius: 10px;
   background-image: url(../images/qrcode.png);
@@ -1099,6 +1100,28 @@
   background-size: cover;
   position: relative;
   animation: qr-show 400ms ease-in-out forwards;
+}
+.jg-nlogin-normalbox{
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.jg-nlogin-nltitle{
+  width: 100%;
+  color: #000;
+  text-align: center;
+  margin: 26px 0;
+}
+.jg-nlogin-nlicon{
+  height: 160px;
+  width: 160px;
+  background-color: #FAFAFA;
+  background-size: 60%;
+  background-image: url(../images/icon.png);
+  background-repeat: no-repeat;
+  background-position: 50% 54%;
+  box-shadow: #0000001c 0 3px 20px;
+  border-radius: 50%;
 }
 .jg-nlogin-icon{
   position: absolute;
@@ -1119,7 +1142,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  
+  width: 390px;
 }
 .jg-nlogin-intro-title{
   margin: 20px 0;
@@ -1136,7 +1159,19 @@
   color: #3390ec;
   font-size: 18px;
 }
-
+.jg-nlogin-btnbox{
+  width: 390px;
+  margin-top: 20px;
+}
+.jg-nlogin-btnbox .form-group{
+  width: 100%;
+}
+.jg-nlogin-btnbox .form-control{
+  padding: 0.9rem 1rem;
+}
+.jg-nlogin-btnbox .btn{
+  padding:  0.9rem 1rem;
+}
 .jg-nlogin-button{
   color: #3390ec;
   cursor: pointer;
@@ -1158,6 +1193,9 @@
 }
 .jg-nlogin-button:hover{
   background-color: rgb(47 132 217 / 8%);
+}
+.jg-nlogin-num-btn{
+  margin-top: 30px;
 }
 @keyframes qr-show {
   0% {
