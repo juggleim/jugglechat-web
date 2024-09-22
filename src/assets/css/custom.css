@@ -1045,26 +1045,16 @@
   align-items: center;
   justify-content: center;
 }
-.tyn-chat-none-bg{
-  --intro-bg: #f0f2f5;
-  --intro-border: #2562d3;
-  --intro-svg1: #dae5f7;
-  --intro-svg2: #fff;
-  --intro-opacity: none;
-  --intro-svg3: #fff;
-  --intro-svg4: #eefefa;
-  --intro-svg5: #eefaf6;
-  text-align: center;
-}
 .intro-text{
-  font-size: 26px;
+  font-size: 14px;
   margin-bottom: 0;
-  margin-top: 30px;
-  font-weight: 400;
   text-align: center;
   color: #0000009e;
   font-style: italic;
   font-weight: 700;
+  box-shadow: #0000000f 0 3px 8px;
+  padding: 4px 20px;
+  border-radius: 6px;
 }
 
 /* New Login */
