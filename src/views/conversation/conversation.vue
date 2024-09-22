@@ -18,7 +18,7 @@ import im from "../../common/im";
 import Text from '../../components/message-text.vue';
 import File from '../../components/message-file.vue';
 import ImageMessage from '../../components/message-image.vue';
-import RichText from '../../components/message-richtext.vue';
+// import RichText from '../../components/message-richtext.vue';
 import Video from '../../components/message-video.vue';
 import Merge from '../../components/message-merge.vue';
 import Known from '../../components/message-unknown.vue';
