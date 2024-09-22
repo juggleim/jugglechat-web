@@ -913,7 +913,7 @@
 }
 
 .jg-img-loader {
-  width: 50px;
+  width: 50px !important;
   aspect-ratio: 1;
   display: grid;
 }
