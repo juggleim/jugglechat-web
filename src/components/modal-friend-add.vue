@@ -1,6 +1,6 @@
 <script setup>
 import im from "../common/im";
-import { reactive } from "vue";
+import { reactive, watch } from "vue";
 import utils from "../common/utils";
 import { User } from "../services/index";
 import { RESPONSE } from "../common/enum";
@@ -48,7 +48,15 @@ function onAdd(user){
 }
 function onInput(){
   state.errorMsg = '';
+  if(utils.isEqual(0, state.phone.length)){
+    state.users = [];
+  }
 }
+watch(() => props.isShow, () => {
+  if(!props.isShow){
+    utils.extend(state, { users: [], phone: '' })
+  }
+});
 </script>
 <template>
   <div class="modal tyn-modal" tabindex="-1" :class="[props.isShow ? 'fade show' : '']">

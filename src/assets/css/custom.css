@@ -637,6 +637,9 @@
 .modal-friend-add .tyn-aside-search{
   padding: 0;
 }
+.modal-friend-add .modal-body{
+  height: unset;
+}
 .modal-friend-add .form-label{
   margin-bottom: 0;
 }
