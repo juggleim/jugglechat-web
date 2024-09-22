@@ -1040,7 +1040,7 @@
 }
 
 .tyn-chat-none-box{
-  background: #f0f2f5;
+  /* background: #f0f2f5; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1053,8 +1053,9 @@
   font-style: italic;
   font-weight: 700;
   box-shadow: #0000000f 0 3px 8px;
-  padding: 4px 20px;
-  border-radius: 6px;
+  padding: 2px 20px;
+  border-radius: 12px;
+  background: #FAFAFA;
 }
 
 /* New Login */
