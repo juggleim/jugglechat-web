@@ -13,7 +13,8 @@ import emitter from "../common/emmit";
 import im from "../common/im";
 import HeaderDropMenu from '../components/header-menu.vue';
 import ModalAddMemberGroup from "../components/modal-add-member-group.vue";
-import { Group } from "../services/index";
+import { Group, User } from "../services/index";
+import ModalUser from "../components/modal-user.vue";
 
 const emit = defineEmits(["onnav"]);
 const router = useRouter();
@@ -27,6 +28,7 @@ let ASIDE_MENU_TYPE = {
   MESSAGE: 3,
   CONTACT: 4,
   LOGOUT: 5,
+  USER_SETTING: 6,
 };
 
 let state = reactive({
@@ -35,9 +37,11 @@ let state = reactive({
   isShowAddMenu: false,
   isShowSettingMenu: false,
   settingMenus: [
-    { name: '会话', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE },
-    { name: '联系人', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT },
-    { type: 'line', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT },
+    { name: '最近会话', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE },
+    { name: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT },
+    { type: 'line' },
+    { name: '个人资料', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING },
+    { type: 'line' },
     { name: '退出', icon: 'logout', event: ASIDE_MENU_TYPE.LOGOUT },
   ],
   addMenus: [
@@ -46,8 +50,18 @@ let state = reactive({
   ],
   isShowCreateGroup: false,
   isCreateGroupLoading: false,
+  user: {},
+  isShowUserClose: true,
+  isShowUser: false
 });
 const context = getCurrentInstance();
+
+emitter.$on(EVENT_NAME.UN_UNATHORIZED, () => {
+  Storage.remove(STORAGE.USER_TOKEN);
+  let juggle = im.getCurrent();
+  juggle.disconnect();
+  router.replace({ name: 'Login' });
+});
 
 function onShowFriendAdd(isShow){
   state.isShowAddFriend = isShow;
@@ -118,6 +132,9 @@ function onMenuClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_GROUP)){
     onShowGroupCreate(true);
   }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
+    onShowUserModal(true);
+  }
   onHideMenu();
 }
 function onShowGroupCreate(isShow){
@@ -158,6 +175,42 @@ function onConfirmGroupCreate({ friends }){
     });
   });
 }
+
+function onShowUserModal(isShow){
+  utils.extend(state, { isShowUser: isShow });
+}
+function onUserCanncel(){
+  onShowUserModal(false);
+}
+let isSaveingUser = false;
+function onUserSave(user){
+  if(isSaveingUser){
+    return;
+  }
+  isSaveingUser = true;
+  User.update(user).then((result) => {
+    isSaveingUser = false;
+    if(!utils.isEqual(result.code, RESPONSE.SUCCESS)){
+      let errorCode = result.code;
+      return context.proxy.$toast({
+        text: `保存失败：${errorCode}`,
+        icon: 'error'
+      });
+    }
+    utils.extend(state.user, user);
+    utils.extend(state, { isShowUser: false, isShowUserClose: true });
+
+    Storage.set(STORAGE.USER_TOKEN, state.user);
+  });
+}
+
+
+// 强制修改头像
+let user = Storage.get(STORAGE.USER_TOKEN);
+let portrait = user.portrait || '';
+let isShowUser = utils.isBase64(portrait.replace('data:image/jpeg;base64,', ''));
+utils.extend(state, { user, isShowUser, isShowUserClose: !isShowUser });
+
 </script>
 
 <template>
@@ -187,5 +240,6 @@ function onConfirmGroupCreate({ friends }){
       @oncancel="onCancelGroupCreate"
       @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
 
+    <ModalUser :is-show="state.isShowUser" :is-show-close="state.isShowUserClose" :user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser>
   </div>
 </template>
