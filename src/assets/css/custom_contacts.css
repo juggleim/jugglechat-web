@@ -47,9 +47,9 @@
   border-color: var(--bs-btn-hover-border-color);
   border: 0;
 }
-.tyn-contact .modal-content{
+/* .tyn-contact .modal-content{
   height: 140px;
-}
+} */
 .tyn-contact .tyn-conver-avatar{
   border: 1px solid #e8e6e6;
 }

@@ -1156,6 +1156,7 @@
 }
 .jg-nlogin-btnbox .form-group{
   width: 100%;
+  -webkit-app-region: no-drag;
 }
 .jg-nlogin-btnbox .form-control{
   padding: 0.9rem 1rem;
