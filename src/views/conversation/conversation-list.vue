@@ -3,6 +3,7 @@ import utils from "../../common/utils";
 import { reactive, getCurrentInstance, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import Conversation from "./conversation.vue";
+import None from "./none.vue";
 import AisdeHeader from "../../components/aside-header.vue";
 import { STORAGE, EVENT_NAME } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -718,6 +719,7 @@ function isScrollTop(index){
       </div>
       <!-- .tyn-aside-body -->
     </div>
+    <None v-if="utils.isEmpty(state.currentConversation)"></None>
     <Conversation
       :conversation="state.currentConversation"
       v-if="!utils.isEmpty(state.currentConversation)"

@@ -848,6 +848,7 @@
   padding: 0 16px;
   flex-wrap: wrap;
   border-bottom: 1px solid #38353c0a;
+  margin-top: 10px;
 }
 .tyn-aside-topitem{
   margin: 6px;
@@ -890,6 +891,15 @@
 /* Top End */
 .tyn-reply-meida-img{
   position: relative;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.tyn-reply-meida-img div{
+  width: 100%;
+}
+.tyn-reply-meida-img .jg-message-senttime{
+  margin-top: -4px;
 }
 .tyn-img-loading{
   position: absolute;
@@ -1024,4 +1034,31 @@
 .emojis__emoji {
   margin-right: 5px;
   cursor: pointer;
+}
+
+.tyn-chat-none-box{
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tyn-chat-none-bg{
+  --intro-bg: #f0f2f5;
+  --intro-border: #25d366;
+  --intro-svg1: #DAF7F3;
+  --intro-svg2: #fff;
+  --intro-opacity: none;
+  --intro-svg3: #fff;
+  --intro-svg4: #eefefa;
+  --intro-svg5: #eefaf6;
+  text-align: center;
+}
+.intro-text{
+  font-size: 32px;
+  margin-bottom: 0;
+  margin-top: 30px;
+  font-weight: 400;
+  text-align: center;
+  line-height: 32px;
+  color: #41525d;
 }

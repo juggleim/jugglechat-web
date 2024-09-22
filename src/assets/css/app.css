@@ -282,7 +282,7 @@ dl {
   justify-content: stretch;
   flex-shrink: 0;
   overflow: hidden;
-  /* border-right: 1px solid var(--border-color); */
+  border-right: 1px solid #38353c2b;
 }
 .tyn-aside-base {
   height: var(--content-full-height);
