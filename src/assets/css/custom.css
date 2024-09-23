@@ -898,9 +898,12 @@
   flex-direction: row;
   flex-wrap: wrap;
 }
-.tyn-reply-meida-img div{
+/* .tyn-reply-meida-img div{
   width: 100%;
-}
+} */
+ .jg-message-senttime{
+  width: 100%;
+ }
 .tyn-reply-meida-img .jg-message-senttime{
   margin-top: -4px;
 }
