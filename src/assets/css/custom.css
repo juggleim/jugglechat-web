@@ -34,7 +34,7 @@
   background-color: hsla(0,0%,100%,.11);
   border-radius: 1px;
   background-clip: content-box;
-  border: 1px solid transparent
+  border: 1px solid transparent;
 }
 ::-webkit-scrollbar{
   width: 0;
@@ -1149,7 +1149,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 390px;
+  width: 410px;
 }
 .jg-nlogin-intro-title{
   margin: 20px 0;
@@ -1273,3 +1273,15 @@
   right: auto !important;
 }
 /* Reactions End*/
+
+@keyframes slide-show {
+  0%, 5% {
+    transform: translateY(20px);
+  }
+  95%, 100% {
+    transform: translateY(0px);
+  }
+}
+.slide-show{
+  animation: slide-show 500ms cubic-bezier(0.5,0,0.5,1) forwards;
+}
