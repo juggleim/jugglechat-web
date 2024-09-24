@@ -333,8 +333,8 @@
   z-index: 999;
 }
 .tyn-emoji-pn.show-aside{
-  top: -400px;
-  height: 400px;
+  top: -144px;
+  height: auto;
 }
 
 .tyn-emoni-box{
@@ -1025,6 +1025,8 @@
 }
 .show-menu-back{
   display: block;
+  /* background-color: rebeccapurple;
+  opacity: 1; */
 }
 .j-pointer{
   cursor: pointer;
@@ -1035,22 +1037,21 @@
   display: flex;
   flex-wrap: wrap;
   margin: 0 auto;
+  padding-bottom: 4px;
 }
 
 .emoji {
   background: url(../images/emoji-sprite.png) transparent;
-  width: 40px;
-  height: 40px;
-  background-size: 400px;
   background-repeat: no-repeat;
-  width: 50px;
-  height: 50px;
-  background-size: 500px;
+  width: 30px;
+  height: 30px;
+  background-size: 350px;
 }
 
 .emojis__emoji {
-  margin-right: 5px;
+  margin-right: 8px;
   cursor: pointer;
+  margin-left: 6px;
 }
 
 .tyn-chat-none-box{
@@ -1219,3 +1220,56 @@
 }
 
 /* New Login End */
+
+/* Reactions */
+.jg-reactions{
+  display: flex;
+  flex-wrap: wrap;
+}
+.jg-reaction{
+  background-color: #00800033;
+  min-width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2px 4px 0 0;
+  padding: 0 8px;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.jg-reaction-emoji{
+  font-size: 14px;
+  animation: qr-show 300ms ease-in-out forwards;
+}
+.jg-reaction-emoji::after{
+  content: "|";
+  color: #063d0a7d;
+  margin: 0 8px;
+  font-size: 12px;
+}
+.jg-reaction-names{
+  display: flex;
+}
+.jg-reaction-emoji-pn{
+  right: 100px;
+  left: auto;
+  display: none;
+}
+.jg-reaction-emoji-pn.show-aside{
+  display: block;
+}
+.jg-reaction-bottom{
+  top: unset !important;
+  bottom: -120px;
+}
+.jg-reaction-top{
+  top: -110px !important;
+  bottom: unset !important;
+}
+
+.ingoing .jg-reaction-emoji-pn{
+  left: 100px !important;
+  right: auto !important;
+}
+/* Reactions End*/
