@@ -245,7 +245,7 @@ function converationHandler({ conversations }) {
         state.conversations.splice(index, 1)[0];
         state.conversations.unshift(conversation);
       } else {
-        state.conversations.splice(index, 1, conversation);
+        state.conversations.splice(index, 1, utils.clone(conversation));
       }
     } else {
       let { latestMessage } = conversation;
