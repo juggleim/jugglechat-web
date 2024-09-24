@@ -95,6 +95,19 @@ juggle.once(Event.MESSAGE_UPDATED, (notify) => {
   }
 });
 
+juggle.once(Event.MESSAGE_REMOVED, (notify) => {
+  console.log('remove', notify);
+  if (conversationTools.isSameConversation(notify, state)) {
+    let { messages } = notify;
+    utils.forEach(messages, (item) => {
+      let index = utils.find(state.messages, (msg) => {
+        return utils.isEqual(msg.messageId, item.messageId)
+      });
+      state.messages.splice(index, 1);
+    });
+  }
+});
+
 juggle.once(Event.MESSAGE_RECALLED, (notify) => {
   if (conversationTools.isSameConversation(notify, state)) {
     let index = utils.find(state.messages, (msg) => {
