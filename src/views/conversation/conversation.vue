@@ -29,7 +29,9 @@ import GroupNtfMessage from '../../components/message-group-notify.vue';
 import utils from "../../common/utils";
 import conversationTools from "./conversation";
 import messageUtils from "../../components/message-utils";
-import { TRANSFER_TYPE, MSG_NAME, EVENT_NAME, MESSAGE_OP_TYPE } from "../../common/enum";
+import Storage from "../../common/storage";
+
+import { TRANSFER_TYPE, MSG_NAME, EVENT_NAME, MESSAGE_OP_TYPE, STORAGE } from "../../common/enum";
 import common from "../../common/common";
 import emitter from "../../common/emmit";
 import { Group } from "../../services/index";
@@ -91,6 +93,34 @@ juggle.once(Event.MESSAGE_UPDATED, (notify) => {
     utils.extend(state.messages[index], {
       isUpdated: true,
       content: notify.content
+    });
+  }
+});
+
+juggle.once(Event.MESSAGE_REACTION_CHANGED, (notify) => {
+  console.log(notify);
+  if (conversationTools.isSameConversation(notify, state)) {
+    let index = utils.find(state.messages, (msg) => {
+      return utils.isEqual(msg.messageId, notify.messageId)
+    });
+    let message = state.messages[index];
+    let list = notify.reactions;
+    
+    utils.forEach(list, (item) => {
+      let { isRemove, key, value } = item;
+      let _list = message.reactions[key] || [];
+      if(isRemove){
+        let _index = utils.find(_list, (_item) => { return _item.key == key});
+        _list.splice(_index, 1);
+      }else{
+        _list.push({ key, value });
+      }
+      if(utils.isEqual(_list.length, 0)){
+        delete message.reactions[key];
+      }else{
+        message.reactions[key] = _list;
+      }
+      
     });
   }
 });
@@ -532,7 +562,34 @@ function onReply(message){
   utils.extend(state, { currentReplyMessage: message, isShowReply: true });
   messageInput.focus();
 }
+function onReaction(reaction){
+  let { text, message } = reaction;
+  let { conversationId, conversationType } = state.currentConversation;
+  let { messageId } = message;
 
+  let list = message.reactions[text] || [];
+  let user = Storage.get(STORAGE.USER_TOKEN);
+  let index = utils.find(list, (reaction) => {
+    return reaction.value == user.id;
+  });
+  let isRemove = index > -1;
+  if(isRemove){
+    list.splice(index, 1);
+    juggle.removeMessageReaction({ conversationType, conversationId, messageId, reactionId: text }).then(() => {
+      console.log('remove message reaction successfully.')
+    });
+  }else{
+    list.push({ key: text, value: user.id, user });
+    juggle.addMessageReaction({ conversationType, conversationId, messageId, reactionId: text }).then(() => {
+      console.log('add message reaction successfully.')
+    });
+  }
+  if(utils.isEqual(list.length, 0)){
+    delete message.reactions[text];
+  }else{
+    message.reactions[text] = list;
+  }
+}
 function onPaste(){
   if(typeof JuggleIMDesktop != 'undefined'){
     var img = JuggleIMDesktop.readImage();
@@ -655,7 +712,7 @@ watch(() => state.content, (val) => {
             <span class="tyn-transfer wr" v-if="state.isShowTransfer" :class="{'wr-success-square': message.isSelected, 'wr-square': !message.isSelected}" @click="onSelected(message)"></span>
             <div class="tyn-reply-item" :class="[message.isSender ? 'outgoing' : 'ingoing', state.isShowTransfer ? 'tny-message' : '']"  @click="onSelected(message)">
               <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" @onrecall="onRecall"
-                @onmodify="onModifyText" @ontransfer="onShowTransfer" @onreply="onReply"></Text>
+                @onmodify="onModifyText" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Text>
               <ImageMessage v-else-if="utils.isEqual(message.name, MessageType.IMAGE)" :message="message"
                 @onrecall="onRecall" @onpreview="onPreviewImage" @ontransfer="onShowTransfer" @onreply="onReply"></ImageMessage>
               <File v-else-if="utils.isEqual(message.name, MessageType.FILE)" :message="message" @onrecall="onRecall" @ontransfer="onShowTransfer" @onreply="onReply">

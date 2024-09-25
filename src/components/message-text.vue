@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps(['message']);
-const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply']);
+const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction']);
 
 import { reactive, watch } from "vue";
 import GroupReads from "./group-reads.vue";
@@ -12,7 +12,6 @@ import im from "../common/im";
 import messageUtils from "./message-utils";
 import { REG_EXP, MESSAGE_OP_TYPE, STORAGE } from "../common/enum";
 import ReactionEmoji from "../components/emoji-reaction.vue"
-import Storage from "../common/storage";
 
 let state = reactive({
   isShowDrop: false,
@@ -93,15 +92,7 @@ function onShowEmojiReaction(isShow){
   state.isShowReaction = isShow;
 }
 function onChoiceEmoji(item){
-  let index = utils.find(state.reactions, (reaction) => {
-    return reaction.text == item.text;
-  });
-  if(index > -1){
-    state.reactions.splice(index, 1);
-  }else{
-    let user = Storage.get(STORAGE.USER_TOKEN);
-    state.reactions.push({ text: item.text, name: user.name })
-  }
+  emit('onreaction', { ...item, message: props.message });
 }
 
 </script>
@@ -130,7 +121,7 @@ function onChoiceEmoji(item){
         <span v-html="getContent(props.message.content.content)"></span>
         <span class="tyn-text-modify" v-if="props.message.isUpdated">（已修改）</span>
         
-        <Reaction :is-show="state.reactions.length > 0" :reactions="state.reactions" @oncancel="onChoiceEmoji"></Reaction>
+        <Reaction :is-show="!utils.isEmpty(props.message.reactions)" :reactions="props.message.reactions" @oncancel="onChoiceEmoji"></Reaction>
 
         <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
           :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"

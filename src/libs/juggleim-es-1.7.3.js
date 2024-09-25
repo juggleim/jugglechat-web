@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.7.1
+* JuggleChat.js v1.7.3
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -496,6 +496,24 @@ function isValidHMTime(timeStr) {
 function getRandoms(len) {
   return Array(len).fill(0).map(() => Math.floor(Math.random() * 10));
 }
+// input: groupBy([{a:1},{a:1}, {a:2}], ['a'])
+// output: { 1: [{a:1},{a:1}], 2: [{a:2}] }
+let groupBy = (arrs, keys) => {
+  let obj = {};
+  forEach(arrs, item => {
+    let names = [];
+    forEach(item, (v, k) => {
+      if (isInclude(keys, k)) {
+        names.push(v);
+      }
+    });
+    let name = names.join('_');
+    let _list = obj[name] || [];
+    _list.push(item);
+    obj[name] = _list;
+  });
+  return obj;
+};
 var utils = {
   Prosumer,
   Observer,
@@ -544,7 +562,8 @@ var utils = {
   iterator,
   formatTime,
   isValidHMTime,
-  getRandoms
+  getRandoms,
+  groupBy
 };
 
 function Emitter () {
@@ -949,6 +968,26 @@ let FUNC_PARAM_CHECKER = {
   GET_ALL_CHATROOM_ATTRS: [{
     name: 'id',
     type: 'String'
+  }],
+  ADD_MSG_REACTION: [{
+    name: 'conversationType'
+  }, {
+    name: 'conversationId'
+  }, {
+    name: 'messageId'
+  }, {
+    name: 'reactionId',
+    type: 'String'
+  }],
+  REMOVE_MSG_REACTION: [{
+    name: 'conversationType'
+  }, {
+    name: 'conversationId'
+  }, {
+    name: 'messageId'
+  }, {
+    name: 'reactionId',
+    type: 'String'
   }]
 };
 let COMMAND_TOPICS = {
@@ -993,7 +1032,9 @@ let COMMAND_TOPICS = {
   SET_CHATROOM_ATTRIBUTES: 'c_batch_add_att',
   REMOVE_CHATROOM_ATTRIBUTES: 'c_batch_del_att',
   GET_CHATROOM_ATTRIBUTES: 'fake_c_get_one',
-  GET_ALL_CHATROOM_ATTRIBUTES: 'fake_c_get_all'
+  GET_ALL_CHATROOM_ATTRIBUTES: 'fake_c_get_all',
+  ADD_MSG_REACTION: 'msg_exset',
+  REMOVE_MSG_REACTION: 'del_msg_exset'
 };
 let NOTIFY_TYPE = {
   DEFAULT: 0,
@@ -1087,6 +1128,7 @@ let EVENT = {
   MESSAGE_REMOVED: 'message_removed',
   MESSAGE_CLEAN: 'message_clean',
   MESSAGE_CLEAN_SOMEONE: 'message_clean_someone',
+  MESSAGE_REACTION_CHANGED: 'message_reaction_changed',
   CONVERSATION_SYNC_FINISHED: 'conversation_sync_finished',
   CONVERSATION_UNDISTURBED: 'conversation_undisturb',
   CONVERSATION_TOP: 'conversation_top',
@@ -1326,6 +1368,7 @@ let MESSAGE_TYPE = {
   COMMAND_CLEAR_TOTALUNREAD: 'jg:cleartotalunread',
   COMMAND_MARK_UNREAD: 'jg:markunread',
   COMMAND_LOG_REPORT: 'jg:logcmd',
+  COMMAND_MSG_EXSET: 'jg:msgexset',
   // CLIENT_* 约定为客户端定义适用
   CLIENT_REMOVE_MSGS: 'jgc:removemsgs',
   CLIENT_REMOVE_CONVERS: 'jgc:removeconvers',
@@ -4624,7 +4667,66 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           unreadIndex: {
             type: "int64",
             id: 23
+          },
+          msgItems: {
+            rule: "repeated",
+            type: "StreamMsgItem",
+            id: 24
+          },
+          msgExtSet: {
+            rule: "repeated",
+            type: "MsgExtItem",
+            id: 25
+          },
+          msgExts: {
+            rule: "repeated",
+            type: "MsgExtItem",
+            id: 26
           }
+        }
+      },
+      StreamMsgItem: {
+        fields: {
+          event: {
+            type: "StreamEvent",
+            id: 1
+          },
+          subSeq: {
+            type: "int64",
+            id: 2
+          },
+          partialContent: {
+            type: "bytes",
+            id: 3
+          }
+        }
+      },
+      StreamDownMsg: {
+        fields: {
+          targetId: {
+            type: "string",
+            id: 1
+          },
+          ChannelType: {
+            type: "ChannelType",
+            id: 2
+          },
+          msgId: {
+            type: "string",
+            id: 3
+          },
+          msgItems: {
+            rule: "repeated",
+            type: "StreamMsgItem",
+            id: 4
+          }
+        }
+      },
+      StreamEvent: {
+        values: {
+          DefaultStreamEvent: 0,
+          StreamMessage: 1,
+          StreamComplete: 2
         }
       },
       MergedMsgs: {
@@ -5630,6 +5732,42 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           Quit: 1,
           Kick: 2,
           Fallout: 3
+        }
+      },
+      MsgExt: {
+        fields: {
+          targetId: {
+            type: "string",
+            id: 1
+          },
+          channelType: {
+            type: "ChannelType",
+            id: 2
+          },
+          msgId: {
+            type: "string",
+            id: 3
+          },
+          ext: {
+            type: "MsgExtItem",
+            id: 4
+          }
+        }
+      },
+      MsgExtItem: {
+        fields: {
+          key: {
+            type: "string",
+            id: 1
+          },
+          value: {
+            type: "string",
+            id: 2
+          },
+          timestamp: {
+            type: "int64",
+            id: 3
+          }
         }
       }
     }
@@ -7351,6 +7489,27 @@ function getQueryBody({
     targetId = _targetId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isInclude([COMMAND_TOPICS.ADD_MSG_REACTION, COMMAND_TOPICS.REMOVE_MSG_REACTION], topic)) {
+    let {
+      messageId,
+      reactionId,
+      userId,
+      conversationId,
+      conversationType
+    } = data;
+    let codec = $root.lookup('codec.MsgExt');
+    let message = codec.create({
+      channelType: conversationType,
+      targetId: conversationId,
+      msgId: messageId,
+      ext: {
+        key: reactionId,
+        value: userId
+      }
+    });
+    targetId = messageId;
+    buffer = codec.encode(message).finish();
+  }
   let codec = $root.lookup('codec.QueryMsgBody');
   let message = codec.create({
     index,
@@ -8075,6 +8234,7 @@ function Decoder(cache, io) {
   function msgFormat(msg) {
     let {
       undisturbType,
+      msgExtSet,
       senderId,
       unreadIndex,
       memberCount,
@@ -8160,6 +8320,18 @@ function Decoder(cache, io) {
     }
     let msgFlag = common.formatter.toMsg(flags);
     let user = io.getCurrentUser();
+    let reactions = {};
+    if (msgExtSet) {
+      msgExtSet = utils.map(msgExtSet, item => {
+        let {
+          key
+        } = item;
+        item.key = unescape(key);
+        return item;
+      });
+      msgExtSet = utils.clone(msgExtSet);
+      reactions = utils.groupBy(msgExtSet, ['key']);
+    }
     let _message = {
       conversationType,
       conversationId,
@@ -8182,7 +8354,8 @@ function Decoder(cache, io) {
       sentState: MESSAGE_SENT_STATE.SUCCESS,
       undisturbType: undisturbType || 0,
       unreadIndex: unreadIndex || 0,
-      flags
+      flags,
+      reactions
     };
     if (_message.isSender) {
       utils.extend(_message.sender, user);
@@ -8402,6 +8575,35 @@ function Decoder(cache, io) {
       });
       content = {
         conversations
+      };
+    }
+    if (utils.isEqual(MESSAGE_TYPE.COMMAND_MSG_EXSET, msgType)) {
+      let {
+        channel_type,
+        msg_id,
+        target_id,
+        exts
+      } = content;
+      let reactions = utils.map(exts, item => {
+        let {
+          is_del,
+          timestamp,
+          key,
+          value
+        } = item;
+        key = unescape(key);
+        return {
+          isRemove: Boolean(is_del),
+          key,
+          value,
+          timestamp
+        };
+      });
+      content = {
+        conversationId: target_id,
+        conversationType: channel_type,
+        messageId: msg_id,
+        reactions
       };
     }
     utils.extend(_message, {
@@ -9086,7 +9288,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.1';
+let VERSION = '1.7.3';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -9693,6 +9895,7 @@ let formatMsg = ({
     isUpdated,
     referMsg = '{}',
     mergeMsg = '{}',
+    reactions = '{}',
     attribute = ''
   } = message;
   content = utils.parse(content);
@@ -9713,6 +9916,7 @@ let formatMsg = ({
   message = utils.extend(message, {
     mergeMsg: utils.parse(mergeMsg),
     referMsg: utils.parse(referMsg),
+    reactions: utils.parse(reactions),
     conversationTitle: target.name,
     conversationPortrait: target.portrait,
     conversationExts: target.exts,
@@ -10002,6 +10206,9 @@ function Conversation$1 (io, emitter) {
   */
   let conversationUtils = common.ConversationUtils();
   io.on(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, message => {
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_MSG_EXSET)) {
+      return;
+    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_DELETE_MSGS)) {
       return io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, {
         ...message,
@@ -11052,6 +11259,14 @@ function Message$1 (io, emitter, logger) {
         sender
       });
     }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_MSG_EXSET)) {
+      let {
+        content
+      } = message;
+      return emitter.emit(EVENT.MESSAGE_REACTION_CHANGED, {
+        ...content
+      });
+    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.CLEAR_MSG)) {
       let {
         content: {
@@ -12096,6 +12311,74 @@ function Message$1 (io, emitter, logger) {
       resolve(msg);
     });
   };
+  let addMessageReaction = message => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.ADD_MSG_REACTION);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        reactionId
+      } = message;
+      reactionId = escape(reactionId);
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.ADD_MSG_REACTION,
+        ...message,
+        reactionId,
+        userId
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
+        code,
+        timestamp
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          common.updateSyncTime({
+            isSender: true,
+            sentTime: timestamp,
+            io
+          });
+        }
+        resolve();
+      });
+    });
+  };
+  let removeMessageReaction = message => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.REMOVE_MSG_REACTION);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let {
+        reactionId
+      } = message;
+      reactionId = escape(reactionId);
+      let data = {
+        topic: COMMAND_TOPICS.REMOVE_MSG_REACTION,
+        ...message,
+        reactionId,
+        userId
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
+        code,
+        timestamp
+      }) => {
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          common.updateSyncTime({
+            isSender: true,
+            sentTime: timestamp,
+            io
+          });
+        }
+        resolve();
+      });
+    });
+  };
   return {
     sendMessage,
     sendMassMessage,
@@ -12120,6 +12403,8 @@ function Message$1 (io, emitter, logger) {
     getMergeMessages,
     getFirstUnreadMessage,
     searchMessages,
+    addMessageReaction,
+    removeMessageReaction,
     _uploadFile
   };
 }
@@ -12753,7 +13038,7 @@ function Conversation ($conversation, {
 function Message ($message, {
   webAgent
 }) {
-  let funcs = ['sendMessage', 'updateMessageAttr', 'removeMessages', 'sendMassMessage', 'getMessagesByIds', 'clearMessage', 'recallMessage', 'readMessage', 'getMessageReadDetails', 'updateMessage', 'insertMessage', 'getMentionMessages', 'getFileToken', 'sendFileMessage', 'sendImageMessage', 'sendVoiceMessage', 'sendVideoMessage', 'sendMergeMessage', 'getMergeMessages', 'setSearchContent', 'getFirstUnreadMessage'];
+  let funcs = ['sendMessage', 'updateMessageAttr', 'removeMessages', 'sendMassMessage', 'getMessagesByIds', 'clearMessage', 'recallMessage', 'readMessage', 'getMessageReadDetails', 'updateMessage', 'insertMessage', 'getMentionMessages', 'getFileToken', 'sendFileMessage', 'sendImageMessage', 'sendVoiceMessage', 'sendVideoMessage', 'sendMergeMessage', 'getMergeMessages', 'setSearchContent', 'addMessageReaction', 'removeMessageReaction', 'getFirstUnreadMessage'];
   let invokes = common.formatProvider(funcs, $message);
   invokes.getMessages = conversation => {
     return utils.deferred((resolve, reject) => {
