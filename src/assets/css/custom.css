@@ -1250,6 +1250,7 @@
 }
 .jg-reaction-names{
   display: flex;
+  animation: qr-show 300ms ease-in-out forwards;
 }
 .jg-reaction-emoji-pn{
   right: 100px;
