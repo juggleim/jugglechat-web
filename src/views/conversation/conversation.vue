@@ -567,6 +567,8 @@ function onReaction(reaction){
   let { conversationId, conversationType } = state.currentConversation;
   let { messageId } = message;
 
+  message.reactions = message.reactions || {};
+
   let list = message.reactions[text] || [];
   let user = Storage.get(STORAGE.USER_TOKEN);
   let index = utils.find(list, (reaction) => {

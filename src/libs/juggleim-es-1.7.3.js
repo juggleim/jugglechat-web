@@ -8581,7 +8581,6 @@ function Decoder(cache, io) {
       let {
         channel_type,
         msg_id,
-        target_id,
         exts
       } = content;
       let reactions = utils.map(exts, item => {
@@ -8600,8 +8599,8 @@ function Decoder(cache, io) {
         };
       });
       content = {
-        conversationId: target_id,
-        conversationType: channel_type,
+        conversationId,
+        conversationType,
         messageId: msg_id,
         reactions
       };
