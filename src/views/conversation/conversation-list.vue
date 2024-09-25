@@ -22,7 +22,7 @@ let {
 } = router;
 
 let juggle = im.getCurrent();
-let { UnreadTag } = juggle;
+let { UnreadTag, UndisturbType } = juggle;
 let { Event, ConnectionState, MentionType, MessageType } = juggle;
 
 let state = reactive({
@@ -505,6 +505,19 @@ function onSetConversationTop(item, isTop) {
   });
 }
 
+function onConversationDisturb(item){
+  let conversation = { conversationId: item.conversationId, conversationType: item.conversationType, undisturbType: UndisturbType.DISTURB };
+  if(utils.isEqual(item.undisturbType, UndisturbType.DISTURB)){
+    conversation.undisturbType = UndisturbType.UNDISTURB;
+    return juggle.disturbConversation(conversation).then(() => {
+      console.log('set conversation disturb successfully');
+    });
+  }
+  juggle.disturbConversation(conversation).then(() => {
+    console.log('set conversation disturb successfully');
+  });
+}
+
 function onNavChat(item) {
   juggle.getConversation(item).then(({ conversation }) => {
     let {
@@ -632,17 +645,21 @@ function isScrollTop(index){
                     >
                       <div
                         class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
-                        v-if="item.unreadCount > 0"
+                        v-if="item.unreadCount > 0 && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
                       >{{ item.unreadCount }}</div>
                       <div
                         class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
-                        v-if="item.unreadCount == 0 && item.unreadTag"
+                        v-if="item.unreadCount == 0 && item.unreadTag && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
                       >1</div>
+
+                      <div class="position-absolute rounded-pill top-1 end-0 mt-n2 me-n1 wr wr-dot text-danger" v-if="((item.unreadCount == 0 && item.unreadTag) || item.unreadCount > 0) && utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></div>
+
                     </div>
                   </div>
                   <div class="tyn-media-col">
                     <div class="tyn-media-row">
                       <h6 class="name">{{ item.conversationTitle }}</h6>
+                      <span class="wr wr-soundoff jg-conver-mute" v-if="utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></span>
                       <span class="typing" v-if="item.isTyping">typing ...</span>
                     </div>
                     <div class="tyn-media-row has-dot-sap between">
@@ -687,6 +704,16 @@ function isScrollTop(index){
                             @click.stop="onSetConversationTop(item, !item.isTop)"
                           >
                             <span>{{ item.isTop ? '取消置顶' : '置顶会话' }}</span>
+                          </a>
+                        </li>
+                        <li class="tyn-list-link">
+                          <a
+                            class="wr wr-mute"
+                            :class="{'wr-unmute': utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)}"
+                            data-bs-toggle="modal"
+                            @click.stop="onConversationDisturb(item)"
+                          >
+                            <span>{{ utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB) ? '免 打 扰' : '取消免打扰' }}</span>
                           </a>
                         </li>
                         <li class="dropdown-divider"></li>

@@ -1286,3 +1286,16 @@
 .slide-show{
   animation: slide-show 500ms cubic-bezier(0.5,0,0.5,1) forwards;
 }
+
+/* Global Mute */
+.jg-conver-mute-modal .modal-body{
+  height: auto;
+}
+.jg-conver-mute-modal .form-check{
+  width: 120px;
+  margin: 0 auto;
+}
+
+.jg-conver-mute{
+  color: #0000003b;
+}

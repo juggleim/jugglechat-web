@@ -1,8 +1,8 @@
 @font-face {
   font-family: 'wr';  /* Project id 4376445 */
-  src: url('//at.alicdn.com/t/c/font_4376445_h3n3m12t16q.woff2?t=1726989395045') format('woff2'),
-       url('//at.alicdn.com/t/c/font_4376445_h3n3m12t16q.woff?t=1726989395045') format('woff'),
-       url('//at.alicdn.com/t/c/font_4376445_h3n3m12t16q.ttf?t=1726989395045') format('truetype');
+  src: url('//at.alicdn.com/t/c/font_4376445_i3z4p1lika.woff2?t=1727242456358') format('woff2'),
+  url('//at.alicdn.com/t/c/font_4376445_i3z4p1lika.woff?t=1727242456358') format('woff'),
+  url('//at.alicdn.com/t/c/font_4376445_i3z4p1lika.ttf?t=1727242456358') format('truetype');
 }
 
 .wr {
@@ -39,9 +39,6 @@
 }
 .wr-read:before {
   content: '\e671';
-}
-.wr-mute:before {
-  content: '\e644';
 }
 .wr-category:before {
   content: '\e62c';
@@ -230,4 +227,16 @@
 }
 .wr-3:before {
   content: '\e656';
+}
+.wr-mute:before {
+  content: '\e649';
+}
+.wr-unmute:before {
+  content: '\e64a';
+}
+.wr-soundoff:before {
+  content: '\e605';
+}
+.wr-dot:before {
+  content: '\e711';
 }
