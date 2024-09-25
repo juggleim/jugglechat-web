@@ -1295,7 +1295,9 @@
   width: 120px;
   margin: 0 auto;
 }
-
+.conver-dot{
+  font-size: 10px;
+}
 .jg-conver-mute{
   color: #0000003b;
 }

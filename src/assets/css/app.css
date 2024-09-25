@@ -703,6 +703,9 @@ dl {
   gap: 0.375rem;
   max-width: 100%;
 }
+.jg-conversation-title{
+  min-height: 20px;
+}
 .tyn-media-row.between {
   justify-content: space-between;
 }

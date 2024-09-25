@@ -652,12 +652,12 @@ function isScrollTop(index){
                         v-if="item.unreadCount == 0 && item.unreadTag && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
                       >1</div>
 
-                      <div class="position-absolute rounded-pill top-1 end-0 mt-n2 me-n1 wr wr-dot text-danger" v-if="((item.unreadCount == 0 && item.unreadTag) || item.unreadCount > 0) && utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></div>
+                      <div class="position-absolute rounded-pill top-1 end-0 mt-n2 me-n1 wr wr-dot text-danger conver-dot" v-if="((item.unreadCount == 0 && item.unreadTag) || item.unreadCount > 0) && utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></div>
 
                     </div>
                   </div>
                   <div class="tyn-media-col">
-                    <div class="tyn-media-row">
+                    <div class="tyn-media-row jg-conversation-title">
                       <h6 class="name">{{ item.conversationTitle }}</h6>
                       <span class="wr wr-soundoff jg-conver-mute" v-if="utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></span>
                       <span class="typing" v-if="item.isTyping">typing ...</span>
