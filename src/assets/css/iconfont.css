@@ -1,8 +1,8 @@
 @font-face {
   font-family: 'wr';  /* Project id 4376445 */
-  src: url('//at.alicdn.com/t/c/font_4376445_i3z4p1lika.woff2?t=1727242456358') format('woff2'),
-  url('//at.alicdn.com/t/c/font_4376445_i3z4p1lika.woff?t=1727242456358') format('woff'),
-  url('//at.alicdn.com/t/c/font_4376445_i3z4p1lika.ttf?t=1727242456358') format('truetype');
+  src: url('//at.alicdn.com/t/c/font_4376445_ctq9yxm6ppm.woff2?t=1727340509861') format('woff2'),
+       url('//at.alicdn.com/t/c/font_4376445_ctq9yxm6ppm.woff?t=1727340509861') format('woff'),
+       url('//at.alicdn.com/t/c/font_4376445_ctq9yxm6ppm.ttf?t=1727340509861') format('truetype');
 }
 
 .wr {
@@ -239,4 +239,32 @@
 }
 .wr-dot:before {
   content: '\e711';
+}
+.wr-menu-left:before {
+  content: '\e64b';
+}
+.wr-menu-right:before {
+  content: '\e658';
+}
+.wr-menu-modify:before {
+  content: '\e6ab';
+}
+.wr-menu-add:before {
+  content: '\e659';
+}
+
+.wr-mg-mention:before {
+  content: '\e7bf';
+}
+.wr-mg-msg:before {
+  content: '\e7c7';
+}
+.wr-mg-tag:before {
+  content: '\e7cf';
+}
+.wr-mg-user:before {
+  content: '\e7d0';
+}
+.wr-mg-group:before {
+  content: '\e7d1';
 }
