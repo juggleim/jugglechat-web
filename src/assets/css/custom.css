@@ -1301,3 +1301,7 @@
 .jg-conver-mute{
   color: #0000003b;
 }
+
+.fade-bg-conversationlist{
+  z-index: 99;
+}

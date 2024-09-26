@@ -650,7 +650,6 @@ function isScrollTop(index){
                 @click="onConversation(item, index)"
                 :index="index"
                 @click.right.prevent="onShowDropmenu"
-                @mouseleave="onHideDrop(item)"
               >
                 <div class="tyn-media-group">
                   <div class="tyn-media tyn-size-lg">
@@ -750,8 +749,10 @@ function isScrollTop(index){
                     </div>
                   </li>
                 </ul>
+                <div class="fade-bg fade-bg-conversationlist" v-if="item.isShowDrop" @click="onHideDrop(item)"></div>
               </li>
             </ul>
+            
             <div class="tyn-aside-row text-center" v-if="state.conversations.length == 0">
               <h6>没有记录</h6>
             </div>
