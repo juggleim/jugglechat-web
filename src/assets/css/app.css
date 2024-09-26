@@ -1127,9 +1127,10 @@ dl {
   color: var(--reply-text);
   background: var(--reply-bg);
   position: relative;
+  padding: 0 4px;
 }
 .tyn-reply-file .tyn-file {
-  padding: 0.375rem 1.25rem 0.375rem 0.375rem;
+  padding: 0.375rem 0 0.375rem 0;
   display: inline-flex;
 }
 .tyn-reply-call {

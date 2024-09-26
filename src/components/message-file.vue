@@ -5,6 +5,8 @@ import utils from "../common/utils";
 import messageUtils from "./message-utils";
 import Dropdownmenu from "./message-menu.vue";
 import { MESSAGE_OP_TYPE } from "../common/enum";
+import ReactionEmoji from "../components/emoji-reaction.vue"
+import Reaction from "./message-reaction.vue";
 
 const props = defineProps(["message"]);
 const emit = defineEmits(["onrecall", "ontransfer", "onreply"]);
@@ -13,6 +15,7 @@ let state = reactive({
   isShowDrop: false,
   isShowGroupDetail: false,
   dropRectX: 0,
+  isShowReaction: false,
 });
 function onTransfer(type){
   onShowDrop(false);
@@ -40,6 +43,12 @@ function onClickRight(e){
   onShowDrop(true);
   state.dropRectX = e.x - e.target.getBoundingClientRect().x
 }
+function onShowEmojiReaction(isShow){
+  state.isShowReaction = isShow;
+}
+function onChoiceEmoji(item){
+  emit('onreaction', { ...item, message: props.message });
+}
 </script>
  
 <template>
@@ -48,10 +57,13 @@ function onClickRight(e){
       <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
     </div>
   </div>
+  
+  <ReactionEmoji :is-show="state.isShowReaction" @onhide="onShowEmojiReaction(false)" @onemit="onChoiceEmoji" :message="props.message"></ReactionEmoji>
+
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-file wr" :messageid="props.message.tid"  @click.right.prevent="onClickRight">
+      <div class="tyn-reply-file wr" :messageid="props.message.tid"  @click.right.prevent="onClickRight" @click.prevent="onShowEmojiReaction(true)">
         <a :href="props.message.content.url" class="tyn-file" :download="props.message.content.name">
           <div class="tyn-media-group">
             <div class="tyn-media tyn-size-lg text-bg-light wr wr-file tyb-msg-fileicon">
@@ -65,6 +77,9 @@ function onClickRight(e){
         <div class="jg-progress" v-if="props.message.percent < 99.9">
           <div class="jg-progress-stacked" :style="{ 'width': props.message.percent + '%' }"></div>
         </div>
+        
+        <Reaction :is-show="!utils.isEmpty(props.message.reactions)" :reactions="props.message.reactions" @oncancel="onChoiceEmoji"></Reaction>
+
        <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
         :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"
           v-if="props.message.isSender">
