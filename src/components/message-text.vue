@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps(['message']);
+const props = defineProps(['message', 'isRead']);
 const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction']);
 
 import { reactive, watch } from "vue";
@@ -79,6 +79,9 @@ function onShowReadDetail(isShow) {
   utils.extend(state, { isShowGroupDetail: isShow });
 }
 function onClickRight(e){
+  if(props.isRead){
+    return;
+  }
   onShowDrop(true);
   let rect = e.target.getBoundingClientRect();
   let x = e.x - rect.x;
@@ -88,6 +91,9 @@ function onClickRight(e){
   state.dropRectX = x;
 }
 function onShowEmojiReaction(isShow){
+  if(props.isRead){
+    return;
+  }
   state.isShowReaction = isShow;
 }
 function onChoiceEmoji(item){
@@ -124,7 +130,7 @@ function onChoiceEmoji(item){
 
         <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
           :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"
-          v-if="props.message.isSender">
+          v-if="props.message.isSender && !props.isRead">
 
           <div v-if="messageUtils.isGroup(props.message) && props.message.readCount > 0 && props.message.unreadCount > 0"
             class="message-group-state"

@@ -9,7 +9,7 @@ import { MESSAGE_OP_TYPE } from "../common/enum";
 import ReactionEmoji from "../components/emoji-reaction.vue"
 import Reaction from "./message-reaction.vue";
 
-const props = defineProps(["message"]);
+const props = defineProps(["message", "isRead"]);
 const emit = defineEmits(["onpreview", "onrecall", "ontransfer", "onreply", "onreaction"]);
 
 function onPreview() {
@@ -63,11 +63,17 @@ function calc(){
   return common.calcSize(props.message.content);
 }
 function onClickRight(e){
+  if(props.isRead){
+    return;
+  }
   onShowDrop(true);
   state.dropRectX = e.x - e.target.getBoundingClientRect().x
 }
 
 function onShowEmojiReaction(isShow){
+  if(props.isRead){
+    return;
+  }
   state.isShowReaction = isShow;
 }
 function onChoiceEmoji(item){
@@ -102,7 +108,7 @@ function onChoiceEmoji(item){
 
         <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
         :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"
-          v-if="props.message.isSender">
+          v-if="props.message.isSender && !props.isRead">
           <div v-if="messageUtils.isGroup(props.message) && props.message.readCount > 0 && props.message.unreadCount > 0"
             class="message-group-state"
             :style="{ 'background-image': 'conic-gradient( #008000 ' + props.message.readPercent + 'deg, transparent ' + props.message.readPercent + '.2deg)' }">

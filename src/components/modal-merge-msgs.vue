@@ -45,12 +45,12 @@ watch(() => props.message, (msg) => {
             <div v-for="message in state.messages">
               <div class="tny-conent-msg">
                 <div class="tyn-reply-item ingoing">
-                  <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message"></Text>
-                  <ImageMessage v-else-if="utils.isEqual(message.name, MessageType.IMAGE)" :message="message">
+                  <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" :is-read=1></Text>
+                  <ImageMessage v-else-if="utils.isEqual(message.name, MessageType.IMAGE)" :message="message" :is-read=1>
                   </ImageMessage>
-                  <File v-else-if="utils.isEqual(message.name, MessageType.FILE)" :message="message"></File>
-                  <Video v-else-if="utils.isEqual(message.name, MessageType.VIDEO)" :message="message"></Video>
-                  <Merge v-else-if="utils.isEqual(message.name, MessageType.MERGE)" :message="message"></Merge>
+                  <File v-else-if="utils.isEqual(message.name, MessageType.FILE)" :message="message" :is-read=1></File>
+                  <Video v-else-if="utils.isEqual(message.name, MessageType.VIDEO)" :message="message" :is-read=1></Video>
+                  <Merge v-else-if="utils.isEqual(message.name, MessageType.MERGE)" :message="message" :is-read=1></Merge>
                   <Known v-else :message="message"></Known>
                 </div>
               </div>
