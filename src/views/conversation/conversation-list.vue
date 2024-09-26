@@ -169,6 +169,21 @@ function getConversationTime(sentTime) {
 juggle.once(Event.CONVERSATION_CHANGED, converationHandler);
 juggle.once(Event.CONVERSATION_ADDED, converationHandler);
 
+juggle.once(Event.CONVERSATION_TOP, ({ conversations }) => {
+  let { tops } = state;
+  utils.forEach(conversations, async (conversation) => {
+    let { isTop } = conversation;
+    let index = utils.find(tops, (top) => { return utils.isEqual(top.conversationId, conversation.conversationId); })
+    if(index > -1 && !isTop){
+      tops.splice(index, 1)
+    }
+    if(index == -1 && isTop){
+      let item = await juggle.getConversation(conversation);
+      tops.push(item.conversation);
+    }
+  });
+});
+
 juggle.once(Event.CONVERSATION_REMOVED, ({ conversations }) => {
   utils.forEach(conversations, conversation => {
     let { conversations } = state;
