@@ -93,10 +93,10 @@ function onSelected(item) {
           </ul>
           <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center">
             <li>
-              <button class="btn btn-md btn-success" @click="onConfirm()">确认</button>
+              <button class="btn btn-sm btn-success" @click="onConfirm()">确认</button>
             </li>
             <li>
-              <button class="btn btn-md btn-light" @click="onCancel()">取消</button>
+              <button class="btn btn-sm btn-light" @click="onCancel()">取消</button>
             </li>
           </ul>
         </div>

@@ -1205,6 +1205,7 @@
 .jg-nlogin-num-btn{
   margin-top: 30px;
 }
+
 @keyframes qr-show {
   0% {
     opacity: 0;
@@ -1348,13 +1349,13 @@
   flex-direction: column;
   transform: translateX(-100%);
   display: flex;
-  width: 160px;
+  width: 180px;
   position: absolute;
   bottom: 0;
   top: 52px;
 }
 .show-group-conver{
-  margin-left: 160px;
+  margin-left: 180px;
 }
 .show-group{
   transform: none;
@@ -1394,4 +1395,66 @@
 
 .jg-conver-group.active .jg-conver-group-content{
   color: #002cff !important;
+}
+.title{
+  font-size: 14px;
+}
+.jg-conver-modal-group{
+  display: flex;
+  justify-content: space-between;
+  color: #29292a;
+  align-items: center;
+  border: 1px solid #00000014;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  animation: slide-in 200ms forwards;
+}
+@keyframes slide-in {
+  0% {
+      transform: translateY(-50%)
+  }
+
+  100% {
+      transform: translateY(0)
+  }
+}
+@keyframes slide-out {
+  0% {
+      transform: translateX(0)
+  }
+  100% {
+      transform: translateX(-100%)
+  }
+}
+.jg-conver-group-desc{
+  font-size: 10px;
+}
+.jg-conver-group-name{
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.jg-conver-group-name::before{
+  margin-right: 10px; 
+}
+.jg-conver-group-name .form-control{
+  border: none;
+  color: #29292a;
+}
+
+.jg-conver-group-name .form-control:disabled{
+  background: transparent;
+  color: #949495;
+}
+
+/* Conversation Group End */
+.jg-text-danger::before{
+  color: #e31515;
+}
+.jg-text-disable::before{
+  color: #b1b1b1;
 }

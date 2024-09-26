@@ -3,6 +3,7 @@ import im from "../../common/im";
 import { reactive, watch } from "vue";
 import utils from "../../common/utils";
 import group from "../../services/group";
+import ModalConversationGroup from "../../components/modal-groups.vue";
 
 const props = defineProps(["isShow"]);
 const emit = defineEmits(["oncancel"]);
@@ -11,11 +12,13 @@ let { MessageType } = juggle;
 
 let state = reactive({
   groups: [
-    { id: 'all', isActive: false, icon: 'wr-mg-msg', name: '消息' },
+    { id: 'all', isActive: true, icon: 'wr-mg-msg', name: '消息' },
     { id: 'mention', isActive: false, icon: 'wr-mg-mention', name: '@我' },
     { id: 'user', isActive: false, icon: 'wr-mg-user', name: '单聊' },
     { id: 'group', isActive: false, icon: 'wr-mg-group', name: '群组' },
-  ]
+  ],
+  isShowGroupManager: false,
+  isShowConversationManager: false,
 });
 
 function onSelected(item, index){
@@ -25,14 +28,18 @@ function onSelected(item, index){
     return group;
   })
 }
+
+function onShowGroupManager(isShow){
+  state.isShowGroupManager = isShow;
+}
 </script>
 
 <template>
   <div class="jg-conver-group-container" :class="[props.isShow ? 'show-group' : '']">
     <div class="jg-conversations-header">
       <ul class="jg-conversations-tools">
-        <li class="jg-conversation-tool wr wr-menu-modify">管理</li>
-        <li class="jg-conversation-tool wr wr-setting">设置</li>
+        <li class="jg-conversation-tool wr wr-menu-modify">添加</li>
+        <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">设置</li>
       </ul>
     </div>
     <ul class="jg-conver-groups">
@@ -41,4 +48,5 @@ function onSelected(item, index){
       </li>
     </ul>
   </div>
+  <ModalConversationGroup :is-show="state.isShowGroupManager" @oncancel="onShowGroupManager(false)"></ModalConversationGroup>
 </template>

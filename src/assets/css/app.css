@@ -1849,3 +1849,19 @@ dl {
    transform: translateX(-20%);
   }
 }
+.jg-modal-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.jg-modal-header .title{
+  color: #242325;
+  font-weight: 700;
+}
+.jg-modal-add::before{
+  color: #069806;
+}
+.jg-modal-add:hover{
+  color: #242325 !important;
+}
