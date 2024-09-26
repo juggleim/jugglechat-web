@@ -38,7 +38,7 @@ function onShowGroupManager(isShow){
   <div class="jg-conver-group-container" :class="[props.isShow ? 'show-group' : '']">
     <div class="jg-conversations-header">
       <ul class="jg-conversations-tools">
-        <li class="jg-conversation-tool wr wr-menu-modify">添加</li>
+        <li></li>
         <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">设置</li>
       </ul>
     </div>

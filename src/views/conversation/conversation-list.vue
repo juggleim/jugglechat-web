@@ -623,6 +623,7 @@ function onShowConversationGroup(){
           <div class="jg-conversations-header">
             <ul class="jg-conversations-tools jg-convers-tools">
               <li class="jg-conversation-tool wr" :class="[state.isShowConversationGroup ? 'wr-menu-left' : 'wr-menu-right']" @click="onShowConversationGroup()">消息</li>
+              <li class="jg-conversation-tool wr wr-menu-modify">添加会话</li>
             </ul>
           </div>
           <div class="tyn-aside-toplist" v-if="state.tops.length">
