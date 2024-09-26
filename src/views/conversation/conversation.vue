@@ -716,13 +716,14 @@ watch(() => state.content, (val) => {
               <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" @onrecall="onRecall"
                 @onmodify="onModifyText" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Text>
               <ImageMessage v-else-if="utils.isEqual(message.name, MessageType.IMAGE)" :message="message"
-                @onrecall="onRecall" @onpreview="onPreviewImage" @ontransfer="onShowTransfer" @onreply="onReply"></ImageMessage>
-              <File v-else-if="utils.isEqual(message.name, MessageType.FILE)" :message="message" @onrecall="onRecall" @ontransfer="onShowTransfer" @onreply="onReply">
+                @onrecall="onRecall" @onpreview="onPreviewImage" @ontransfer="onShowTransfer" @onreply="onReply"  @onreaction="onReaction"></ImageMessage>
+              <File v-else-if="utils.isEqual(message.name, MessageType.FILE)" :message="message" 
+                    @onrecall="onRecall" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction">
               </File>
               <Video v-else-if="utils.isEqual(message.name, MessageType.VIDEO)" :message="message"
-                @onrecall="onRecall" @ontransfer="onShowTransfer" @onreply="onReply"></Video>
+                @onrecall="onRecall" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Video>
               <Merge v-else-if="utils.isEqual(message.name, MessageType.MERGE)" :message="message"
-                @onrecall="onRecall" @ondetail="onMergeDetail" @ontransfer="onShowTransfer" @onreply="onReply"></Merge>
+                @onrecall="onRecall" @ondetail="onMergeDetail" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Merge>
               <Known v-else :message="message"></Known>
             </div>
           </div>

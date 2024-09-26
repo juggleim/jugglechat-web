@@ -6,9 +6,11 @@ import messageUtils from "./message-utils";
 import Dropdownmenu from "./message-menu.vue";
 import common from "../common/common";
 import { MESSAGE_OP_TYPE } from "../common/enum";
+import ReactionEmoji from "../components/emoji-reaction.vue"
+import Reaction from "./message-reaction.vue";
 
 const props = defineProps(["message"]);
-const emit = defineEmits(["onpreview", "onrecall", "ontransfer", "onreply"]);
+const emit = defineEmits(["onpreview", "onrecall", "ontransfer", "onreply", "onreaction"]);
 
 function onPreview() {
   let { content: { url } } = props.message;
@@ -19,6 +21,7 @@ let state = reactive({
   isShowDrop: false,
   isShowGroupDetail: false,
   dropRectX: 0,
+  isShowReaction: false,
 });
 function onTransfer(type){
   onShowDrop(false);
@@ -63,6 +66,14 @@ function onClickRight(e){
   onShowDrop(true);
   state.dropRectX = e.x - e.target.getBoundingClientRect().x
 }
+
+function onShowEmojiReaction(isShow){
+  state.isShowReaction = isShow;
+}
+function onChoiceEmoji(item){
+  emit('onreaction', { ...item, message: props.message });
+}
+
 </script>
 
 <template>
@@ -71,20 +82,24 @@ function onClickRight(e){
       <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
     </div>
   </div>
+  <ReactionEmoji :is-show="state.isShowReaction" @onhide="onShowEmojiReaction(false)" @onemit="onChoiceEmoji" :message="props.message"></ReactionEmoji>
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}"  @click.right.prevent="onClickRight">
+      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId"  @click.right.prevent="onClickRight"  @click.prevent="onShowEmojiReaction(true)">
         <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId" v-if="!props.message.localUrl">
           <div class="jg-img-loader"></div>
         </div>
-        <a class="glightbox" data-gallery="media-photo" @click="onPreview">
+        <a class="glightbox" data-gallery="media-photo" @click="onPreview" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
           <img v-if="props.message.localUrl" :src="props.message.localUrl" class="tyn-image" >
           <img v-else :src="props.message.content.thumbnail" class="tyn-image fadein-o" :id="'img_msg_' +props.message.messageId" alt/>
           <div class="jg-progress" v-if="props.message.percent < 99.9">
             <div class="jg-progress-stacked" :style="{ 'width': props.message.percent + '%' }"></div>
           </div>
         </a>
+
+        <Reaction :is-show="!utils.isEmpty(props.message.reactions)" :reactions="props.message.reactions" @oncancel="onChoiceEmoji"></Reaction>
+
         <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
         :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"
           v-if="props.message.isSender">

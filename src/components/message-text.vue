@@ -10,7 +10,7 @@ import ReplyMessage from "./message-reply.vue";
 import utils from "../common/utils";
 import im from "../common/im";
 import messageUtils from "./message-utils";
-import { REG_EXP, MESSAGE_OP_TYPE, STORAGE } from "../common/enum";
+import { REG_EXP, MESSAGE_OP_TYPE } from "../common/enum";
 import ReactionEmoji from "../components/emoji-reaction.vue"
 
 let state = reactive({
@@ -21,8 +21,7 @@ let state = reactive({
   mentionMsgs: im.mentionShortFormat(props.message),
   isShowGroupDetail: false,
   dropRectX: 0,
-  reactions: [],
-  isShowReaction: false
+  isShowReaction: false,
 });
 watch(() => props.message, (msg) => {
   state.mentionMsgs = im.mentionShortFormat(msg);
