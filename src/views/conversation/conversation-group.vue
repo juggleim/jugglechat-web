@@ -18,7 +18,6 @@ let state = reactive({
     { id: 'group', isActive: false, icon: 'wr-mg-group', name: '群组' },
   ],
   isShowGroupManager: false,
-  isShowConversationManager: false,
 });
 
 function onSelected(item, index){

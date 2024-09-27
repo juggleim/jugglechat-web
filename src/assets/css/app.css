@@ -1858,6 +1858,7 @@ dl {
 .jg-modal-header .title{
   color: #242325;
   font-weight: 700;
+  font-size: 16px;
 }
 .jg-modal-add::before{
   color: #069806;

@@ -14,6 +14,7 @@ import messageUtils from "../../components/message-utils";
 import conversationTools from "./conversation";
 import JHeader from '../header/header.vue';
 import ConversationGroup from './conversation-group.vue';
+import ModalGroupMember from '../../components/modal-groups-member.vue';
 
 const router = useRouter();
 let {
@@ -34,6 +35,7 @@ let state = reactive({
   dropmenuX: 0,
   currentRightIndex: -1,
   isShowConversationGroup: false,
+  isShowGroupMemberManager: false,
 });
 emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   let { type, id, avatar, name} = friend;
@@ -611,19 +613,24 @@ function onShowConversationGroup(){
   let { isShowConversationGroup } = state;
   state.isShowConversationGroup = !isShowConversationGroup;
 }
+function onShowGroupMemberManager(isShow){
+  state.isShowGroupMemberManager = isShow;
+}
 </script>
 <template>
   <div class="tyn-content">
     <div class="tyn-aside">
       <AisdeHeader @onnav="onNavChat"></AisdeHeader>
-  
+      
+      <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)"></ModalGroupMember>
+
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup"></ConversationGroup>
         <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']">
           <div class="jg-conversations-header">
             <ul class="jg-conversations-tools jg-convers-tools">
               <li class="jg-conversation-tool wr" :class="[state.isShowConversationGroup ? 'wr-menu-left' : 'wr-menu-right']" @click="onShowConversationGroup()">消息</li>
-              <li class="jg-conversation-tool wr wr-menu-modify">添加会话</li>
+              <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)">会话设置</li>
             </ul>
           </div>
           <div class="tyn-aside-toplist" v-if="state.tops.length">

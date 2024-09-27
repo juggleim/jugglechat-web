@@ -1450,11 +1450,77 @@
   background: transparent;
   color: #949495;
 }
-
 /* Conversation Group End */
+
+/* Conversation Group Member Start */
+.jg-conver-group-member-modal .modal-content{
+  width: auto;
+}
+.jg-conver-group-member-modal .modal-body{
+  width: 500px;
+}
+.jg-conver-group-member-modal .tyn-media-list{
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+}
+.jg-group-conver-box, .jg-group-conver-checkbox{
+  width: 100%;
+  color: #4b4d50;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+}
+.jg-group-conver-box{
+  margin-right: 6px;
+}
+.jg-group-conver-checkbox{
+  margin-left: 6px;
+}
+.jg-group-conver-header{
+  font-weight: 700;
+}
+.jg-group-convers{
+  height: 100%;
+  overflow-y: auto;
+  flex: 1 auto;
+}
+.jg-group-conver{
+  padding: 4px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  border: 1px solid #00000014;
+  border-radius: 4px;
+}
+.jg-group-conver-avatar{
+  height: 36px;
+  width: 36px;
+  margin-right: 10px;
+}
+.jg-group-conver-btn{
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.jg-group-conver-name{
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 120px;
+}
+/* Conversation Group Member end */
 .jg-text-danger::before{
   color: #e31515;
 }
+.jg-text-success::before{
+  color: #1b8e0e;
+}
 .jg-text-disable::before{
   color: #b1b1b1;
+}
+.jg-line{
+  border: 1px solid #00000014;
 }
