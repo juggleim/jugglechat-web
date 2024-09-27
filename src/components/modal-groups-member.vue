@@ -12,29 +12,10 @@ let context = getCurrentInstance();
 let juggle = im.getCurrent();
 let { ConversationType } = juggle;
 let state = reactive({
-  list: [
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-  ],
-  selectList:  [
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' },
-    { conversationId: 'n1', conversationPortrait: 'https://file.lwoowl.cn/6c51-6dc0.png', conversationTitle: '正儿八经办公群' }
-  ],
+  conversations: [],
+  selectList:  [],
 });
 let user = Storage.get(STORAGE.USER_TOKEN);
-
-watch(() => props.isShow, () => {
-
-});
 
 function onSelected(item){
   utils.map(state.list, (_item) => {
@@ -56,6 +37,21 @@ function onConfirm() {
   emit('onconfirm', item);
 }
 
+function getConversations(isFirst = false, callback = utils.noop) {
+  let params = {};
+  if (!isFirst) {
+    let index = state.conversations.length - 1;
+    let item = state.conversations[index];
+    params = { time: item.sortTime };
+  }
+  let { conversations } = state;
+  juggle.getConversations(params).then(result => {
+    let { conversations: list } = result;
+    state.conversations = conversations.concat(list);
+    callback();
+  });
+}
+
 function scrollBottom(name) {
   nextTick(() => {
     let node = context.refs[name];
@@ -64,17 +60,40 @@ function scrollBottom(name) {
     }
   });
 }
+
+let canscroll = true;
+nextTick(() => {
+  let { conversations } = context.refs;
+  conversations.addEventListener("scroll", () => {
+    let scrollTop = conversations.scrollTop;
+    let scrollHeight = conversations.scrollHeight;
+    let rectHeight = conversations.getBoundingClientRect().height;
+    let isNeedLoad = scrollHeight - scrollTop - rectHeight < 100;
+    if (isNeedLoad && canscroll) {
+      let isFirst = false;
+      getConversations(isFirst, () => {
+        canscroll = true;
+      });
+    }
+  });
+});
+
 function onClick(item){
   let { isRemove, index, conversation } = item;
   if(isRemove){
     state.selectList.splice(index, 1);
-    state.list.push(conversation);
-    return scrollBottom('list');
+    state.conversations.push(conversation);
+    return scrollBottom('conversations');
   }
-  state.list.splice(index, 1);
+  state.conversations.splice(index, 1);
   state.selectList.push(conversation);
   scrollBottom('selectList');
 }
+watch(() => props.isShow, () => {
+  if(props.isShow){
+    getConversations(true);
+  }
+});
 </script>
 <template>
   <div class="modal tyn-modal jg-conver-group-member-modal" tabindex="-1" :class="[props.isShow ? 'fade show' : '']">
@@ -87,8 +106,8 @@ function onClick(item){
           <div class="tyn-media-list">
             <div class="jg-group-conver-box">
               <div class="jg-group-conver-header">最近聊天</div>
-              <div class="jg-group-convers" ref="list">
-                <Conversation v-for="(item, index) in state.list" :is-remove="0" :conversation="item" :index="index" :cls="'wr-cir-add jg-text-success'" @onemit="onClick"></Conversation>
+              <div class="jg-group-convers" ref="conversations">
+                <Conversation v-for="(item, index) in state.conversations" :is-remove="0" :conversation="item" :index="index" :cls="'wr-cir-add jg-text-success'" @onemit="onClick"></Conversation>
               </div>
             </div>
             <div class="jg-line"></div>
