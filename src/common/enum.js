@@ -7,6 +7,8 @@ let EVENT_NAME = {
   ON_GROUP_CREATED: 'on_group_created',
   ON_GROUP_MEMBER_ADDED: 'on_group_member_added',
   ON_GROUP_MEMBER_REMOVED: 'on_group_member_removed',
+
+  ON_CONVERSATION_TAG_CHANGED: 'on_conversation_tag_changed',
 };
 export let STORAGE = {
   PREFIX: 'jgweb',
@@ -86,4 +88,5 @@ let EMOJI_POS_LIST = [
   { pos: '-316px -186px', text: '🤓' },
   { pos: '-36px -224px', text: '💩' },
   ]
+
 export { EMOJI_POS_LIST, EVENT_NAME, TRANSFER_TYPE, CONTACT_TAB_TYPE, RESPONSE, GROUP_CHANGE_TYPE, MSG_NAME, REG_EXP, MESSAGE_OP_TYPE }

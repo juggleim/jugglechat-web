@@ -1,9 +1,12 @@
 <script setup>
 import im from "../common/im";
+import common from "../common/common";
 import { reactive, watch, nextTick, getCurrentInstance } from "vue";
 import utils from "../common/utils";
 import Storage from "../common/storage";
-import { STORAGE } from "../common/enum";
+import { STORAGE, EVENT_NAME } from "../common/enum";
+import emitter from "../common/emmit";
+
 const props = defineProps(["isShow"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 let context = getCurrentInstance();
@@ -11,19 +14,9 @@ let context = getCurrentInstance();
 let juggle = im.getCurrent();
 let { ConversationType } = juggle;
 let state = reactive({
-  list: utils.clone([
-    { id: 'n1', title: '消息', isInner: true, category: '默认分组' },
-    { id: 'n2', title: '单聊', isInner: true, category: '默认分组' },
-    { id: 'n3', title: '群聊', isInner: true, category: '默认分组' },
-    { id: 'n4', title: '@我', isInner: true, category: '默认分组' },
-    { id: 'n5', title: 'JuggleIM', isInner: false, category: '自定义分组' },
-  ])
+  list: []
 });
 let user = Storage.get(STORAGE.USER_TOKEN);
-
-watch(() => props.isShow, () => {
-
-});
 
 function onSelected(item){
   utils.map(state.list, (_item) => {
@@ -41,12 +34,12 @@ function onConfirm() {
   let item = utils.filter(state.list, (item) => {
     return item.checked;
   })[0];
-  
   emit('onconfirm', item);
 }
 
 function onAdd(){
-  state.list.push({ title: `分组-${state.list.length}`, isInner: false, category: '自定义分组' })
+  let tag = { id: `T${Date.now()}`, name: '', isInner: false }
+  state.list.push(tag)
   scrollBottom();
 }
 function onRemove(index){
@@ -55,6 +48,18 @@ function onRemove(index){
     return;
   }
   state.list.splice(index, 1);
+  juggle.destroyConversationTag(item);
+  emitter.$emit(EVENT_NAME.ON_CONVERSATION_TAG_CHANGED, { isRemove: true, tag: item })
+}
+function onSave(index){
+  let item = state.list[index];
+  if(utils.isEqual(item.name.length, 0)){
+    return;
+  }
+  juggle.createConversationTag(item);
+  emitter.$emit(EVENT_NAME.ON_CONVERSATION_TAG_CHANGED, { isRemove: false, tag: item })
+  context.proxy.$toast({ text: `保存成功`, icon: 'success' });
+
 }
 function scrollBottom() {
   nextTick(() => {
@@ -64,6 +69,14 @@ function scrollBottom() {
     }
   });
 }
+
+watch(() => props.isShow, async () => {
+  if(props.isShow){
+    let { tags = [] } = await juggle.getConversationTags();
+    state.list = common.formatTags(tags);
+  }
+})
+
 </script>
 <template>
   <div class="modal tyn-modal jg-conver-group-modal" tabindex="-1" :class="[props.isShow ? 'fade show' : '']">
@@ -78,17 +91,17 @@ function scrollBottom() {
           </div>
           <ul class="tyn-media-list" ref="groups">
             <li v-for="(item, index) in state.list" class="jg-conver-modal-group">
-              <div class="jg-conver-group-name">
+              <div class="jg-conver-group-name" :class="{ 'wr-asterisk jg-text-danger': item.name.length == 0 }">
                 <span class="wr wr-cir-remove jg-text-danger" :class="{'jg-text-disable': item.isInner}" @click="onRemove(index)"></span>
-                <input type="text" class="form-control" :disabled="item.isInner" :value="item.title">
+                <input type="text" class="form-control" placeholder="请输入分组名称（回车保存）" :disabled="item.isInner" v-model="item.name" @keydown.enter="onSave(index)">
               </div>
-              <div class="jg-conver-group-desc">默认分组</div>
+              <div class="jg-conver-group-desc">{{ item.isInner ? '系统分组' : '自定义分组' }}</div>
             </li>
           </ul>
           <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center">
-            <li>
+            <!-- <li>
               <button class="btn btn-sm btn-success" @click="onConfirm()">确认</button>
-            </li>
+            </li> -->
             <li>
               <button class="btn btn-sm btn-light" @click="onCancel()">取消</button>
             </li>

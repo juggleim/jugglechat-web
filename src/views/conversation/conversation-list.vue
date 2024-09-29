@@ -626,8 +626,8 @@ function onShowGroupMemberManager(isShow){
 
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup"></ConversationGroup>
-        <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']">
-          <div class="jg-conversations-header">
+        <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']" >
+          <div class="jg-conversations-header" v-if="!juggle.isDesktop()">
             <ul class="jg-conversations-tools jg-convers-tools">
               <li class="jg-conversation-tool wr" :class="[state.isShowConversationGroup ? 'wr-menu-left' : 'wr-menu-right']" @click="onShowConversationGroup()">消息</li>
               <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)">会话设置</li>

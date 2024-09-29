@@ -988,6 +988,44 @@ let FUNC_PARAM_CHECKER = {
   }, {
     name: 'reactionId',
     type: 'String'
+  }],
+  CREATE_CONVERSATION_TAG: [{
+    name: 'id',
+    type: 'String'
+  }, {
+    name: 'name',
+    type: 'String'
+  }],
+  REMOVE_CONVERSATION_TAG: [{
+    name: 'id',
+    type: 'String'
+  }, {
+    name: 'name',
+    type: 'String'
+  }],
+  ADD_CONVERSATION_TO_TAG: [{
+    name: 'id',
+    type: 'String'
+  }, {
+    name: 'conversations',
+    type: 'Array',
+    children: [{
+      name: 'conversationId'
+    }, {
+      name: 'conversationType'
+    }]
+  }],
+  REMOVE_CONVERSATION_FROM_TAG: [{
+    name: 'id',
+    type: 'String'
+  }, {
+    name: 'conversations',
+    type: 'Array',
+    children: [{
+      name: 'conversationId'
+    }, {
+      name: 'conversationType'
+    }]
   }]
 };
 let COMMAND_TOPICS = {
@@ -1034,7 +1072,10 @@ let COMMAND_TOPICS = {
   GET_CHATROOM_ATTRIBUTES: 'fake_c_get_one',
   GET_ALL_CHATROOM_ATTRIBUTES: 'fake_c_get_all',
   ADD_MSG_REACTION: 'msg_exset',
-  REMOVE_MSG_REACTION: 'del_msg_exset'
+  REMOVE_MSG_REACTION: 'del_msg_exset',
+  CONVERSATION_TAG_ADD: 'tag_add_convers',
+  CONVERSATION_TAG_REMOVE: 'tag_del_convers',
+  CONVERSATION_TAG_QUERY: 'qry_user_conver_tags'
 };
 let NOTIFY_TYPE = {
   DEFAULT: 0,
@@ -1137,6 +1178,9 @@ let EVENT = {
   CONVERSATION_CHANGED: 'conversation_changed',
   CONVERSATION_ADDED: 'conversation_added',
   CONVERSATION_REMOVED: 'conversation_removed',
+  CONVERSATION_TAG_CREATED: 'conversation_tag_created',
+  CONVERSATION_TAG_DESTROYED: 'conversation_tag_destroyed',
+  CONVERSATION_TAG_CHANGED: 'conversation_tag_changed',
   CHATROOM_ATTRIBUTE_UPDATED: 'chatroom_attr_updated',
   CHATROOM_ATTRIBUTE_DELETED: 'chatroom_attr_deleted',
   CHATROOM_DESTROYED: 'chatroom_destroyed',
@@ -1369,6 +1413,8 @@ let MESSAGE_TYPE = {
   COMMAND_MARK_UNREAD: 'jg:markunread',
   COMMAND_LOG_REPORT: 'jg:logcmd',
   COMMAND_MSG_EXSET: 'jg:msgexset',
+  COMMAND_CONVERSATION_TAG_ADD: 'jg:tagaddconvers',
+  COMMAND_CONVERSATION_TAG_REMOVE: 'jg:tagdelconvers',
   // CLIENT_* 约定为客户端定义适用
   CLIENT_REMOVE_MSGS: 'jgc:removemsgs',
   CLIENT_REMOVE_CONVERS: 'jgc:removeconvers',
@@ -1407,6 +1453,33 @@ let SET_SEARCH_CONTENT_TYPE = {
   APPEND: 1,
   REPLACE: 2
 };
+let CONVERSATION_TAG = {
+  jg_all: {
+    id: 'jg_all',
+    type: 1,
+    name: '消息'
+  },
+  jg_unread: {
+    id: 'jg_unread',
+    type: 1,
+    name: '未读'
+  },
+  jg_mentionme: {
+    id: 'jg_mentionme',
+    type: 1,
+    name: '@我'
+  },
+  jg_private: {
+    id: 'jg_private',
+    type: 1,
+    name: '单聊'
+  },
+  jg_group: {
+    id: 'jg_group',
+    type: 1,
+    name: '群聊'
+  }
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1443,7 +1516,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   MESSAGE_SENT_STATE: MESSAGE_SENT_STATE,
   DISCONNECT_TYPE: DISCONNECT_TYPE,
   UNREAD_TAG: UNREAD_TAG,
-  SET_SEARCH_CONTENT_TYPE: SET_SEARCH_CONTENT_TYPE
+  SET_SEARCH_CONTENT_TYPE: SET_SEARCH_CONTENT_TYPE,
+  CONVERSATION_TAG: CONVERSATION_TAG
 });
 
 function Cache () {
@@ -5769,6 +5843,55 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             id: 3
           }
         }
+      },
+      TagConvers: {
+        fields: {
+          tag: {
+            type: "string",
+            id: 1
+          },
+          tagName: {
+            type: "string",
+            id: 2
+          },
+          convers: {
+            rule: "repeated",
+            type: "SimpleConversation",
+            id: 11
+          }
+        }
+      },
+      UserConverTags: {
+        fields: {
+          tags: {
+            rule: "repeated",
+            type: "ConverTag",
+            id: 1
+          }
+        }
+      },
+      ConverTag: {
+        fields: {
+          tag: {
+            type: "string",
+            id: 1
+          },
+          tagName: {
+            type: "string",
+            id: 2
+          },
+          tagType: {
+            type: "ConverTagType",
+            id: 3
+          }
+        }
+      },
+      ConverTagType: {
+        values: {
+          UserTag: 0,
+          SystemTag: 1,
+          GlobalTag: 2
+        }
       }
     }
   }
@@ -7510,6 +7633,43 @@ function getQueryBody({
     targetId = messageId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isInclude([COMMAND_TOPICS.CONVERSATION_TAG_ADD, COMMAND_TOPICS.CONVERSATION_TAG_REMOVE], topic)) {
+    let {
+      userId,
+      tag
+    } = data;
+    let {
+      name = '',
+      id,
+      conversations = []
+    } = tag;
+    let convers = utils.map(conversations, ({
+      conversationId,
+      conversationType
+    }) => {
+      return {
+        targetId: conversationId,
+        channelType: conversationType
+      };
+    });
+    let codec = $root.lookup('codec.TagConvers');
+    let message = codec.create({
+      tag: id,
+      tagName: name,
+      convers: convers
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.CONVERSATION_TAG_QUERY, topic)) {
+    let {
+      userId
+    } = data;
+    let codec = $root.lookup('codec.Nil');
+    let message = codec.create({});
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
   let codec = $root.lookup('codec.QueryMsgBody');
   let message = codec.create({
     index,
@@ -7833,6 +7993,9 @@ function Decoder(cache, io) {
     }
     if (utils.isEqual(topic, COMMAND_TOPICS.GET_FIRST_UNREAD_MSG)) {
       result = getMessage(index, data);
+    }
+    if (utils.isEqual(topic, COMMAND_TOPICS.CONVERSATION_TAG_QUERY)) {
+      result = getConversationTags(index, data);
     }
     result = utils.extend(result, {
       code,
@@ -8170,6 +8333,29 @@ function Decoder(cache, io) {
     return {
       attrs: atts,
       chatroomId: targetId,
+      index
+    };
+  }
+  function getConversationTags(index, data) {
+    let payload = $root.lookup('codec.UserConverTags');
+    let result = payload.decode(data);
+    let {
+      tags
+    } = result;
+    tags = utils.map(tags, tag => {
+      let {
+        tag: id,
+        tagName,
+        tagType
+      } = tag;
+      return {
+        id,
+        name: tagName,
+        type: tagType
+      };
+    });
+    return {
+      tags,
       index
     };
   }
@@ -10214,6 +10400,42 @@ function Conversation$1 (io, emitter) {
         name: MESSAGE_TYPE.CLIENT_REMOVE_MSGS
       });
     }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD)) {
+      let {
+        content: {
+          id,
+          name
+        }
+      } = message;
+      if (utils.isEmpty(name) && conversations.length > 0) {
+        return emitter.emit(EVENT.CONVERSATION_TAG_CREATED, {
+          tags: [{
+            id,
+            name
+          }]
+        });
+      }
+      return emitter.emit(EVENT.CONVERSATION_CHANGED, {
+        tags: [{
+          id,
+          name
+        }]
+      });
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE)) {
+      let {
+        content: {
+          id,
+          name
+        }
+      } = message;
+      return emitter.emit(EVENT.CONVERSATION_TAG_DESTROYED, {
+        tags: [{
+          id,
+          name
+        }]
+      });
+    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_ADD_CONVER)) {
       let {
         content: _conversation
@@ -11091,6 +11313,186 @@ function Conversation$1 (io, emitter) {
       });
     });
   };
+  let createConversationTag = tag => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, tag, FUNC_PARAM_CHECKER.CREATE_CONVERSATION_TAG);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let _tag = utils.clone(tag);
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.CONVERSATION_TAG_ADD,
+        userId,
+        tag: _tag
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          timestamp,
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          common.updateSyncTime({
+            isSender: true,
+            sentTime: timestamp,
+            io
+          });
+          io.getConfig();
+          resolve();
+        } else {
+          reject({
+            code
+          });
+        }
+      });
+    });
+  };
+  let destroyConversationTag = tag => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, tag, FUNC_PARAM_CHECKER.REMOVE_CONVERSATION_TAG);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let _tag = utils.clone(tag);
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.CONVERSATION_TAG_REMOVE,
+        userId,
+        tag: _tag
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          timestamp,
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          common.updateSyncTime({
+            isSender: true,
+            sentTime: timestamp,
+            io
+          });
+          io.getConfig();
+          resolve();
+        } else {
+          reject({
+            code
+          });
+        }
+      });
+    });
+  };
+  let getConversationTags = () => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, {}, {});
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.CONVERSATION_TAG_QUERY,
+        userId
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          timestamp,
+          code,
+          tags
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          let _tags = utils.map(tags, tag => {
+            let item = CONVERSATION_TAG[tag.id] || {};
+            utils.extend(tag, item);
+            return tag;
+          });
+          resolve({
+            tags: _tags
+          });
+        } else {
+          reject({
+            code
+          });
+        }
+      });
+    });
+  };
+  let addConversationsToTag = tag => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, tag, FUNC_PARAM_CHECKER.ADD_CONVERSATION_TO_TAG);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let _tag = utils.clone(tag);
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.CONVERSATION_TAG_ADD,
+        userId,
+        tag: _tag
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          timestamp,
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          common.updateSyncTime({
+            isSender: true,
+            sentTime: timestamp,
+            io
+          });
+          io.getConfig();
+          resolve();
+        } else {
+          reject({
+            code
+          });
+        }
+      });
+    });
+  };
+  let removeConversationsFromTag = tag => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, tag, FUNC_PARAM_CHECKER.REMOVE_CONVERSATION_FROM_TAG);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let _tag = utils.clone(tag);
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.CONVERSATION_TAG_REMOVE,
+        userId,
+        tag: _tag
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          timestamp,
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          common.updateSyncTime({
+            isSender: true,
+            sentTime: timestamp,
+            io
+          });
+          io.getConfig();
+          resolve();
+        } else {
+          reject({
+            code
+          });
+        }
+      });
+    });
+  };
   return {
     getConversations,
     removeConversation,
@@ -11107,7 +11509,12 @@ function Conversation$1 (io, emitter) {
     getDraft,
     removeDraft,
     setAllDisturb,
-    getAllDisturb
+    getAllDisturb,
+    createConversationTag,
+    destroyConversationTag,
+    getConversationTags,
+    addConversationsToTag,
+    removeConversationsFromTag
   };
 }
 
@@ -11180,6 +11587,12 @@ function Message$1 (io, emitter, logger) {
           messageId
         }
       });
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD)) {
+      return;
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE)) {
+      return;
     }
     if (utils.isEqual(message.name, MESSAGE_TYPE.MODIFY)) {
       let {

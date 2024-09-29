@@ -1,9 +1,13 @@
 <script setup>
 import im from "../../common/im";
+import common from "../../common/common";
+
 import { reactive, watch } from "vue";
 import utils from "../../common/utils";
 import group from "../../services/group";
 import ModalConversationGroup from "../../components/modal-groups.vue";
+import emitter from "../../common/emmit";
+import { EVENT_NAME } from "../../common/enum";
 
 const props = defineProps(["isShow"]);
 const emit = defineEmits(["oncancel"]);
@@ -11,12 +15,7 @@ let juggle = im.getCurrent();
 let { MessageType } = juggle;
 
 let state = reactive({
-  groups: [
-    { id: 'all', isActive: true, icon: 'wr-mg-msg', name: '消息' },
-    { id: 'mention', isActive: false, icon: 'wr-mg-mention', name: '@我' },
-    { id: 'user', isActive: false, icon: 'wr-mg-user', name: '单聊' },
-    { id: 'group', isActive: false, icon: 'wr-mg-group', name: '群组' },
-  ],
+  groups: [],
   isShowGroupManager: false,
 });
 
@@ -28,9 +27,31 @@ function onSelected(item, index){
   })
 }
 
+emitter.$on(EVENT_NAME.ON_CONVERSATION_TAG_CHANGED, ({ isRemove, tag }) => {
+  if(isRemove){
+    let { groups } = state;
+    let index = utils.find(groups, (group) => {
+      return utils.isEqual(group.id, tag.id);
+    });
+    if(index > -1){
+      state.groups.splice(index, 1);
+    }
+    return;
+  }
+  state.groups.push(tag)
+});
+
 function onShowGroupManager(isShow){
   state.isShowGroupManager = isShow;
 }
+
+watch(() => props.isShow, async () => {
+  if(props.isShow){
+    let { tags = [] } = await juggle.getConversationTags();
+    state.groups = common.formatTags(tags);
+  }
+})
+
 </script>
 
 <template>
@@ -43,7 +64,7 @@ function onShowGroupManager(isShow){
     </div>
     <ul class="jg-conver-groups">
       <li class="jg-conver-group" v-for="(group, index) in state.groups" :key="group.id" :class="{'active': group.isActive}" @click="onSelected(group, index)">
-        <div class="jg-conver-group-content wr" :class="[group.icon]" >{{ group.name }}</div>
+        <div class="jg-conver-group-content wr wr-mg-tag" :class="[group.icon]" >{{ group.name }}</div>
       </li>
     </ul>
   </div>

@@ -232,6 +232,22 @@ function calcSize(params, patch = 20){
   height = height * ratio + patch;
   return { width, height }
 }
+function formatTags(tags){
+  let tagIcons = {
+    jg_all: 'wr-mg-msg',
+    jg_mentionme: 'wr-mg-mention',
+    jg_private: 'wr-mg-user',
+    jg_unread: 'wr-mg-unread',
+    jg_group: 'wr-mg-group',
+  };
+  let groups = utils.map(tags, (tag) => {
+    let icon = tagIcons[tag.id] || 'wr-mg-tag';
+    let isInner = tag.type > 0;
+    utils.extend(tag, { icon, isActive: false, isInner });
+    return tag;
+  });
+  return groups;
+}
 export default {
  isElementTop,
  getAvatar,
@@ -241,4 +257,5 @@ export default {
  getConversationInfo,
  htmlToContent,
  calcSize,
+ formatTags,
 }

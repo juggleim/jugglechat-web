@@ -1445,10 +1445,17 @@
   border: none;
   color: #29292a;
 }
-
+.jg-conver-group-name .form-control::placeholder {
+  color: #a09f9f;
+  opacity: 1;
+  font-size: 12px;
+}
 .jg-conver-group-name .form-control:disabled{
   background: transparent;
   color: #949495;
+}
+.jg-conver-group-modal .modal-body{
+  height: 600px;
 }
 /* Conversation Group End */
 
@@ -1512,6 +1519,7 @@
   width: 120px;
 }
 /* Conversation Group Member end */
+.jg-text-danger::after,
 .jg-text-danger::before{
   color: #e31515;
 }
