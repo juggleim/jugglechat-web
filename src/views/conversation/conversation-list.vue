@@ -16,6 +16,9 @@ import JHeader from '../header/header.vue';
 import ConversationGroup from './conversation-group.vue';
 import ModalGroupMember from '../../components/modal-groups-member.vue';
 import ConversationRightMenu from "../../components/conversation-menu.vue";
+import conversationHandler from "./conversation-handler";
+import conversationTopHandler from "./conversation-top-handler";
+import conversationRemoveHandler from "./conversation-remove-handler";
 
 const router = useRouter();
 let {
@@ -135,12 +138,13 @@ let user = Storage.get(STORAGE.USER_TOKEN);
 if (utils.isEmpty(user)) {
   router.replace({ name: "Login" });
 }
+
 im.connect(user, {
   success: _user => {
     console.log("conversation connect success", _user);
     let isFirst = true;
     getConversations(isFirst);
-    getTops();
+    conversationTools.getTops(state);
     utils.extend(state.currentUser, user);
   },
   error: () => {
@@ -148,163 +152,18 @@ im.connect(user, {
   }
 });
 
-function getConversationTime(sentTime) {
-  let str = utils.getCurrentTime();
-  let current = new Date(str);
-  let time = utils.formatTime(sentTime, "MM-dd hh:mm");
-  if (sentTime > current) {
-    time = utils.formatTime(sentTime, "hh:mm");
-  }
-  return time;
+juggle.once(Event.CONVERSATION_CHANGED, onConversationChanged);
+juggle.once(Event.CONVERSATION_ADDED, onConversationChanged);
+juggle.once(Event.CONVERSATION_TOP, onConversationTop);
+juggle.once(Event.CONVERSATION_REMOVED, onConversationRemove);
+function onConversationChanged({ conversations }) {
+  return conversationHandler(conversations, state);
 }
-// juggle.once(Event.CONVERSATION_CLEARUNREAD, ({ conversations }) => {
-//   utils.forEach(conversations, (conver) => {
-//     let index = utils.find(state.conversations, (item) => {
-//       return utils.isEqual(item.conversationType, conver.conversationType) && utils.isEqual(item.conversationId, conver.conversationId);
-//     });
-//     if(index > -1){
-//       let item = state.conversations[index];
-//       clearUnreadCount(item, index);
-//     }
-//   })
-// });
-juggle.once(Event.CONVERSATION_CHANGED, converationHandler);
-juggle.once(Event.CONVERSATION_ADDED, converationHandler);
-
-juggle.once(Event.CONVERSATION_TOP, ({ conversations }) => {
-  let { tops } = state;
-  utils.forEach(conversations, async (conversation) => {
-    let { isTop } = conversation;
-    let index = utils.find(tops, (top) => { return utils.isEqual(top.conversationId, conversation.conversationId); })
-    if(index > -1 && !isTop){
-      tops.splice(index, 1)
-    }
-    if(index == -1 && isTop){
-      let item = await juggle.getConversation(conversation);
-      tops.push(item.conversation);
-    }
-  });
-});
-
-juggle.once(Event.CONVERSATION_REMOVED, ({ conversations }) => {
-  utils.forEach(conversations, conversation => {
-    let { conversations } = state;
-    let {
-      conversationId,
-      conversationType,
-      latestMessage,
-      unreadCount
-    } = conversation;
-    let index = utils.find(conversations, item => {
-      return (
-        utils.isEqual(item.conversationType, conversationType) &&
-        utils.isEqual(item.conversationId, conversationId)
-      );
-    });
-    state.conversations.splice(index, 1)[0];
-  });
-});
-function converationHandler({ conversations }) {
-  utils.forEach(conversations, conversation => {
-    console.log("conversation", conversation);
-
-    if (!conversation.latestMessage) {
-      return;
-    }
-    formatMention(conversation);
-    let { conversations } = state;
-    let {
-      conversationId,
-      conversationType,
-      latestMessage,
-      unreadCount
-    } = conversation;
-    let index = utils.find(conversations, item => {
-      return (
-        utils.isEqual(item.conversationType, conversationType) &&
-        utils.isEqual(item.conversationId, conversationId)
-      );
-    });
-    if (!utils.isEqual(index, -1)) {
-      let oldConversation = state.conversations[index];
-      let { isActive } = oldConversation;
-
-      if (!conversation.conversationTitle) {
-        let { conversationTitle } = oldConversation;
-        utils.extend(conversation, { conversationTitle });
-      }
-
-      if (!conversation.conversationPortrait) {
-        let { conversationPortrait } = oldConversation;
-        utils.extend(conversation, { conversationPortrait });
-      }
-
-      if (latestMessage.sentTime >= oldConversation.latestMessage.sentTime) {
-        let shortName = im.msgShortFormat(latestMessage);
-        let { sentTime } = latestMessage;
-        let f_time = getConversationTime(sentTime);
-        if (!sentTime) {
-          f_time = "";
-        }
-        utils.extend(conversation, {
-          f_time,
-          isShowDrop: false,
-          shortName,
-          latestMessage: latestMessage,
-          unreadCount
-        });
-      } else {
-        utils.extend(oldConversation, { unreadCount });
-      }
-
-      utils.extend(conversation, { isActive });
-      if (conversation.sortTime > oldConversation.sortTime) {
-        state.conversations.splice(index, 1)[0];
-        state.conversations.unshift(conversation);
-      } else {
-        state.conversations.splice(index, 1, utils.clone(conversation));
-      }
-    } else {
-      let { latestMessage } = conversation;
-      let shortName = im.msgShortFormat(latestMessage);
-      let { sentTime } = latestMessage;
-      let f_time = getConversationTime(sentTime);
-      if (!sentTime) {
-        f_time = "";
-      }
-      utils.extend(conversation, { f_time, isShowDrop: false, shortName });
-      state.conversations.unshift(conversation);
-    }
-
-    if (conversationTools.isSameConversation(conversation, state)) {
-      utils.extend(state.currentConversation, conversation);
-    }
-  });
+function onConversationTop({ conversations }){
+  return conversationTopHandler(conversations, state);
 }
-// juggle.on(Event.STATE_CHANGED, ({ state: status }) => {
-//   if (ConnectionState.DISCONNECTED == status) {
-//     utils.extend(state, { conversations: [], currentUser: {}, currentConversation: {} })
-//   }
-// });
-function formatMention(conversation) {
-  let { mentions = {} } = conversation;
-  let f_mentionContent = "";
-  if (mentions.isMentioned) {
-    f_mentionContent = "有人@我";
-  }
-  return utils.extend(conversation, { f_mentionContent });
-}
-function getTops() {
-  juggle.getTopConversations().then(result => {
-    let { conversations, isFinished } = result;
-    conversations = utils.map(conversations, item => {
-      let { conversationPortrait, conversationTitle } = item;
-      item.conversationPortrait =
-        conversationPortrait || common.getTextAvatar(conversationTitle);
-      return item;
-    });
-    state.tops = conversations;
-  });
+function onConversationRemove({ conversations }){
+  return conversationRemoveHandler(conversations, state);
 }
 function getConversations(isFirst = false, callback = utils.noop) {
   let params = {};
@@ -324,11 +183,11 @@ function getConversations(isFirst = false, callback = utils.noop) {
         conversationTitle = ""
       } = conversation;
       let { sentTime } = latestMessage;
-      let f_time = getConversationTime(sentTime);
+      let f_time = common.getConversationTime(sentTime);
       if (!sentTime) {
         f_time = "";
       }
-      conversation = formatMention(conversation);
+      conversation = common.formatMention(conversation);
       let shortName = im.msgShortFormat(latestMessage);
       conversationPortrait =
         conversationPortrait || common.getTextAvatar(conversationTitle);
@@ -355,184 +214,31 @@ function getConversations(isFirst = false, callback = utils.noop) {
   });
 }
 
-function insertTempConversation() {
-  if (query.id) {
-    common.getConversationInfo(query, info => {
-      let { id: conversationId, type: conversationType } = query;
-      conversationType = Number(conversationType);
-      let index = utils.find(state.conversations, item => {
-        return (
-          utils.isEqual(item.conversationType, conversationType) &&
-          utils.isEqual(item.conversationId, conversationId)
-        );
-      });
-
-      let message = {
-        name: MessageType.TEXT,
-        content: { content: "[新会话]" },
-        sentTime: Date.now(),
-        messageIndex: -1
-      };
-      if (!utils.isEqual(index, -1)) {
-        var item = state.conversations.splice(index, 1)[0] || {};
-        utils.extend(message, item);
-      }
-      let { nickname, avatar } = info;
-      let conversation = {
-        conversationId,
-        conversationType,
-        conversationTitle: nickname,
-        conversationPortrait: avatar || common.getTextAvatar(nickname),
-        shortName: im.msgShortFormat(message),
-        latestMessage: message,
-        isActive: true
-      };
-      state.conversations.map(item => {
-        item.isActive = false;
-        return item;
-      });
-      console.log("insert new converation", conversation);
-      state.conversations.unshift(conversation);
-      utils.extend(state, { currentConversation: conversation });
-    });
-  }
-}
-insertTempConversation();
+conversationTools.insertTempConversation(query, state);
 
 function onMarkUnread(index) {
-  let conversation = state.conversations[index];
-  let { unreadTag } = conversation;
-  utils.extend(conversation, {
-    isShowDrop: false,
-    unreadTag: UnreadTag.UNREAD
-  });
-
-  if (utils.isEqual(unreadTag, UnreadTag.UNREAD)) {
-    return clearUnreadCount(conversation, index);
-  }
-  let { conversationId, conversationType } = conversation;
-  juggle
-    .markUnread({
-      conversationId: conversationId,
-      conversationType: conversationType,
-      unreadTag: UnreadTag.UNREAD
-    })
-    .then(
-      () => {
-        console.log("markunread successfully");
-      },
-      error => {
-        console.log(error);
-      }
-    );
+  return conversationTools.markUnread(index, state);
 }
 function onRemoveConversation(index) {
-  let conversation = state.conversations[index];
-  conversation.isShowDrop = false;
-  let { conversationType, conversationId } = conversation;
-  juggle.removeConversation({ conversationType, conversationId }).then(() => {
-    console.log("remove conversation successfully");
-  });
-  // state.conversations.splice(index, 1);
-  let { currentConversation } = state;
-  if (
-    utils.isEqual(
-      currentConversation.conversationId,
-      conversation.conversationId
-    )
-  ) {
-    utils.extend(state, { currentConversation: {} });
-    router.push({ name: "ConversationList" });
-  }
+  return conversationTools.removeConversation(index, state);
 }
 function onClearMessages(index) {
   let conversation = state.conversations[index];
-  utils.extend(conversation, {
-    isShowDrop: false,
-    unreadCount: 0
-  });
   state.currentConversation = {};
-
-  let params = {
-    conversationType: conversation.conversationType,
-    conversationId: conversation.conversationId,
-    time: conversation.latestMessage.sentTime
-  };
-  juggle.clearMessage(params).then(
-    () => {
-      console.log("clear messages successfully");
-    },
-    error => {
-      console.log(error);
-    }
-  );
+  return conversationTools.clearMessages(conversation);
 }
 
-function isSameConversation(origin, source) {
-  return (
-    utils.isEqual(origin.conversationId, source.conversationId) &&
-    utils.isEqual(origin.conversationType, source.conversationType)
-  );
-}
 function onDraft(conversation) {
-  let { draft } = conversation;
-
-  let index = utils.find(state.conversations, item => {
-    return isSameConversation(item, conversation);
-  });
-  if (utils.isEqual(index, -1)) {
-    return;
-  }
-  utils.extend(state.conversations[index], { draft });
-  if (utils.isEmpty(draft)) {
-    juggle.removeDraft(conversation);
-  } else {
-    juggle.setDraft(conversation);
-  }
+  return conversationTools.updateDraft({ conversation, conversations: state.conversations });
 }
 
 function onSetConversationTop(item, isTop) {
   let { tops, conversations } = state;
-  let topIndex = utils.find(tops, top => {
-    return utils.isEqual(top.conversationId, item.conversationId);
-  });
-  if (topIndex > -1) {
-    tops[topIndex].isShowTopDrop = false;
-    tops.splice(topIndex, 1);
-  } else {
-    tops.push(item);
-  }
-
-  let conversationIndex = utils.find(conversations, conver => {
-    return utils.isEqual(conver.conversationId, item.conversationId);
-  });
-
-  if (conversationIndex > -1) {
-    conversations[conversationIndex].isShowDrop = false;
-    conversations[conversationIndex].isTop = isTop;
-  }
-
-  let _item = {
-    conversationType: item.conversationType,
-    conversationId: item.conversationId,
-    isTop
-  };
-  juggle.setTopConversation(_item).then(() => {
-    console.log("set conversation top successfully", _item);
-  });
+  return conversationTools.setConversationTop({ item, isTop, tops, conversations });
 }
 
 function onConversationDisturb(item){
-  let conversation = { conversationId: item.conversationId, conversationType: item.conversationType, undisturbType: UndisturbType.DISTURB };
-  if(utils.isEqual(item.undisturbType, UndisturbType.DISTURB)){
-    conversation.undisturbType = UndisturbType.UNDISTURB;
-    return juggle.disturbConversation(conversation).then(() => {
-      console.log('set conversation disturb successfully');
-    });
-  }
-  juggle.disturbConversation(conversation).then(() => {
-    console.log('set conversation disturb successfully');
-  });
+  return conversationTools.conversationDisturb(item);
 }
 
 function onNavChat(item) {
@@ -550,11 +256,10 @@ function onNavChat(item) {
       );
     });
     if (utils.isEqual(index, -1)) {
-      formatMention(conversation);
-      getConversationTime;
+      common.formatMention(conversation);
       let shortName = im.msgShortFormat(latestMessage);
       let { sentTime } = latestMessage;
-      let f_time = getConversationTime(sentTime);
+      let f_time = common.getConversationTime(sentTime);
       if (!sentTime) {
         f_time = "";
       }
@@ -607,9 +312,7 @@ function onGroupChange(item){
   <div class="tyn-content">
     <div class="tyn-aside">
       <AisdeHeader @onnav="onNavChat"></AisdeHeader>
-      
       <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)"></ModalGroupMember>
-
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup" @onchange="onGroupChange"></ConversationGroup>
         <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']" >
@@ -674,9 +377,7 @@ function onGroupChange(item){
                             class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
                             v-if="item.unreadCount == 0 && item.unreadTag && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
                           >1</div>
-
                           <div class="position-absolute rounded-pill top-1 end-0 mt-n2 me-n1 wr wr-dot text-danger conver-dot" v-if="((item.unreadCount == 0 && item.unreadTag) || item.unreadCount > 0) && utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></div>
-
                         </div>
                       </div>
                       <div class="tyn-media-col">
@@ -716,23 +417,16 @@ function onGroupChange(item){
                     </ConversationRightMenu>
                   </li>
                 </ul>
-                
                 <div class="tyn-aside-row text-center" v-if="state.conversations.length == 0">
                   <h6>没有记录</h6>
                 </div>
               </div>
             </div>
-            <!-- .tab-content -->
           </div>
         </div>
       </div>
-
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
-    <Conversation
-      :conversation="state.currentConversation"
-      v-if="!utils.isEmpty(state.currentConversation)"
-      @ondraft="onDraft"
-    ></Conversation>
+    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" ></Conversation>
   </div>
 </template>

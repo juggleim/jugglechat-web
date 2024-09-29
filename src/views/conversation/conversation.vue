@@ -735,7 +735,7 @@ watch(() => state.content, (val) => {
       <Mention :is-show="state.isShowMention" :members="state.mentionMembers" @onselected="onMentionSelected" :index="state.selectMentionIndex"/>
       <Reply :is-show="state.isShowReply" @oncancel="onCancelReply" :message="state.currentReplyMessage"></Reply>
       <Emoji :is-show="state.isShowEmoji" @onhide="onShowEmoji(false)" @onemit="onChoiceEmoji"></Emoji>
-      <div class="tyn-chat-form-enter">
+      <div class="tyn-chat-form-enter tyn-conversation-input">
         <ul class="tyn-list-inline me-n2 my-1 tyn-chat-file">
           <li class="d-none d-sm-block">
             <div class="btn btn-icon btn-light btn-md btn-pill wr wr-huixing tyn-input-file" @click="onFileClick"></div>

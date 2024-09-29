@@ -5,7 +5,7 @@ import { TRANSFER_TYPE } from "../../common/enum";
 import common from "../../common/common";
 
 let juggle = im.getCurrent();
-let { MessageType, ConversationType, MentionType } = juggle;
+let { MessageType, ConversationType, MentionType, UndisturbType } = juggle;
 
 function readMessage(messages){
   if(!utils.isEmpty(messages)){
@@ -161,6 +161,9 @@ function isSameConversation(message, state){
   let { currentConversation: item } = state;
   return utils.isEqual(item.conversationId, message.conversationId) && utils.isEqual(item.conversationType, message.conversationType); 
 }
+function isSame(target, source){
+  return utils.isEqual(target.conversationId, source.conversationId) && utils.isEqual(target.conversationType, source.conversationType); 
+}
 function transfer(type, conversations, msgs, state){
   if(utils.isEqual(TRANSFER_TYPE.ONE, type)){
     sendOne(conversations, msgs, state);
@@ -236,6 +239,174 @@ function isScrollTop(index){
   let num = chatNode.offsetTop-node.getBoundingClientRect().bottom;
   return Math.abs(num) > 300;
 }
+function conversationDisturb(item){
+  let conversation = { conversationId: item.conversationId, conversationType: item.conversationType, undisturbType: UndisturbType.DISTURB };
+  if(utils.isEqual(item.undisturbType, UndisturbType.DISTURB)){
+    conversation.undisturbType = UndisturbType.UNDISTURB;
+    return juggle.disturbConversation(conversation).then(() => {
+      console.log('set conversation disturb successfully');
+    });
+  }
+  juggle.disturbConversation(conversation).then(() => {
+    console.log('set conversation disturb successfully');
+  });
+}
+function setConversationTop({ item, isTop, tops, conversations }) {
+  let topIndex = utils.find(tops, top => {
+    return utils.isEqual(top.conversationId, item.conversationId);
+  });
+  if (topIndex > -1) {
+    tops[topIndex].isShowTopDrop = false;
+    tops.splice(topIndex, 1);
+  } else {
+    tops.push(item);
+  }
+
+  let conversationIndex = utils.find(conversations, conver => {
+    return utils.isEqual(conver.conversationId, item.conversationId);
+  });
+
+  if (conversationIndex > -1) {
+    conversations[conversationIndex].isShowDrop = false;
+    conversations[conversationIndex].isTop = isTop;
+  }
+
+  let _item = {
+    conversationType: item.conversationType,
+    conversationId: item.conversationId,
+    isTop
+  };
+  juggle.setTopConversation(_item).then(() => {
+    console.log("set conversation top successfully", _item);
+  });
+}
+function updateDraft({ conversation, conversations }) {
+  let { draft } = conversation;
+
+  let index = utils.find(conversations, item => {
+    return isSame(item, conversation);
+  });
+  if (utils.isEqual(index, -1)) {
+    return;
+  }
+  utils.extend(conversations[index], { draft });
+  if (utils.isEmpty(draft)) {
+    juggle.removeDraft(conversation);
+  } else {
+    juggle.setDraft(conversation);
+  }
+}
+function clearMessages(conversation) {
+  utils.extend(conversation, {
+    isShowDrop: false,
+    unreadCount: 0
+  });
+
+  let params = {
+    conversationType: conversation.conversationType,
+    conversationId: conversation.conversationId,
+    time: conversation.latestMessage.sentTime
+  };
+  juggle.clearMessage(params).then(
+    () => {
+      console.log("clear messages successfully");
+    },
+    error => {
+      console.log(error);
+    }
+  );
+}
+function removeConversation(index, state) {
+  let conversation = state.conversations[index];
+  conversation.isShowDrop = false;
+  let { conversationType, conversationId } = conversation;
+  juggle.removeConversation({ conversationType, conversationId }).then(() => {
+    console.log("remove conversation successfully");
+  });
+  let { currentConversation } = state;
+  if (isSame(currentConversation, conversation)) {
+    utils.extend(state, { currentConversation: {} });
+  }
+}
+function markUnread(index) {
+  let conversation = state.conversations[index];
+  let { unreadTag } = conversation;
+  utils.extend(conversation, {
+    isShowDrop: false,
+    unreadTag: UnreadTag.UNREAD
+  });
+
+  if (utils.isEqual(unreadTag, UnreadTag.UNREAD)) {
+    return clearUnreadCount(conversation, index);
+  }
+  let { conversationId, conversationType } = conversation;
+  juggle.markUnread({
+      conversationId: conversationId,
+      conversationType: conversationType,
+      unreadTag: UnreadTag.UNREAD
+    }).then(
+      () => {
+        console.log("markunread successfully");
+      },
+      error => {
+        console.log(error);
+      }
+    );
+}
+function insertTempConversation(query, state) {
+  if (query.id) {
+    common.getConversationInfo(query, info => {
+      let { id: conversationId, type: conversationType } = query;
+      conversationType = Number(conversationType);
+      let index = utils.find(state.conversations, item => {
+        return (
+          utils.isEqual(item.conversationType, conversationType) &&
+          utils.isEqual(item.conversationId, conversationId)
+        );
+      });
+
+      let message = {
+        name: MessageType.TEXT,
+        content: { content: "[新会话]" },
+        sentTime: Date.now(),
+        messageIndex: -1
+      };
+      if (!utils.isEqual(index, -1)) {
+        var item = state.conversations.splice(index, 1)[0] || {};
+        utils.extend(message, item);
+      }
+      let { nickname, avatar } = info;
+      let conversation = {
+        conversationId,
+        conversationType,
+        conversationTitle: nickname,
+        conversationPortrait: avatar || common.getTextAvatar(nickname),
+        shortName: im.msgShortFormat(message),
+        latestMessage: message,
+        isActive: true
+      };
+      state.conversations.map(item => {
+        item.isActive = false;
+        return item;
+      });
+      console.log("insert new converation", conversation);
+      state.conversations.unshift(conversation);
+      utils.extend(state, { currentConversation: conversation });
+    });
+  }
+}
+function getTops(state) {
+  juggle.getTopConversations().then(result => {
+    let { conversations, isFinished } = result;
+    conversations = utils.map(conversations, item => {
+      let { conversationPortrait, conversationTitle } = item;
+      item.conversationPortrait =
+        conversationPortrait || common.getTextAvatar(conversationTitle);
+      return item;
+    });
+    state.tops = conversations;
+  });
+}
 export default {
   isScrollTop,
   readMessage,
@@ -247,4 +418,13 @@ export default {
   isSameConversation,
   transfer,
   clearUnreadCount,
+  conversationDisturb,
+  setConversationTop,
+  updateDraft,
+  clearMessages,
+  removeConversation,
+  markUnread,
+  insertTempConversation,
+  isSame,
+  getTops,
 }

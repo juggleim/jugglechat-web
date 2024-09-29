@@ -173,9 +173,11 @@
   top: auto;
   left: 0;
   right: 0;
-  bottom: 3.4rem;
+  bottom: 54px;
   padding: 0;
+  background-color: #FAFAFA;
 }
+
 .tyn-replies{
   padding: 0.6rem;
 }
@@ -1538,4 +1540,10 @@
 }
 .jg-line{
   border: 1px solid #00000014;
+}
+.tyn-contact-aside{
+  width: 320px;
+}
+.tyn-conversation-input{
+  height: 54px;
 }

@@ -254,6 +254,24 @@ function formatTags(tags){
   });
   return groups;
 }
+
+function getConversationTime(sentTime) {
+  let str = utils.getCurrentTime();
+  let current = new Date(str);
+  let time = utils.formatTime(sentTime, "MM-dd hh:mm");
+  if (sentTime > current) {
+    time = utils.formatTime(sentTime, "hh:mm");
+  }
+  return time;
+}
+function formatMention(conversation) {
+  let { mentions = {} } = conversation;
+  let f_mentionContent = "";
+  if (mentions.isMentioned) {
+    f_mentionContent = "有人@我";
+  }
+  return utils.extend(conversation, { f_mentionContent });
+}
 export default {
  isElementTop,
  getAvatar,
@@ -265,4 +283,6 @@ export default {
  calcSize,
  formatTags,
  isConversationElementTop,
+ getConversationTime,
+ formatMention,
 }

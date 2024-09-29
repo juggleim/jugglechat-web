@@ -139,7 +139,7 @@ getFriends();
 </script>
 <template>
   <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
-    <div class="tyn-aside">
+    <div class="tyn-aside tyn-contact-aside">
       <AisdeHeader :title="'通讯录'"></AisdeHeader>
       <div class="tyn-aside-row pt-1">
         <ul class="nav nav-tabs nav-tabs-line">
