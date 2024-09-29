@@ -15,6 +15,7 @@ import conversationTools from "./conversation";
 import JHeader from '../header/header.vue';
 import ConversationGroup from './conversation-group.vue';
 import ModalGroupMember from '../../components/modal-groups-member.vue';
+import ConversationRightMenu from "../../components/conversation-menu.vue";
 
 const router = useRouter();
 let {
@@ -33,7 +34,6 @@ let state = reactive({
   currentConversation: {},
   currentUser: {},
   dropmenuX: 0,
-  currentRightIndex: -1,
   isShowConversationGroup: false,
   isShowGroupMemberManager: false,
 });
@@ -61,10 +61,8 @@ function onShowDropmenu(e) {
     x = 150;
   }
   state.dropmenuX = x;
-  console.log(state.dropmenuX)
 
   let conversation = state.conversations[index];
-  state.currentRightIndex = index;
   conversation.isShowDrop = true;
 }
 function onHideDrop(conversation) {
@@ -594,21 +592,6 @@ nextTick(() => {
   });
 });
 
-watch(() => state.currentRightIndex, (value) => {
-  let isCNDropMenuScrollTop = true;
-  let conversation = state.conversations[value];
-  if(conversation.isShowDrop){
-    isCNDropMenuScrollTop = isScrollTop(value)
-  }
-  utils.extend(state, { isCNDropMenuScrollTop });
-})
-
-function isScrollTop(index){
-  var chatNode = document.querySelector('.tyn-aside-list');
-  var node = document.querySelector(`.tyn-aside-item[index="${index}"]`);
-  let num = chatNode.offsetTop-node.getBoundingClientRect().bottom;
-  return Math.abs(num) > 300;
-}
 function onShowConversationGroup(){
   let { isShowConversationGroup } = state;
   state.isShowConversationGroup = !isShowConversationGroup;
@@ -674,6 +657,7 @@ function onGroupChange(item){
                     :class="{ 'active': item.isActive }"
                     @click="onConversation(item, index)"
                     :index="index"
+                    :uid="item.conversationType + '_' + item.conversationId"
                     @click.right.prevent="onShowDropmenu"
                   >
                     <div class="tyn-media-group">
@@ -721,60 +705,15 @@ function onGroupChange(item){
                         </div>
                       </div>
                     </div>
-                    <ul class="tyn-media-option-list">
-                      <li class="dropdown">
-                        <div
-                          class="dropdown-menu dropdown-menu-end"
-                          :class="{ 'show jg-cndrop-show': item.isShowDrop }"
-                          @mouseleave="onHideDrop(item)"
-                          :style="['left:' + state.dropmenuX + 'px', state.isCNDropMenuScrollTop ? 'bottom: 0px' : '']"
-                        >
-                          <ul class="tyn-list-links">
-                            <li class="tyn-list-link">
-                              <a class="wr wr-read" @click.stop="onMarkUnread(index)">
-                                <span>{{ item.unreadTag ? '清理未读' : '标记未读' }}</span>
-                              </a>
-                            </li>
-                            <li class="tyn-list-link">
-                              <a
-                                class="wr wr-top"
-                                :class="{'wr-untop': item.isTop}"
-                                data-bs-toggle="modal"
-                                @click.stop="onSetConversationTop(item, !item.isTop)"
-                              >
-                                <span>{{ item.isTop ? '取消置顶' : '置顶会话' }}</span>
-                              </a>
-                            </li>
-                            <li class="tyn-list-link">
-                              <a
-                                class="wr wr-mute"
-                                :class="{'wr-unmute': utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)}"
-                                data-bs-toggle="modal"
-                                @click.stop="onConversationDisturb(item)"
-                              >
-                                <span>{{ utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB) ? '免 打 扰' : '取消免打扰' }}</span>
-                              </a>
-                            </li>
-                            <li class="dropdown-divider"></li>
-                            <li class="tyn-list-link">
-                              <a
-                                class="wr wr-delete"
-                                data-bs-toggle="modal"
-                                @click.stop="onRemoveConversation(index)"
-                              >
-                                <span>删除会话</span>
-                              </a>
-                            </li>
-                            <li class="tyn-list-link">
-                              <a href="#" class="wr wr-clear" @click.stop="onClearMessages(index)">
-                                <span>清空消息</span>
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
-                      </li>
-                    </ul>
-                    <div class="fade-bg fade-bg-conversationlist" v-if="item.isShowDrop" @click="onHideDrop(item)"></div>
+                    <ConversationRightMenu :is-show="item.isShowDrop" :conversation="item" :index="index" 
+                      @onhide="onHideDrop" :x="state.dropmenuX"
+                      @onmark="onMarkUnread"
+                      @ontop="onSetConversationTop"
+                      @ondisturb="onConversationDisturb"
+                      @onremove="onRemoveConversation"
+                      @onclearmsg="onClearMessages"
+                      >
+                    </ConversationRightMenu>
                   </li>
                 </ul>
                 

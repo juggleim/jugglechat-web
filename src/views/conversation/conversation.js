@@ -230,7 +230,14 @@ function sendMsg(conversation, message, callback){
     callback();
   });
 }
+function isScrollTop(index){
+  var chatNode = document.querySelector('.tyn-aside-list');
+  var node = document.querySelector(`.tyn-aside-item[index="${index}"]`);
+  let num = chatNode.offsetTop-node.getBoundingClientRect().bottom;
+  return Math.abs(num) > 300;
+}
 export default {
+  isScrollTop,
   readMessage,
   getMessages,
   sendFile,

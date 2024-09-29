@@ -12,6 +12,12 @@ function isElementTop(message){
   let num = chatNode.offsetTop-messageNode.getBoundingClientRect().bottom;
   return num > -200;
 }
+function isConversationElementTop(conversation){
+  var chatNode = document.querySelector('.tyn-aside-list');
+  var node = chatNode.querySelector(`li[uid="${conversation.conversationType}_${conversation.conversationId}"]`);
+  let num = chatNode.offsetTop-node.getBoundingClientRect().bottom;
+  return num > -200;
+}
 function getAvatars(){
   let avatars = [
     '0d93f139-23f8-4b48-ae3a-a929a0c864c3.png',
@@ -258,4 +264,5 @@ export default {
  htmlToContent,
  calcSize,
  formatTags,
+ isConversationElementTop,
 }
