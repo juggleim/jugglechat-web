@@ -95,7 +95,7 @@ watch(() => props.isShow, async () => {
                 <span class="wr wr-cir-remove jg-text-danger" :class="{'jg-text-disable': item.isInner}" @click="onRemove(index)"></span>
                 <input type="text" class="form-control" placeholder="请输入分组名称（回车保存）" :disabled="item.isInner" v-model="item.name" @keydown.enter="onSave(index)">
               </div>
-              <div class="jg-conver-group-desc">{{ item.isInner ? '系统分组' : '自定义分组' }}</div>
+              <div class="jg-conver-group-desc" :class="{'jg-conver-group-desc-custom': !item.isInner}">{{ item.isInner ? '系统分组' : '自定义分组' }}</div>
             </li>
           </ul>
           <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center">

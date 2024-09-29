@@ -10,7 +10,7 @@ import emitter from "../../common/emmit";
 import { EVENT_NAME } from "../../common/enum";
 
 const props = defineProps(["isShow"]);
-const emit = defineEmits(["oncancel"]);
+const emit = defineEmits(["oncancel", "onchange"]);
 let juggle = im.getCurrent();
 let { MessageType } = juggle;
 
@@ -25,6 +25,7 @@ function onSelected(item, index){
     utils.extend(group, { isActive });
     return group;
   })
+  emit('onchange', { item })
 }
 
 emitter.$on(EVENT_NAME.ON_CONVERSATION_TAG_CHANGED, ({ isRemove, tag }) => {
@@ -50,7 +51,7 @@ watch(() => props.isShow, async () => {
     let { tags = [] } = await juggle.getConversationTags();
     state.groups = common.formatTags(tags);
   }
-})
+});
 
 </script>
 

@@ -616,6 +616,9 @@ function onShowConversationGroup(){
 function onShowGroupMemberManager(isShow){
   state.isShowGroupMemberManager = isShow;
 }
+function onGroupChange(item){
+  console.log(item)
+}
 </script>
 <template>
   <div class="tyn-content">
@@ -625,7 +628,7 @@ function onShowGroupMemberManager(isShow){
       <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)"></ModalGroupMember>
 
       <div class="jg-conversation-body">
-        <ConversationGroup :is-show="state.isShowConversationGroup"></ConversationGroup>
+        <ConversationGroup :is-show="state.isShowConversationGroup" @onchange="onGroupChange"></ConversationGroup>
         <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']" >
           <div class="jg-conversations-header" v-if="!juggle.isDesktop()">
             <ul class="jg-conversations-tools jg-convers-tools">

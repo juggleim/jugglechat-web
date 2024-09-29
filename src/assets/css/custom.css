@@ -1429,6 +1429,13 @@
 }
 .jg-conver-group-desc{
   font-size: 10px;
+  background: #008aff;
+  border-radius: 4px;
+  padding: 0px 4px;
+  color: #FFF;
+}
+.jg-conver-group-desc-custom{
+  background: #6c00ff;
 }
 .jg-conver-group-name{
   font-size: 12px;
