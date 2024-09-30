@@ -9,6 +9,7 @@ let juggle = im.getCurrent();
 let { MessageType, ConversationType, MentionType, UndisturbType } = juggle;
 
 export default function(conversations, state){
+  let { currentTag } = state;
   utils.forEach(conversations, conversation => {
     console.log("conversation", conversation);
 
@@ -16,8 +17,8 @@ export default function(conversations, state){
       return;
     }
     common.formatMention(conversation);
-    
-    let { conversations } = state;
+
+    let conversations = state.conversationMap[currentTag];
     let {
       conversationId,
       conversationType,
@@ -31,7 +32,7 @@ export default function(conversations, state){
       );
     });
     if (!utils.isEqual(index, -1)) {
-      let oldConversation = state.conversations[index];
+      let oldConversation = state.conversationMap[currentTag][index];
       let { isActive } = oldConversation;
 
       if (!conversation.conversationTitle) {
@@ -64,10 +65,10 @@ export default function(conversations, state){
 
       utils.extend(conversation, { isActive });
       if (conversation.sortTime > oldConversation.sortTime) {
-        state.conversations.splice(index, 1)[0];
-        state.conversations.unshift(conversation);
+        state.conversationMap[currentTag].splice(index, 1)[0];
+        state.conversationMap[currentTag].unshift(conversation);
       } else {
-        state.conversations.splice(index, 1, utils.clone(conversation));
+        state.conversationMap[currentTag].splice(index, 1, utils.clone(conversation));
       }
     } else {
       let { latestMessage } = conversation;
@@ -78,7 +79,7 @@ export default function(conversations, state){
         f_time = "";
       }
       utils.extend(conversation, { f_time, isShowDrop: false, shortName });
-      state.conversations.unshift(conversation);
+      state.conversationMap[currentTag].unshift(conversation);
     }
     if (conversationTools.isSame(conversation, state.currentConversation)) {
       utils.extend(state.currentConversation, conversation);
