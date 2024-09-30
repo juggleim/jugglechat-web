@@ -7,7 +7,7 @@ import utils from "../../common/utils";
 import group from "../../services/group";
 import ModalConversationGroup from "../../components/modal-groups.vue";
 import emitter from "../../common/emmit";
-import { EVENT_NAME } from "../../common/enum";
+import { EVENT_NAME, CONVERATION_TAG_ID } from "../../common/enum";
 
 const props = defineProps(["isShow"]);
 const emit = defineEmits(["oncancel", "onchange"]);
@@ -48,7 +48,8 @@ function onShowGroupManager(isShow){
 
 watch(() => props.isShow, async () => {
   if(props.isShow){
-    let { tags = [] } = await juggle.getConversationTags();
+    // let { tags = [] } = await juggle.getConversationTags();
+    let tags = [{id: CONVERATION_TAG_ID.ALL, name: '消息'}]
     if(utils.isEqual(state.groups.length, 0)){
       state.groups = common.formatTags(tags);
     }
@@ -62,7 +63,7 @@ watch(() => props.isShow, async () => {
     <div class="jg-conversations-header">
       <ul class="jg-conversations-tools">
         <li></li>
-        <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">设置</li>
+        <!-- <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">设置</li> -->
       </ul>
     </div>
     <ul class="jg-conver-groups">
