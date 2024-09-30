@@ -37,7 +37,8 @@ let GROUP_CHANGE_TYPE = {
   RENAME: 3
 };
 let MSG_NAME = {
-  GROUP_NTF: 'jgd:grpntf'
+  GROUP_NTF: 'jgd:grpntf',
+  FRIEND_NTF: 'jgd:friendntf',
 };
 let REG_EXP = {
   LINK: /(([^:]+:)\/\/(([^:\/\?#]+)(:\d+)?))(\/[^?#]*)?(\?[^#]*)?(#.*)?/g,

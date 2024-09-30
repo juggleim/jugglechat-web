@@ -26,6 +26,7 @@ import Timeline from '../../components/message-timeline.vue';
 import Without from '../../components/message-without.vue';
 import RecallMessage from '../../components/message-recall.vue';
 import GroupNtfMessage from '../../components/message-group-notify.vue';
+import FriendNtfMessage from '../../components/message-friend-notify.vue';
 import utils from "../../common/utils";
 import conversationTools from "./conversation";
 import messageUtils from "../../components/message-utils";
@@ -710,6 +711,7 @@ watch(() => state.content, (val) => {
           <TimelineMessage v-if="message.name == 'notify'" :message="message"></TimelineMessage>
           <RecallMessage v-else-if="message.name == MessageType.RECALL_INFO" :message="message"></RecallMessage>
           <GroupNtfMessage v-else-if="message.name == MSG_NAME.GROUP_NTF" :message="message"></GroupNtfMessage>
+          <FriendNtfMessage v-else-if="message.name == MSG_NAME.FRIEND_NTF" :message="message"></FriendNtfMessage>
           <div class="tny-conent-msg" v-else>
             <span class="tyn-transfer wr" v-if="state.isShowTransfer" :class="{'wr-success-square': message.isSelected, 'wr-square': !message.isSelected}" @click="onSelected(message)"></span>
             <div class="tyn-reply-item" :class="[message.isSender ? 'outgoing' : 'ingoing', state.isShowTransfer ? 'tny-message' : '']"  @click="onSelected(message)">

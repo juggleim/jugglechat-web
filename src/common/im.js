@@ -8,6 +8,7 @@ import Storage from "../common/storage";
 let juggle = JuggleChat.init({ appkey: CONFIG.appkey, upload: OSS });
 juggle.registerMessage([
   { name: MSG_NAME.GROUP_NTF,  isCount: true, isStorage: true },
+  { name: MSG_NAME.FRIEND_NTF,  isCount: true, isStorage: true },
 ])
 
 function getCurrent(){
@@ -66,6 +67,9 @@ function msgShortFormat(message){
   }
   if(utils.isEqual(name, MSG_NAME.GROUP_NTF)){
     shortName = `[群通知]`;
+  }
+  if(utils.isEqual(name, MSG_NAME.FRIEND_NTF)){
+    shortName = `[添加好友通知]`;
   }
   if(utils.isEqual(name, MessageType.RECALL_INFO)){
     let label = isSender ? '你' : sender.name;

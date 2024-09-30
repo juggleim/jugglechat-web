@@ -60,7 +60,7 @@ emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
     f_mentionContent: '',
     shortName: '新朋友',
   }
-  state.conversations.unshift(conversation);
+  state.conversationMap[state.currentTag].unshift(conversation);
   state.currentConversation = conversation;
 });
 function onShowDropmenu(e) {
