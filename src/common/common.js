@@ -249,7 +249,8 @@ function formatTags(tags){
   let groups = utils.map(tags, (tag) => {
     let icon = tagIcons[tag.id] || 'wr-mg-tag';
     let isInner = tag.type > 0;
-    utils.extend(tag, { icon, isActive: false, isInner });
+    let isActive = utils.isEqual(tag.id, 'jg_all');
+    utils.extend(tag, { icon, isActive, isInner });
     return tag;
   });
   return groups;

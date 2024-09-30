@@ -49,7 +49,9 @@ function onShowGroupManager(isShow){
 watch(() => props.isShow, async () => {
   if(props.isShow){
     let { tags = [] } = await juggle.getConversationTags();
-    state.groups = common.formatTags(tags);
+    if(utils.isEqual(state.groups.length, 0)){
+      state.groups = common.formatTags(tags);
+    }
   }
 });
 

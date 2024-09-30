@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 import Conversation from "./conversation.vue";
 import None from "./none.vue";
 import AisdeHeader from "../../components/aside-header.vue";
-import { STORAGE, EVENT_NAME } from "../../common/enum";
+import { STORAGE, EVENT_NAME, CONVERATION_TAG_ID, CONVERSATION_TAG_TYPE } from "../../common/enum";
 import Storage from "../../common/storage";
 import im from "../../common/im";
 import common from "../../common/common";
@@ -19,7 +19,13 @@ import ConversationRightMenu from "../../components/conversation-menu.vue";
 import conversationHandler from "./conversation-handler";
 import conversationTopHandler from "./conversation-top-handler";
 import conversationRemoveHandler from "./conversation-remove-handler";
+import ConversationBody from "./conversation-body.vue";
 
+/* 
+会话列表支持多分组
+1、优先展示全部会话列表，其他分组引用全部会话分组的会话，相同引用只需修改一次
+2、如果全部会话没有包含的会话，单独更新
+*/
 const router = useRouter();
 let {
   currentRoute: {
@@ -39,6 +45,9 @@ let state = reactive({
   dropmenuX: 0,
   isShowConversationGroup: false,
   isShowGroupMemberManager: false,
+  conversationMap: {},
+  currentTag: CONVERATION_TAG_ID.ALL,
+  currentTagType: -1,
 });
 emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   let { type, id, avatar, name} = friend;
@@ -84,22 +93,8 @@ function onHideTopDrop(conversation) {
     item.isShowTopDrop = false;
   });
 }
-function onConversation(item, index) {
-  state.conversations.map((conversation, i) => {
-    let isActive = utils.isEqual(
-      item.conversationId,
-      conversation.conversationId
-    );
-    if (isActive) {
-      conversation.f_mentionContent = "";
-      index = i;
-    }
-    conversation.isActive = isActive;
-    return conversation;
-  });
-  item.isActive = true;
-  state.currentConversation = item;
-  clearUnreadCount(item, index);
+function onConversation(conversation){
+  state.currentConversation = conversation;
 }
 emitter.$on(EVENT_NAME.ON_GROUP_CREATED, ({ conversation }) => {
   state.currentConversation = conversation;
@@ -123,27 +118,22 @@ function updateConversation(conversation) {
   });
 }
 
-function clearUnreadCount(item, index) {
-  let conversation = state.conversations[index];
-  conversation.unreadCount = 0;
-  let { conversationId, conversationType, latestUnreadIndex } = item;
-  juggle.clearUnreadcount({
-    conversationId,
-    conversationType,
-    unreadIndex: latestUnreadIndex
-  });
-}
-
 let user = Storage.get(STORAGE.USER_TOKEN);
 if (utils.isEmpty(user)) {
   router.replace({ name: "Login" });
 }
 
 im.connect(user, {
-  success: _user => {
+  success: async (_user) => {
     console.log("conversation connect success", _user);
+    let { tags = [] } = await juggle.getConversationTags();
+    utils.forEach(tags, (tag) => {
+      let map = {};
+      map[tag.id] = [];
+      utils.extend(state.conversationMap, map);
+    })
     let isFirst = true;
-    getConversations(isFirst);
+    getConversations(isFirst, CONVERATION_TAG_ID.ALL);
     conversationTools.getTops(state);
     utils.extend(state.currentUser, user);
   },
@@ -165,53 +155,60 @@ function onConversationTop({ conversations }){
 function onConversationRemove({ conversations }){
   return conversationRemoveHandler(conversations, state);
 }
-function getConversations(isFirst = false, callback = utils.noop) {
+function getConversations(isFirst = false, tag, callback = utils.noop) {
   let params = {};
   if (!isFirst) {
-    let index = state.conversations.length - 1;
-    let item = state.conversations[index];
+    let index = state.conversationMap[tag].length - 1;
+    let item = state.conversationMap[tag][index];
     params = { time: item.sortTime };
   }
-
-  juggle.getConversations(params).then(result => {
-    let { conversations: _list } = result;
-    console.log("conversatoins", _list);
-    utils.forEach(_list, conversation => {
-      let {
-        latestMessage,
-        conversationPortrait,
-        conversationTitle = ""
-      } = conversation;
-      let { sentTime } = latestMessage;
-      let f_time = common.getConversationTime(sentTime);
-      if (!sentTime) {
-        f_time = "";
-      }
-      conversation = common.formatMention(conversation);
-      let shortName = im.msgShortFormat(latestMessage);
-      conversationPortrait =
-        conversationPortrait || common.getTextAvatar(conversationTitle);
-      utils.extend(conversation, {
-        f_time,
-        isShowDrop: false,
-        isActive: false,
-        shortName,
-        conversationPortrait
+  if(utils.isEqual(tag, CONVERATION_TAG_ID.ALL)){
+    juggle.getConversations(params).then(result => {
+      let { conversations: _list } = result;
+      console.log("conversatoins", _list);
+      utils.forEach(_list, conversation => {
+        let {
+          latestMessage,
+          conversationPortrait,
+          conversationTitle = ""
+        } = conversation;
+        let { sentTime } = latestMessage;
+        let f_time = common.getConversationTime(sentTime);
+        if (!sentTime) {
+          f_time = "";
+        }
+        conversation = common.formatMention(conversation);
+        let shortName = im.msgShortFormat(latestMessage);
+        conversationPortrait =
+          conversationPortrait || common.getTextAvatar(conversationTitle);
+        utils.extend(conversation, {
+          f_time,
+          isShowDrop: false,
+          isActive: false,
+          shortName,
+          conversationPortrait
+        });
+        let index = utils.find(state.conversationMap[tag], item => {
+          return (
+            utils.isEqual(item.conversationType, conversation.conversationType) &&
+            utils.isEqual(item.conversationId, conversation.conversationId)
+          );
+        });
+        if (utils.isEqual(index, -1)) {
+          state.conversationMap[tag].push(conversation);
+        } else {
+          state.conversationMap[tag].splice(index, 1, conversation);
+        }
       });
-      let index = utils.find(state.conversations, item => {
-        return (
-          utils.isEqual(item.conversationType, conversation.conversationType) &&
-          utils.isEqual(item.conversationId, conversation.conversationId)
-        );
-      });
-      if (utils.isEqual(index, -1)) {
-        state.conversations.push(conversation);
-      } else {
-        state.conversations.splice(index, 1, conversation);
-      }
+      callback();
     });
-    callback();
-  });
+  }
+  
+}
+
+function onLoadMore({ tag, callback }){
+  let isFirst = false;
+  getConversations(isFirst, tag, callback);
 }
 
 conversationTools.insertTempConversation(query, state);
@@ -240,7 +237,6 @@ function onSetConversationTop(item, isTop) {
 function onConversationDisturb(item){
   return conversationTools.conversationDisturb(item);
 }
-
 function onNavChat(item) {
   juggle.getConversation(item).then(({ conversation }) => {
     let {
@@ -275,27 +271,11 @@ function onNavChat(item) {
     }
     conversation = utils.clone(conversation);
     state.conversations.unshift(conversation);
-    onConversation(conversation, 0);
+    onConversation(conversation);
+    //TODO: 切换值 all 分组
   });
 }
 let context = getCurrentInstance();
-
-let canscroll = true;
-nextTick(() => {
-  let { conversations } = context.refs;
-  conversations.addEventListener("scroll", () => {
-    let scrollTop = conversations.scrollTop;
-    let scrollHeight = conversations.scrollHeight;
-    let rectHeight = conversations.getBoundingClientRect().height;
-    let isNeedLoad = scrollHeight - scrollTop - rectHeight < 100;
-    if (isNeedLoad && canscroll) {
-      let isFirst = false;
-      getConversations(isFirst, () => {
-        canscroll = true;
-      });
-    }
-  });
-});
 
 function onShowConversationGroup(){
   let { isShowConversationGroup } = state;
@@ -304,8 +284,9 @@ function onShowConversationGroup(){
 function onShowGroupMemberManager(isShow){
   state.isShowGroupMemberManager = isShow;
 }
-function onGroupChange(item){
-  console.log(item)
+function onGroupChange({ item }){
+  state.currentTag = item.id;
+  state.currentTagType = item.type;
 }
 </script>
 <template>
@@ -316,12 +297,14 @@ function onGroupChange(item){
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup" @onchange="onGroupChange"></ConversationGroup>
         <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']" >
+
           <div class="jg-conversations-header" v-if="!juggle.isDesktop()">
             <ul class="jg-conversations-tools jg-convers-tools">
               <li class="jg-conversation-tool wr" :class="[state.isShowConversationGroup ? 'wr-menu-left' : 'wr-menu-right']" @click="onShowConversationGroup()">消息</li>
-              <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)">会话设置</li>
+              <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)" v-if="state.currentTagType == CONVERSATION_TAG_TYPE.CUSTOM">会话设置</li>
             </ul>
           </div>
+
           <div class="tyn-aside-toplist" v-if="state.tops.length">
             <div
               class="tyn-aside-topitem"
@@ -350,79 +333,19 @@ function onGroupChange(item){
               </ul>
             </div>
           </div>
-          <div class="tyn-aside-body" ref="conversations">
-            <div class="tab-content">
-              <div class="tab-pane show active">
-                <ul class="tyn-aside-list">
-                  <li
-                    class="tyn-aside-item js-toggle-main"
-                    v-for="(item, index) in state.conversations"
-                    :class="{ 'active': item.isActive }"
-                    @click="onConversation(item, index)"
-                    :index="index"
-                    :uid="item.conversationType + '_' + item.conversationId"
-                    @click.right.prevent="onShowDropmenu"
-                  >
-                    <div class="tyn-media-group">
-                      <div class="tyn-media tyn-size-lg">
-                        <div
-                          class="tyn-avatar tyn-s-avatar position-relative tyn-circle"
-                          :style="{ 'background-image': 'url(' + item.conversationPortrait + ')' }"
-                        >
-                          <div
-                            class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
-                            v-if="item.unreadCount > 0 && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
-                          >{{ item.unreadCount }}</div>
-                          <div
-                            class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
-                            v-if="item.unreadCount == 0 && item.unreadTag && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
-                          >1</div>
-                          <div class="position-absolute rounded-pill top-1 end-0 mt-n2 me-n1 wr wr-dot text-danger conver-dot" v-if="((item.unreadCount == 0 && item.unreadTag) || item.unreadCount > 0) && utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></div>
-                        </div>
-                      </div>
-                      <div class="tyn-media-col">
-                        <div class="tyn-media-row jg-conversation-title">
-                          <h6 class="name">{{ item.conversationTitle }}</h6>
-                          <span class="wr wr-soundoff jg-conver-mute" v-if="utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></span>
-                          <span class="typing" v-if="item.isTyping">typing ...</span>
-                        </div>
-                        <div class="tyn-media-row has-dot-sap between">
-                          <p
-                            class="content wr"
-                            v-if="item.draft"
-                            :class="{ 'wr-modify-pen content-draft': item.draft }"
-                          >
-                            {{
-                            item.draft }}
-                          </p>
-                          <p class="content" v-else>
-                            <span
-                              class="text-danger lastmsg-mention"
-                              v-if="item.f_mentionContent != ''"
-                            >{{ item.f_mentionContent }}</span>
-                            {{ item.shortName }}
-                          </p>
-                          <span class="meta">{{ item.f_time }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <ConversationRightMenu :is-show="item.isShowDrop" :conversation="item" :index="index" 
-                      @onhide="onHideDrop" :x="state.dropmenuX"
-                      @onmark="onMarkUnread"
-                      @ontop="onSetConversationTop"
-                      @ondisturb="onConversationDisturb"
-                      @onremove="onRemoveConversation"
-                      @onclearmsg="onClearMessages"
-                      >
-                    </ConversationRightMenu>
-                  </li>
-                </ul>
-                <div class="tyn-aside-row text-center" v-if="state.conversations.length == 0">
-                  <h6>没有记录</h6>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ConversationBody v-for="(list, tag) in state.conversationMap"
+            :style="[utils.isEqual(tag, state.currentTag) ? 'display: block;' : 'display: none;']"
+            :conversations="list"
+            :tag="tag"
+            @onloadmore="onLoadMore"
+            @onconversation="onConversation"
+            @onhide="onHideDrop" 
+            @onmark="onMarkUnread"
+            @ontop="onSetConversationTop"
+            @ondisturb="onConversationDisturb"
+            @onremove="onRemoveConversation"
+            @onclearmsg="onClearMessages">
+          </ConversationBody>
         </div>
       </div>
     </div>

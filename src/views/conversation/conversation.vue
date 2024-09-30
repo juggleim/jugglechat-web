@@ -729,7 +729,6 @@ watch(() => state.content, (val) => {
           </div>
         </div>
       </div>
-      <!-- .tyn-reply -->
     </div>
     <div class="tyn-chat-form">
       <Mention :is-show="state.isShowMention" :members="state.mentionMembers" @onselected="onMentionSelected" :index="state.selectMentionIndex"/>

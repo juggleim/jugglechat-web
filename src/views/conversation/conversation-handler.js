@@ -16,6 +16,7 @@ export default function(conversations, state){
       return;
     }
     common.formatMention(conversation);
+    
     let { conversations } = state;
     let {
       conversationId,

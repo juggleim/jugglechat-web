@@ -1317,7 +1317,8 @@
   justify-content: space-between;
 }
 .jg-convers-tools{
-  padding: 0 0;
+  padding: 0;
+  padding-left: 10px;
 }
 .jg-conversation-tool{
   margin-right: 10px;
