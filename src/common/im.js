@@ -5,7 +5,8 @@ import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
 import emitter from "../common/emmit";
 import Storage from "../common/storage";
 
-let juggle = JuggleChat.init({ appkey: CONFIG.appkey, upload: OSS });
+let option = { appkey: CONFIG.appkey, upload: OSS, navList: CONFIG.navList };
+let juggle = JuggleChat.init(option);
 juggle.registerMessage([
   { name: MSG_NAME.GROUP_NTF,  isCount: true, isStorage: true },
   { name: MSG_NAME.FRIEND_NTF,  isCount: true, isStorage: true },
