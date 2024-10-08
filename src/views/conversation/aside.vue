@@ -243,9 +243,10 @@ watch(() => props.conversation, (conversation) => {
 });
 watch(() => props.isShow, () => {
   utils.extend(state, { members: props.members });
+  if(props.isShow){
+    onMsgMenuTab(state.msgMenus[0]);
+  }
 });
-onMsgMenuTab(state.msgMenus[0]);
-// getMembers(props.conversation);
 </script>
 
 <template>
