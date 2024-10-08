@@ -14,34 +14,34 @@ let { ConversationType } = juggle;
 let state = reactive({
   conversations: [],
   selectList:  [],
+  addList: {},
+  removeList: {},
 });
 let user = Storage.get(STORAGE.USER_TOKEN);
-
-function onSelected(item){
-  utils.map(state.list, (_item) => {
-    _item.checked = false;
-    if(utils.isEqual(item.time, _item.time)){
-      _item.checked = !item.checked;
-    }
-  })
-}
 
 function onCancel() {
   emit('oncancel', {});
 }
 
 function onConfirm() {
-  let item = utils.filter(state.list, (item) => {
-    return item.checked;
-  })[0];
-  emit('onconfirm', item);
+  let { removeList, addList } = state;
+  let removes = [];
+  utils.forEach(removeList, (conversation) => {
+    removes.push(conversation);
+  });
+
+  let adds = [];
+  utils.forEach(addList, (conversation) => {
+    adds.push(conversation);
+  });
+  emit('onconfirm', { adds, removes, tag: props.tag });
 }
 
 function getConversations(isFirst = false, callback = utils.noop) {
   let params = {};
   if (!isFirst) {
     let index = state.conversations.length - 1;
-    let item = state.conversations[index];
+    let item = state.conversations[index] || { sortTime: 0 };
     params = { time: item.sortTime };
   }
   let { conversations } = state;
@@ -52,10 +52,12 @@ function getConversations(isFirst = false, callback = utils.noop) {
   });
 }
 
+let isCodeScroll = false;
 function scrollBottom(name) {
   nextTick(() => {
     let node = context.refs[name];
     if (node) {
+      isCodeScroll = true;
       node.scrollTop = node.scrollHeight;
     }
   });
@@ -70,6 +72,11 @@ nextTick(() => {
     let rectHeight = conversations.getBoundingClientRect().height;
     let isNeedLoad = scrollHeight - scrollTop - rectHeight < 100;
     if (isNeedLoad && canscroll) {
+      if(isCodeScroll){
+        isCodeScroll = false;
+        return;
+      }
+      canscroll = false;
       let isFirst = false;
       getConversations(isFirst, () => {
         canscroll = true;
@@ -87,28 +94,69 @@ nextTick(() => {
     let rectHeight = selectList.getBoundingClientRect().height;
     let isNeedLoad = scrollHeight - scrollTop - rectHeight < 100;
     if (isNeedLoad && selectCanscroll) {
+      if(isCodeScroll){
+        isCodeScroll = false;
+        return;
+      }
+      selectCanscroll = false;
       let isFirst = false;
-      getConversations(isFirst, () => {
+      getSelectConversations(isFirst, () => {
         selectCanscroll = true;
       });
     }
   });
 });
 
+function getSelectConversations(isFirst = false, callback = utils.noop) {
+  let params = {};
+  if (!isFirst) {
+    let index = state.selectList.length - 1;
+    let item = state.selectList[index] || { sortTime: 0 };
+    params = { time: item.sortTime };
+  }
+  utils.extend(params, { tag: props.tag.id });
+  let { selectList, conversations } = state;
+  juggle.getConversations(params).then(result => {
+    let { conversations: list } = result;
+    state.selectList = selectList.concat(list);
+    utils.forEach(list, (item) => {
+      let index = utils.find(conversations, (conversation) => {
+        return utils.isEqual(conversation.conversationId, item.conversationId)
+      });
+      if(index > -1){
+        conversations.splice(index, 1);
+      }
+    })
+    callback();
+  });
+}
+function getId(conversation){
+  return `${conversation.conversationType}_${conversation.conversationId}`;
+}
 function onClick(item){
+  let { addList, removeList } = state;
   let { isRemove, index, conversation } = item;
+  let key = getId(conversation);
+
   if(isRemove){
     state.selectList.splice(index, 1);
     state.conversations.push(conversation);
+    removeList[key] = conversation;
     return scrollBottom('conversations');
   }
+
+  addList[key] = conversation;
   state.conversations.splice(index, 1);
   state.selectList.push(conversation);
   scrollBottom('selectList');
 }
 watch(() => props.isShow, () => {
   if(props.isShow){
-    getConversations(true);
+    getConversations(true, () => {
+      getSelectConversations(true);
+    });
+  }else{
+    utils.extend(state, { selectList: [], conversations: [], addList: {}, removeList: {} })
   }
 });
 </script>

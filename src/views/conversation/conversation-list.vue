@@ -46,8 +46,7 @@ let state = reactive({
   isShowConversationGroup: false,
   isShowGroupMemberManager: false,
   conversationMap: {},
-  currentTag: CONVERATION_TAG_ID.ALL,
-  currentTagType: -1,
+  currentTag: { id: CONVERATION_TAG_ID.ALL },
 });
 emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   let { type, id, avatar, name} = friend;
@@ -60,7 +59,7 @@ emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
     f_mentionContent: '',
     shortName: '新朋友',
   }
-  state.conversationMap[state.currentTag].unshift(conversation);
+  state.conversationMap[state.currentTag.id].unshift(conversation);
   state.currentConversation = conversation;
 });
 function onShowDropmenu(e) {
@@ -295,17 +294,70 @@ function onShowGroupMemberManager(isShow){
   state.isShowGroupMemberManager = isShow;
 }
 function onGroupChange({ item }){
-  state.currentTag = item.id;
-  state.currentTagType = item.type;
+  state.currentTag = item;
   let isFirst = true;
   getConversations(isFirst, item.id);
 }
+function onTagConversationChanged({ removes, adds, tag }){
+  let tagId = tag.id;
+  if(adds.length > 0){
+    let params = {
+      id: tagId,
+      conversations: adds
+    }
+    juggle.addConversationsToTag(params);
+
+    let conversations = state.conversationMap[tagId] || [];
+
+    adds = utils.map(adds, (item) => {
+      let { latestMessage } = item;
+      common.formatMention(item);
+      let shortName = im.msgShortFormat(latestMessage);
+      let { sentTime } = latestMessage;
+      let f_time = common.getConversationTime(sentTime);
+      if (!sentTime) {
+        f_time = "";
+      }
+      utils.extend(item, {
+        f_time,
+        isShowDrop: false,
+        isActive: false,
+        shortName
+      });
+      return item;
+    })
+
+    let list = conversations.concat(adds);
+    state.conversationMap[tagId] = list.sort((a, b) => {
+      return a.sortTime < b.sortTime;
+    })
+  }
+
+  if(removes.length > 0){
+    let params = {
+      id: tagId,
+      conversations: removes
+    }
+    juggle.removeConversationsFromTag(params);
+    let conversations = state.conversationMap[tagId] || [];
+    utils.forEach(removes, (item) => {
+      let index = utils.find(conversations, (conversation) => {
+        return utils.isEqual(conversation.id, item.id);
+      });
+      if(index > -1){
+        conversations.splice(index, 1);
+      }
+    });
+  }
+  state.isShowGroupMemberManager = false;
+}
+
 </script>
 <template>
   <div class="tyn-content">
     <div class="tyn-aside">
       <AisdeHeader @onnav="onNavChat"></AisdeHeader>
-      <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)"></ModalGroupMember>
+      <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)" @onconfirm="onTagConversationChanged" :tag="state.currentTag"></ModalGroupMember>
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup" @onchange="onGroupChange"></ConversationGroup>
         <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']" >
@@ -313,7 +365,7 @@ function onGroupChange({ item }){
           <div class="jg-conversations-header" v-if="!juggle.isDesktop()">
             <ul class="jg-conversations-tools jg-convers-tools">
               <li class="jg-conversation-tool wr" :class="[state.isShowConversationGroup ? 'wr-menu-left' : 'wr-menu-right']" @click="onShowConversationGroup()">消息</li>
-              <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)" v-if="state.currentTagType == CONVERSATION_TAG_TYPE.CUSTOM">会话设置</li>
+              <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)" v-if="state.currentTag.type == CONVERSATION_TAG_TYPE.CUSTOM">会话设置</li>
             </ul>
           </div>
 
@@ -346,7 +398,7 @@ function onGroupChange({ item }){
             </div>
           </div>
           <ConversationBody v-for="(list, tag) in state.conversationMap"
-            :style="[utils.isEqual(tag, state.currentTag) ? 'display: block;' : 'display: none;']"
+            :style="[utils.isEqual(tag, state.currentTag.id) ? 'display: block;' : 'display: none;']"
             :conversations="list"
             :tag="tag"
             @onloadmore="onLoadMore"

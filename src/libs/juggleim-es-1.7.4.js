@@ -1,5 +1,5 @@
 /*
-* JuggleChat.js v1.7.3
+* JuggleChat.js v1.7.4
 * (c) 2022-2024 JuggleChat
 * Released under the MIT License.
 */
@@ -999,9 +999,6 @@ let FUNC_PARAM_CHECKER = {
   REMOVE_CONVERSATION_TAG: [{
     name: 'id',
     type: 'String'
-  }, {
-    name: 'name',
-    type: 'String'
   }],
   ADD_CONVERSATION_TO_TAG: [{
     name: 'id',
@@ -1075,6 +1072,7 @@ let COMMAND_TOPICS = {
   REMOVE_MSG_REACTION: 'del_msg_exset',
   CONVERSATION_TAG_ADD: 'tag_add_convers',
   CONVERSATION_TAG_REMOVE: 'tag_del_convers',
+  TAG_REMOVE: 'del_user_conver_tags',
   CONVERSATION_TAG_QUERY: 'qry_user_conver_tags'
 };
 let NOTIFY_TYPE = {
@@ -4924,9 +4922,17 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "int32",
             id: 3
           },
+          targetId: {
+            type: "string",
+            id: 5
+          },
           channelType: {
             type: "ChannelType",
-            id: 4
+            id: 6
+          },
+          tag: {
+            type: "string",
+            id: 7
           }
         }
       },
@@ -5039,6 +5045,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           unreadTag: {
             type: "int32",
             id: 17
+          },
+          tag: {
+            type: "string",
+            id: 18
           }
         }
       },
@@ -7038,7 +7048,8 @@ function getQueryBody({
       count,
       time,
       order,
-      conversationType
+      conversationType,
+      tag
     } = data;
     targetId = userId;
     let codec = $root.lookup('codec.QryConversationsReq');
@@ -7050,6 +7061,11 @@ function getQueryBody({
     if (!utils.isUndefined(conversationType)) {
       utils.extend(content, {
         channelType: conversationType
+      });
+    }
+    if (tag) {
+      utils.extend(content, {
+        tag
       });
     }
     let message = codec.create(content);
@@ -7147,7 +7163,8 @@ function getQueryBody({
     let codec = $root.lookup('codec.QryTotalUnreadCountReq');
     let {
       conversationTypes = [],
-      ignoreConversations = []
+      ignoreConversations = [],
+      tag
     } = data;
     let ingores = [];
     utils.forEach(ignoreConversations, ({
@@ -7163,6 +7180,11 @@ function getQueryBody({
       channelTypes: conversationTypes,
       ignoreConvers: ingores
     };
+    if (tag) {
+      utils.extend(filter, {
+        tag
+      });
+    }
     let message = codec.create({
       filter: filter
     });
@@ -7657,6 +7679,24 @@ function getQueryBody({
       tag: id,
       tagName: name,
       convers: convers
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.TAG_REMOVE, topic)) {
+    let {
+      userId,
+      tag
+    } = data;
+    let tags = utils.isArray(tag) ? tag : [tag];
+    tags = utils.map(tags, tag => {
+      return {
+        tag: tag.id
+      };
+    });
+    let codec = $root.lookup('codec.UserConverTags');
+    let message = codec.create({
+      tags: tags
     });
     targetId = userId;
     buffer = codec.encode(message).finish();
@@ -8167,7 +8207,8 @@ function Decoder(cache, io) {
         latestReadIndex,
         latestUnreadIndex,
         isTop,
-        unreadTag
+        unreadTag,
+        tag
       } = conversation;
       if (!msg) {
         msg = {
@@ -8274,6 +8315,7 @@ function Decoder(cache, io) {
         latestReadIndex,
         latestUnreadIndex,
         unreadTag,
+        tag: tag || '',
         isTop: !!isTop
       };
     });
@@ -9473,7 +9515,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.3';
+let VERSION = '1.7.4';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -11028,7 +11070,8 @@ function Conversation$1 (io, emitter) {
       }
       let {
         conversationTypes = [],
-        ignoreConversations
+        ignoreConversations,
+        tag
       } = params;
       conversationTypes = utils.isArray(conversationTypes) ? conversationTypes : [conversationTypes];
       if (!utils.isEmpty(ignoreConversations)) {
@@ -11044,7 +11087,8 @@ function Conversation$1 (io, emitter) {
         topic: COMMAND_TOPICS.GET_UNREAD_TOTLAL_CONVERSATION,
         userId,
         conversationTypes,
-        ignoreConversations
+        ignoreConversations,
+        tag
       };
       io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         count
@@ -11360,7 +11404,7 @@ function Conversation$1 (io, emitter) {
         id: userId
       } = io.getCurrentUser();
       let data = {
-        topic: COMMAND_TOPICS.CONVERSATION_TAG_REMOVE,
+        topic: COMMAND_TOPICS.TAG_REMOVE,
         userId,
         tag: _tag
       };
@@ -11431,6 +11475,15 @@ function Conversation$1 (io, emitter) {
       let {
         id: userId
       } = io.getCurrentUser();
+      let conversations = utils.map(_tag.conversations, conversation => {
+        return {
+          conversationId: conversation.conversationId,
+          conversationType: conversation.conversationType
+        };
+      });
+      _tag = utils.extend(_tag, {
+        conversations
+      });
       let data = {
         topic: COMMAND_TOPICS.CONVERSATION_TAG_ADD,
         userId,
@@ -11464,6 +11517,15 @@ function Conversation$1 (io, emitter) {
         return reject(error);
       }
       let _tag = utils.clone(tag);
+      let conversations = utils.map(_tag.conversations, conversation => {
+        return {
+          conversationId: conversation.conversationId,
+          conversationType: conversation.conversationType
+        };
+      });
+      _tag = utils.extend(_tag, {
+        conversations
+      });
       let {
         id: userId
       } = io.getCurrentUser();

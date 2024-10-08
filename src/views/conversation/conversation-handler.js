@@ -18,7 +18,7 @@ export default function(conversations, state){
     }
     common.formatMention(conversation);
 
-    let conversations = state.conversationMap[currentTag];
+    let conversations = state.conversationMap[currentTag.id];
     let {
       conversationId,
       conversationType,
@@ -32,7 +32,7 @@ export default function(conversations, state){
       );
     });
     if (!utils.isEqual(index, -1)) {
-      let oldConversation = state.conversationMap[currentTag][index];
+      let oldConversation = state.conversationMap[currentTag.id][index];
       let { isActive } = oldConversation;
 
       if (!conversation.conversationTitle) {
@@ -65,10 +65,10 @@ export default function(conversations, state){
 
       utils.extend(conversation, { isActive });
       if (conversation.sortTime > oldConversation.sortTime) {
-        state.conversationMap[currentTag].splice(index, 1)[0];
-        state.conversationMap[currentTag].unshift(conversation);
+        state.conversationMap[currentTag.id].splice(index, 1)[0];
+        state.conversationMap[currentTag.id].unshift(conversation);
       } else {
-        state.conversationMap[currentTag].splice(index, 1, utils.clone(conversation));
+        state.conversationMap[currentTag.id].splice(index, 1, utils.clone(conversation));
       }
     } else {
       let { latestMessage } = conversation;
@@ -79,7 +79,7 @@ export default function(conversations, state){
         f_time = "";
       }
       utils.extend(conversation, { f_time, isShowDrop: false, shortName });
-      state.conversationMap[currentTag].unshift(conversation);
+      state.conversationMap[currentTag.id].unshift(conversation);
     }
     if (conversationTools.isSame(conversation, state.currentConversation)) {
       utils.extend(state.currentConversation, conversation);
