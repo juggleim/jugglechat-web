@@ -163,48 +163,57 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
     let item = state.conversationMap[tag][index];
     params = { time: item.sortTime };
   }
+  utils.extend(params, { tag });
+
+  //临时代码：和服务端约定获取全部规则后可删除
   if(utils.isEqual(tag, CONVERATION_TAG_ID.ALL)){
-    juggle.getConversations(params).then(result => {
-      let { conversations: _list } = result;
-      console.log("conversatoins", _list);
-      utils.forEach(_list, conversation => {
-        let {
-          latestMessage,
-          conversationPortrait,
-          conversationTitle = ""
-        } = conversation;
-        let { sentTime } = latestMessage;
-        let f_time = common.getConversationTime(sentTime);
-        if (!sentTime) {
-          f_time = "";
-        }
-        conversation = common.formatMention(conversation);
-        let shortName = im.msgShortFormat(latestMessage);
-        conversationPortrait =
-          conversationPortrait || common.getTextAvatar(conversationTitle);
-        utils.extend(conversation, {
-          f_time,
-          isShowDrop: false,
-          isActive: false,
-          shortName,
-          conversationPortrait
-        });
-        let index = utils.find(state.conversationMap[tag], item => {
-          return (
-            utils.isEqual(item.conversationType, conversation.conversationType) &&
-            utils.isEqual(item.conversationId, conversation.conversationId)
-          );
-        });
-        if (utils.isEqual(index, -1)) {
-          state.conversationMap[tag].push(conversation);
-        } else {
-          state.conversationMap[tag].splice(index, 1, conversation);
-        }
-      });
-      callback();
-    });
+    params.tag = '';
   }
-  
+  juggle.getConversations(params).then(result => {
+    let { conversations: _list } = result;
+    console.log("conversatoins", _list);
+    utils.forEach(_list, conversation => {
+      let {
+        latestMessage,
+        conversationPortrait,
+        conversationTitle = ""
+      } = conversation;
+      let { sentTime } = latestMessage;
+      let f_time = common.getConversationTime(sentTime);
+      if (!sentTime) {
+        f_time = "";
+      }
+      conversation = common.formatMention(conversation);
+      let shortName = im.msgShortFormat(latestMessage);
+      conversationPortrait =
+        conversationPortrait || common.getTextAvatar(conversationTitle);
+      utils.extend(conversation, {
+        f_time,
+        isShowDrop: false,
+        isActive: false,
+        shortName,
+        conversationPortrait
+      });
+      if(!state.conversationMap[tag]){
+        state.conversationMap[tag] = [];
+      }
+      let index = utils.find(state.conversationMap[tag], item => {
+        return (
+          utils.isEqual(item.conversationType, conversation.conversationType) &&
+          utils.isEqual(item.conversationId, conversation.conversationId)
+        );
+      });
+      if (utils.isEqual(index, -1)) {
+        state.conversationMap[tag].push(conversation);
+      } else {
+        state.conversationMap[tag].splice(index, 1, conversation);
+      }
+    });
+    if(utils.isEmpty(_list)){
+      state.conversationMap[tag] = _list;
+    }
+    callback();
+  });
 }
 
 function onLoadMore({ tag, callback }){
@@ -288,6 +297,8 @@ function onShowGroupMemberManager(isShow){
 function onGroupChange({ item }){
   state.currentTag = item.id;
   state.currentTagType = item.type;
+  let isFirst = true;
+  getConversations(isFirst, item.id);
 }
 </script>
 <template>

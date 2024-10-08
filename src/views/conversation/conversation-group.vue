@@ -48,8 +48,8 @@ function onShowGroupManager(isShow){
 
 watch(() => props.isShow, async () => {
   if(props.isShow){
-    // let { tags = [] } = await juggle.getConversationTags();
-    let tags = [{id: CONVERATION_TAG_ID.ALL, name: '消息'}]
+    let { tags = [] } = await juggle.getConversationTags();
+    // let tags = [{id: CONVERATION_TAG_ID.ALL, name: '消息'}];
     if(utils.isEqual(state.groups.length, 0)){
       state.groups = common.formatTags(tags);
     }
@@ -63,7 +63,7 @@ watch(() => props.isShow, async () => {
     <div class="jg-conversations-header">
       <ul class="jg-conversations-tools">
         <li></li>
-        <!-- <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">设置</li> -->
+        <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">设置</li>
       </ul>
     </div>
     <ul class="jg-conver-groups">

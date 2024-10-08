@@ -4,7 +4,7 @@ import common from "../common/common";
 import { reactive, watch, nextTick, getCurrentInstance } from "vue";
 import utils from "../common/utils";
 import Storage from "../common/storage";
-import { STORAGE, EVENT_NAME } from "../common/enum";
+import { STORAGE, EVENT_NAME, CONVERSATION_TAG_TYPE } from "../common/enum";
 import emitter from "../common/emmit";
 
 const props = defineProps(["isShow"]);
@@ -38,7 +38,7 @@ function onConfirm() {
 }
 
 function onAdd(){
-  let tag = { id: `T${Date.now()}`, name: '', isInner: false }
+  let tag = { id: `T${Date.now()}`, name: '', isInner: false, type: CONVERSATION_TAG_TYPE.CUSTOM }
   state.list.push(tag)
   scrollBottom();
 }

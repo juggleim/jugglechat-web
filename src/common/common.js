@@ -246,12 +246,23 @@ function formatTags(tags){
     jg_unread: 'wr-mg-unread',
     jg_group: 'wr-mg-group',
   };
-  let groups = utils.map(tags, (tag) => {
-    let icon = tagIcons[tag.id] || 'wr-mg-tag';
-    let isInner = tag.type > 0;
-    let isActive = utils.isEqual(tag.id, 'jg_all');
-    utils.extend(tag, { icon, isActive, isInner });
-    return tag;
+  // let groups = utils.map(tags, (tag) => {
+  //   let icon = tagIcons[tag.id] || 'wr-mg-tag';
+  //   let isInner = tag.type > 0;
+  //   let isActive = utils.isEqual(tag.id, 'jg_all');
+  //   utils.extend(tag, { icon, isActive, isInner });
+  //   return tag;
+  // });
+
+  //暂时只保留全部会话和自定义会话，和服务端约定后可删除
+  let groups = [{ id: 'jg_all', name: '消息', icon: 'wr-mg-msg', isActive: true, isInner: true}];
+  utils.forEach(tags, (tag) => {
+    if(!tagIcons[tag.id]){
+      let icon = 'wr-mg-tag';
+      let isInner = tag.type > 0;
+      utils.extend(tag, { icon, isActive: false, isInner });
+      groups.push(tag);
+    }
   });
   return groups;
 }
