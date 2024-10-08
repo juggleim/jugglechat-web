@@ -31,20 +31,21 @@ juggle.getMessageReadDetails(props.message).then((result) => {
 
 <template>
   <div class="dropdown-menu dropdown-menu-xs tyn-group-dropdown show fadeinx " :class="[state.isTop ? 'tyn-group-dropdown-top' : 'tyn-group-dropdown-bottom']">
-    <ul class="tyn-list-links tyn-group-reads-links">
-      <li>
-        <h6 class="name">{{ state.reads.length }} 人已读</h6>
-      </li>
-      <li v-for="read in state.reads">
-        <Member :member="read.member"></Member>
-      </li>
-    </ul>
-    <ul class="tyn-list-links tyn-group-reads-links">
-      <li>
-        <h6 class="name">{{ state.unreads.length }} 人未读</h6>
-      </li>
-      <li v-for="unread in state.unreads">
+    <div class="tyn-group-read-box">
+      <h6 class="name">{{ state.reads.length }} 人已读</h6>
+      <ul class="tyn-list-links tyn-group-reads-links">
+        <li v-for="read in state.reads">
+          <Member :member="read.member"></Member>
+        </li>
+      </ul>
+    </div>
+
+    <div class="tyn-group-read-box">
+      <h6 class="name">{{ state.unreads.length }} 人未读</h6>
+      <ul class="tyn-list-links tyn-group-reads-links">
+        <li v-for="unread in state.unreads">
         <Member :member="unread.member"></Member>
       </li>
-    </ul>
+      </ul>
+    </div>
 </div></template>

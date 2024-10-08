@@ -5,7 +5,7 @@ import utils from "../common/utils";
 import Storage from "../common/storage";
 import { STORAGE } from "../common/enum";
 import Conversation from "./conversation.vue";
-const props = defineProps(["isShow"]);
+const props = defineProps(["isShow", "tag"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 let context = getCurrentInstance();
 
@@ -78,6 +78,23 @@ nextTick(() => {
   });
 });
 
+let selectCanscroll = true;
+nextTick(() => {
+  let { selectList } = context.refs;
+  selectList.addEventListener("scroll", () => {
+    let scrollTop = selectList.scrollTop;
+    let scrollHeight = selectList.scrollHeight;
+    let rectHeight = selectList.getBoundingClientRect().height;
+    let isNeedLoad = scrollHeight - scrollTop - rectHeight < 100;
+    if (isNeedLoad && selectCanscroll) {
+      let isFirst = false;
+      getConversations(isFirst, () => {
+        selectCanscroll = true;
+      });
+    }
+  });
+});
+
 function onClick(item){
   let { isRemove, index, conversation } = item;
   if(isRemove){
@@ -101,7 +118,7 @@ watch(() => props.isShow, () => {
       <div class="modal-content border-0">
         <div class="modal-body">
           <div class="jg-modal-header">
-            <div class="title">单聊分组</div>
+            <div class="title">{{ props.tag.name }}</div>
           </div>
           <div class="tyn-media-list">
             <div class="jg-group-conver-box">
