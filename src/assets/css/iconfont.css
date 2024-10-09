@@ -5,7 +5,8 @@
   url('//at.alicdn.com/t/c/font_4376445_wm6t0a5uwq.ttf?t=1727433807115') format('truetype');
 }
 
-.wr {
+.wr::before,
+.wr::after{
   font-family: 'wr' !important;
   font-size: 14px;
   font-style: normal;

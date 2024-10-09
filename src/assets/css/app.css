@@ -959,6 +959,9 @@ dl {
   background: #FFF;
   border-radius: 10px;
   padding: 0 12px;
+  height: 14px;
+  line-height: 14px;
+  display: inline-block;
 }
 .tyn-reply-avatar {
   margin-right: var(--avatar-gap);
