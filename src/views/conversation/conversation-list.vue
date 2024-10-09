@@ -208,7 +208,7 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
         state.conversationMap[tag].splice(index, 1, conversation);
       }
     });
-    if(utils.isEmpty(_list)){
+    if(utils.isEmpty(_list) && !state.conversationMap[tag]){
       state.conversationMap[tag] = _list;
     }
     callback();
