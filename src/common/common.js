@@ -255,7 +255,7 @@ function formatTags(tags){
   // });
 
   //暂时只保留全部会话和自定义会话，和服务端约定后可删除
-  let groups = [{ id: 'jg_all', name: '消息', icon: 'wr-mg-msg', isActive: true, isInner: true}];
+  let groups = [];
   utils.forEach(tags, (tag) => {
     if(!tagIcons[tag.id]){
       let icon = 'wr-mg-tag';
@@ -264,6 +264,7 @@ function formatTags(tags){
       groups.push(tag);
     }
   });
+  groups.unshift({ id: 'jg_all', name: '消息', icon: 'wr-mg-msg', isActive: true, isInner: true})
   return groups;
 }
 

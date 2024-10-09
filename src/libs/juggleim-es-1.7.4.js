@@ -4754,6 +4754,11 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             rule: "repeated",
             type: "MsgExtItem",
             id: 26
+          },
+          converTags: {
+            rule: "repeated",
+            type: "ConverTag",
+            id: 27
           }
         }
       },
@@ -5046,9 +5051,18 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "int32",
             id: 17
           },
-          tag: {
+          latestReadMsgId: {
             type: "string",
             id: 18
+          },
+          latestReadMsgTime: {
+            type: "int64",
+            id: 19
+          },
+          converTags: {
+            rule: "repeated",
+            type: "ConverTag",
+            id: 20
           }
         }
       },
@@ -5324,6 +5338,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             rule: "repeated",
             type: "SimpleConversation",
             id: 2
+          },
+          tag: {
+            type: "string",
+            id: 4
           }
         }
       },
@@ -6408,6 +6426,7 @@ function ConversationUtils() {
         mentions,
         undisturbType
       } = item;
+      let tags = latestMessage.tags;
       let messageName = latestMessage.name;
       let msgFlag = formatter.toMsg(latestMessage.flags) || {};
       let _isSender = latestMessage.isSender;
@@ -6465,6 +6484,11 @@ function ConversationUtils() {
       utils.extend(conversation, {
         draft
       });
+      if (!utils.isEmpty(tags)) {
+        utils.extend(conversation, {
+          tags
+        });
+      }
       let sortTime = latestMessage.sentTime || conversation.sortTime;
       // 如果是自己发发送的群发消息不更新会话列表, 自己本地发送的消息通过 isMass 区分，接收或同步消息通过消息位计算
       if (latestMessage.isMass && isSender) {
@@ -8208,7 +8232,7 @@ function Decoder(cache, io) {
         latestUnreadIndex,
         isTop,
         unreadTag,
-        tag
+        converTags
       } = conversation;
       if (!msg) {
         msg = {
@@ -8299,6 +8323,19 @@ function Decoder(cache, io) {
       if (utils.isEqual(COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS, topic)) {
         _sortTime = topUpdatedTime;
       }
+      converTags = converTags || [];
+      let tags = utils.map(converTags, item => {
+        let {
+          tag: id,
+          tagName: name,
+          tagType: type
+        } = item;
+        return {
+          id,
+          name,
+          type
+        };
+      });
       return {
         conversationType,
         conversationId: targetId,
@@ -8315,7 +8352,7 @@ function Decoder(cache, io) {
         latestReadIndex,
         latestUnreadIndex,
         unreadTag,
-        tag: tag || '',
+        tags,
         isTop: !!isTop
       };
     });
@@ -8461,6 +8498,7 @@ function Decoder(cache, io) {
   }
   function msgFormat(msg) {
     let {
+      converTags,
       undisturbType,
       msgExtSet,
       senderId,
@@ -8560,6 +8598,19 @@ function Decoder(cache, io) {
       msgExtSet = utils.clone(msgExtSet);
       reactions = utils.groupBy(msgExtSet, ['key']);
     }
+    converTags = converTags || [];
+    let tags = utils.map(converTags, item => {
+      let {
+        tag: id,
+        tagName: name,
+        tagType: type
+      } = item;
+      return {
+        id,
+        name,
+        type
+      };
+    });
     let _message = {
       conversationType,
       conversationId,
@@ -8583,7 +8634,8 @@ function Decoder(cache, io) {
       undisturbType: undisturbType || 0,
       unreadIndex: unreadIndex || 0,
       flags,
-      reactions
+      reactions,
+      tags
     };
     if (_message.isSender) {
       utils.extend(_message.sender, user);

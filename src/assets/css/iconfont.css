@@ -258,7 +258,7 @@
   content: '\e7bf';
 }
 .wr-mg-msg:before {
-  content: '\e7c7';
+  content: '\e7c7' !important;
 }
 .wr-mg-tag:before {
   content: '\e7cf';
