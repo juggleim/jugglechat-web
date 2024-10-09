@@ -113,7 +113,7 @@ function setQrLogin(isQR){
         <h2 class="jg-nlogin-intro-title">Log in to JuggleChat by QR Code</h2>
         <ul class="jg-nlogin-intros">
           <li class="jg-nlogin-intro wr wr-1">Open JuggleChat on your phone</li>
-          <li class="jg-nlogin-intro wr wr-2">Go to First Page -> QRCode</li>
+          <li class="jg-nlogin-intro wr wr-2">Go to Home Page -> QRCode</li>
           <li class="jg-nlogin-intro wr wr-3">Point your phone at this screen to confirm login</li>
         </ul>
         <div class="jg-nlogin-button" @click="setQrLogin(false)"> LOG IN BY PHONE NUMBER </div>
@@ -123,6 +123,7 @@ function setQrLogin(isQR){
       <div class="jg-nlogin-normalbox">
         <div class="jg-nlogin-nlicon"></div>
         <h2 class="jg-nlogin-nltitle">JuggleChat</h2>
+        <span class="fs10">v1.7.5</span>
       </div>
       <div class="jg-nlogin-intro-box jg-nlogin-btnbox">
         <div class="form-group">
