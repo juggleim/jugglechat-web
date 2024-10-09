@@ -13,15 +13,6 @@ let { ConversationType } = juggle;
 let state = reactive({});
 let user = Storage.get(STORAGE.USER_TOKEN);
 
-function onSelected(item){
-  utils.map(state.list, (_item) => {
-    _item.checked = false;
-    if(utils.isEqual(item.time, _item.time)){
-      _item.checked = !item.checked;
-    }
-  })
-}
-
 </script>
 <template>
   <div class="jg-group-conver fadein-o4">

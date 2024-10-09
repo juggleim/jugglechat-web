@@ -118,6 +118,10 @@ function getSelectConversations(isFirst = false, callback = utils.noop) {
   let { selectList, conversations } = state;
   juggle.getConversations(params).then(result => {
     let { conversations: list } = result;
+    list = utils.map(list, (item) => {
+      item.isRemote = true;
+      return item;
+    })
     state.selectList = selectList.concat(list);
     utils.forEach(list, (item) => {
       let index = utils.find(conversations, (conversation) => {
@@ -140,15 +144,18 @@ function onClick(item){
 
   if(isRemove){
     state.selectList.splice(index, 1);
-    state.conversations.push(conversation);
-    removeList[key] = conversation;
-    return scrollBottom('conversations');
+    state.conversations.unshift(conversation);
+    if(conversation.isRemote){
+      removeList[key] = conversation;
+    }
+    delete addList[key];
+    return;
   }
 
   addList[key] = conversation;
+  delete removeList[key];
   state.conversations.splice(index, 1);
-  state.selectList.push(conversation);
-  scrollBottom('selectList');
+  state.selectList.unshift(conversation);
 }
 watch(() => props.isShow, () => {
   if(props.isShow){

@@ -329,7 +329,7 @@ function onTagConversationChanged({ removes, adds, tag }){
 
     let list = conversations.concat(adds);
     state.conversationMap[tagId] = list.sort((a, b) => {
-      return a.sortTime < b.sortTime;
+      return a.sortTime > b.sortTime;
     })
   }
 
@@ -342,7 +342,7 @@ function onTagConversationChanged({ removes, adds, tag }){
     let conversations = state.conversationMap[tagId] || [];
     utils.forEach(removes, (item) => {
       let index = utils.find(conversations, (conversation) => {
-        return utils.isEqual(conversation.id, item.id);
+        return utils.isEqual(conversation.conversationId, item.conversationId);
       });
       if(index > -1){
         conversations.splice(index, 1);
