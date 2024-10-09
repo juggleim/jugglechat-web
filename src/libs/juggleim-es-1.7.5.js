@@ -635,6 +635,7 @@ let SIGNAL_NAME = {
   CMD_SYNC_CONVERSATION_FINISHED: 'cmd_inner_sync_conversations_finished',
   CMD_CONVERSATION_CHANGED: 'cmd_inner_conversation_changed',
   CONN_CHANGED: 'conn_inner_changed',
+  CMD_SYNC_TAG_FINISHED: 'cmd_inner_sync_tags_finished',
   CMD_CHATROOM_EVENT: 'cmd_inner_chatroom_event',
   CMD_CHATROOM_REJOIN: 'cmd_inner_chatroom_rejoin',
   // 与下行信令进行匹配，在 io.js 中进行派发
@@ -1168,6 +1169,11 @@ let EVENT = {
   MESSAGE_CLEAN: 'message_clean',
   MESSAGE_CLEAN_SOMEONE: 'message_clean_someone',
   MESSAGE_REACTION_CHANGED: 'message_reaction_changed',
+  TAG_ADDED: 'tag_added',
+  TAG_REMOVED: 'tag_removed',
+  TAG_CHANGED: 'tag_changed',
+  TAG_CONVERSATION_ADDED: 'tag_conversation_added',
+  TAG_CONVERSATION_REMOVED: 'tag_conversation_removed',
   CONVERSATION_SYNC_FINISHED: 'conversation_sync_finished',
   CONVERSATION_UNDISTURBED: 'conversation_undisturb',
   CONVERSATION_TOP: 'conversation_top',
@@ -1176,9 +1182,6 @@ let EVENT = {
   CONVERSATION_CHANGED: 'conversation_changed',
   CONVERSATION_ADDED: 'conversation_added',
   CONVERSATION_REMOVED: 'conversation_removed',
-  CONVERSATION_TAG_CREATED: 'conversation_tag_created',
-  CONVERSATION_TAG_DESTROYED: 'conversation_tag_destroyed',
-  CONVERSATION_TAG_CHANGED: 'conversation_tag_changed',
   CHATROOM_ATTRIBUTE_UPDATED: 'chatroom_attr_updated',
   CHATROOM_ATTRIBUTE_DELETED: 'chatroom_attr_deleted',
   CHATROOM_DESTROYED: 'chatroom_destroyed',
@@ -1412,7 +1415,10 @@ let MESSAGE_TYPE = {
   COMMAND_LOG_REPORT: 'jg:logcmd',
   COMMAND_MSG_EXSET: 'jg:msgexset',
   COMMAND_CONVERSATION_TAG_ADD: 'jg:tagaddconvers',
-  COMMAND_CONVERSATION_TAG_REMOVE: 'jg:tagdelconvers',
+  // 删除 TAG 下会话
+  COMMAND_REMOVE_CONVERS_FROM_TAG: 'jg:tagdelconvers',
+  // 删除 TAG 
+  COMMAND_CONVERSATION_TAG_REMOVE: 'jg:delconvertags',
   // CLIENT_* 约定为客户端定义适用
   CLIENT_REMOVE_MSGS: 'jgc:removemsgs',
   CLIENT_REMOVE_CONVERS: 'jgc:removeconvers',
@@ -1478,6 +1484,11 @@ let CONVERSATION_TAG = {
     name: '群聊'
   }
 };
+let CONVERATION_TAG_TYPE = {
+  USER: 0,
+  SYSNTEM: 1,
+  GLOBAL: 2
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1515,7 +1526,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   DISCONNECT_TYPE: DISCONNECT_TYPE,
   UNREAD_TAG: UNREAD_TAG,
   SET_SEARCH_CONTENT_TYPE: SET_SEARCH_CONTENT_TYPE,
-  CONVERSATION_TAG: CONVERSATION_TAG
+  CONVERSATION_TAG: CONVERSATION_TAG,
+  CONVERATION_TAG_TYPE: CONVERATION_TAG_TYPE
 });
 
 function Cache () {
@@ -8839,6 +8851,54 @@ function Decoder(cache, io) {
         clearTime: content.clear_time
       };
     }
+    if (utils.isEqual(MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD, msgType)) {
+      let {
+        tag,
+        tag_name,
+        convers
+      } = content;
+      convers = convers || [];
+      convers = utils.map(convers, item => {
+        return {
+          conversationId: item.target_id,
+          conversationType: item.channel_type
+        };
+      });
+      content = {
+        id: tag,
+        name: tag_name,
+        conversations: convers
+      };
+    }
+    if (utils.isEqual(MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE, msgType)) {
+      let {
+        tags
+      } = content;
+      tags = utils.map(tags, tag => {
+        return {
+          id: tag.tag
+        };
+      });
+      content = {
+        tags
+      };
+    }
+    if (utils.isEqual(MESSAGE_TYPE.COMMAND_REMOVE_CONVERS_FROM_TAG, msgType)) {
+      let {
+        tag: id,
+        convers
+      } = content;
+      convers = utils.map(convers, item => {
+        return {
+          conversationId: item.target_id,
+          conversationType: item.channel_type
+        };
+      });
+      content = {
+        id,
+        conversations: convers
+      };
+    }
     if (utils.isEqual(MESSAGE_TYPE.COMMAND_MARK_UNREAD, msgType)) {
       let list = content.conversations;
       let conversations = utils.map(list, item => {
@@ -9514,6 +9574,41 @@ function ChatroomAttSyncer(send, emitter, io, {
   };
 }
 
+function TagSyncer(send, emitter, io, {
+  logger
+}) {
+  let exec = ({
+    $conversation
+  }) => {
+    let {
+      id: userId
+    } = io.getCurrentUser();
+    let data = {
+      topic: COMMAND_TOPICS.CONVERSATION_TAG_QUERY,
+      userId
+    };
+    io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+      let {
+        code,
+        tags
+      } = result;
+      if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+        utils.map(tags, tag => {
+          let item = CONVERSATION_TAG[tag.id] || {};
+          utils.extend(tag, item);
+          return tag;
+        });
+        $conversation._batchInsertTags(tags).then(result => {
+          emitter.emit(SIGNAL_NAME.CMD_SYNC_TAG_FINISHED, result);
+        });
+      }
+    });
+  };
+  return {
+    exec
+  };
+}
+
 function Timer (_config = {}) {
   let config = {
     timeout: 1 * 60 * 1000
@@ -9567,7 +9662,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.4';
+let VERSION = '1.7.5';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -9865,6 +9960,9 @@ function IO(config) {
   let chatroomAttrSyncer = ChatroomAttSyncer(sendCommand, emitter, io, {
     logger
   });
+  let tagSyncer = TagSyncer(sendCommand, emitter, io, {
+    logger
+  });
   let bufferHandler = buffer => {
     let {
       cmd,
@@ -10014,6 +10112,9 @@ function IO(config) {
                 $conversation: config.$conversation
               });
               syncMsgs();
+              tagSyncer.exec({
+                $conversation: config.$conversation
+              });
             };
 
             // PC 中先连接后打开数据库，优先将本地数据库中的同步时间更新至 LocalStorage 中，避免换 Token 不换用户 Id 重复同步会话
@@ -10498,18 +10599,25 @@ function Conversation$1 (io, emitter) {
       let {
         content: {
           id,
-          name
+          name,
+          conversations
         }
       } = message;
-      if (utils.isEmpty(name) && conversations.length > 0) {
-        return emitter.emit(EVENT.CONVERSATION_TAG_CREATED, {
+      if (conversations.length > 0) {
+        return emitter.emit(EVENT.TAG_CONVERSATION_ADDED, {
+          id,
+          conversations
+        });
+      }
+      if (!utils.isEmpty(name) && conversations.length == 0) {
+        return emitter.emit(EVENT.TAG_CHANGED, {
           tags: [{
             id,
             name
           }]
         });
       }
-      return emitter.emit(EVENT.CONVERSATION_CHANGED, {
+      return emitter.emit(EVENT.TAG_ADDED, {
         tags: [{
           id,
           name
@@ -10519,15 +10627,23 @@ function Conversation$1 (io, emitter) {
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE)) {
       let {
         content: {
-          id,
-          name
+          tags
         }
       } = message;
-      return emitter.emit(EVENT.CONVERSATION_TAG_DESTROYED, {
-        tags: [{
+      return emitter.emit(EVENT.TAG_REMOVED, {
+        tags: tags
+      });
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_REMOVE_CONVERS_FROM_TAG)) {
+      let {
+        content: {
           id,
-          name
-        }]
+          conversations
+        }
+      } = message;
+      return emitter.emit(EVENT.TAG_CONVERSATION_REMOVED, {
+        id,
+        conversations
       });
     }
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_ADD_CONVER)) {
@@ -11702,12 +11818,6 @@ function Message$1 (io, emitter, logger) {
         }
       });
     }
-    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD)) {
-      return;
-    }
-    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE)) {
-      return;
-    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.MODIFY)) {
       let {
         content: {
@@ -11728,6 +11838,15 @@ function Message$1 (io, emitter, logger) {
 
     // 收到非聊天室消息一定要更新会话列表
     io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, utils.clone(message));
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD)) {
+      return;
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE)) {
+      return;
+    }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_REMOVE_CONVERS_FROM_TAG)) {
+      return;
+    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_DELETE_MSGS)) {
       let {
         content: {
@@ -13514,7 +13633,7 @@ function Conversation ($conversation, {
   conversationUtils,
   webAgent
 }) {
-  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'markUnread', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'setTopConversation', 'getTopConversations', 'setAllDisturb', 'getAllDisturb', 'getAllDisturb', '_batchInsertConversations'];
+  let funcs = ['removeConversation', 'clearUnreadcount', 'getTotalUnreadcount', 'clearTotalUnreadcount', 'markUnread', 'setDraft', 'getDraft', 'removeDraft', 'insertConversation', 'disturbConversation', 'setTopConversation', 'getTopConversations', 'setAllDisturb', 'getAllDisturb', 'getAllDisturb', 'createConversationTag', 'destroyConversationTag', 'getConversationTags', 'addConversationsToTag', 'removeConversationsFromTag', '_batchInsertConversations'];
   let invokes = common.formatProvider(funcs, $conversation);
   invokes.getConversations = (params = {}) => {
     return $conversation.getConversations(params).then(({
@@ -14236,7 +14355,8 @@ let init = config => {
     FileType: FILE_TYPE,
     UndisturbType: UNDISTURB_TYPE,
     SentState: MESSAGE_SENT_STATE,
-    UnreadTag: UNREAD_TAG
+    UnreadTag: UNREAD_TAG,
+    ConversationTagType: CONVERATION_TAG_TYPE
   };
 };
 var client = {
@@ -14253,7 +14373,8 @@ var client = {
   FileType: FILE_TYPE,
   UndisturbType: UNDISTURB_TYPE,
   SentState: MESSAGE_SENT_STATE,
-  UnreadTag: UNREAD_TAG
+  UnreadTag: UNREAD_TAG,
+  ConversationTagType: CONVERATION_TAG_TYPE
 };
 
 var index = {

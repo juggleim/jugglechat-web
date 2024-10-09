@@ -1408,7 +1408,12 @@
   margin-right: 6px;
   font-size: 14px;
 }
-
+.jg-conver-group-content-name{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 150px;
+}
 .jg-conver-group.active .jg-conver-group-content{
   color: #002cff !important;
 }

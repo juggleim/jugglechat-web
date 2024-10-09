@@ -12,9 +12,10 @@ import { EVENT_NAME, CONVERATION_TAG_ID } from "../../common/enum";
 const props = defineProps(["isShow"]);
 const emit = defineEmits(["oncancel", "onchange"]);
 let juggle = im.getCurrent();
-let { MessageType } = juggle;
+let { MessageType, Event } = juggle;
 
 let state = reactive({
+  isRemote: false,
   groups: [],
   isShowGroupManager: false,
 });
@@ -29,28 +30,69 @@ function onSelected(item, index){
 }
 
 emitter.$on(EVENT_NAME.ON_CONVERSATION_TAG_CHANGED, ({ isRemove, tag }) => {
+  let { groups } = state;
+  let index = utils.find(groups, (group) => {
+    return utils.isEqual(group.id, tag.id);
+  });
+
   if(isRemove){
-    let { groups } = state;
-    let index = utils.find(groups, (group) => {
-      return utils.isEqual(group.id, tag.id);
-    });
     if(index > -1){
       state.groups.splice(index, 1);
     }
-    return;
   }
-  state.groups.push(tag)
+
+  if(!isRemove){
+    if(index == -1){
+      state.groups.push(tag)  
+    }else{
+      state.groups.splice(index, 1, tag);
+    }
+  }
 });
 
 function onShowGroupManager(isShow){
   state.isShowGroupManager = isShow;
 }
 
+juggle.once(Event.TAG_ADDED, (notify) => {
+  let { tags } = notify;
+  utils.forEach(tags, (tag) => {
+    state.groups.push(tag);
+  });
+});
+juggle.once(Event.TAG_REMOVED, (notify) => {
+  let { tags } = notify;
+  let { groups } = state;
+  utils.forEach(tags, (tag) => {
+    let index = utils.find(groups, (group) => {
+      return utils.isEqual(group.id, tag.id);
+    });
+    if(index > -1){
+      groups.splice(index, 1);
+    }
+  });
+});
+juggle.once(Event.TAG_CHANGED, (notify) => {
+  let { tags } = notify;
+  let { groups } = state;
+  utils.forEach(tags, (tag) => {
+    let index = utils.find(groups, (group) => {
+      return utils.isEqual(group.id, tag.id);
+    });
+    if(index > -1){
+      groups.splice(index, 1, tag);
+    }else{
+      groups.push(tag);
+    }
+  });
+});
+
 watch(() => props.isShow, async () => {
   if(props.isShow){
     let { tags = [] } = await juggle.getConversationTags();
     // let tags = [{id: CONVERATION_TAG_ID.ALL, name: '消息'}];
-    if(utils.isEqual(state.groups.length, 0)){
+    if(!state.isRemote){
+      state.isRemote = true;
       state.groups = common.formatTags(tags);
     }
   }
@@ -68,7 +110,9 @@ watch(() => props.isShow, async () => {
     </div>
     <ul class="jg-conver-groups">
       <li class="jg-conver-group" v-for="(group, index) in state.groups" :key="group.id" :class="{'active': group.isActive}" @click="onSelected(group, index)">
-        <div class="jg-conver-group-content wr wr-mg-tag" :class="[group.icon]" >{{ group.name }}</div>
+        <div class="jg-conver-group-content wr wr-mg-tag" :class="[group.icon]" >
+          <span class="jg-conver-group-content-name">{{ group.name }}</span>
+        </div>
       </li>
     </ul>
   </div>
