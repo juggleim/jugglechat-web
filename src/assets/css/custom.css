@@ -1351,6 +1351,7 @@
   overflow: auto;
   -webkit-app-region: no-drag;
   display: flex;
+  margin: 0 auto;
 }
 .jg-conver-list{
   overflow: hidden;
