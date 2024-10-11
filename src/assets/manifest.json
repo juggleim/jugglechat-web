@@ -1,7 +1,7 @@
 {
   "name": "JuggleChat",
   "short_name": "JuggleChat",
-  "start_url": "http://localhost:5173/",
+  "start_url": "https://im.jugglechat.com/",
   "display": "standalone",
   "icons": [
     {
