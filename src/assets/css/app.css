@@ -314,8 +314,9 @@ dl {
 }
 .tyn-aside-item {
   padding: var(--aside-item-gap-y) var(--aside-gap-x);
-  cursor: pointer;
+  cursor: pointer !important;
   position: relative;
+  user-select: none;
 }
 .tyn-aside-item:hover {
   background: var(--aside-item-active-bg);

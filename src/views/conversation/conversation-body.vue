@@ -68,7 +68,11 @@ nextTick(() => {
   });
 });
 
-function onConversation(item, index) {
+// function onConversation(item, index) {
+function onConversation(e) {
+  let index = e.currentTarget.getAttribute('index');
+  let item = props.conversations[index];
+  
   props.conversations.map((conversation, i) => {
     let isActive = utils.isEqual(
       item.conversationId,
@@ -104,7 +108,7 @@ function clearUnreadCount(item, index) {
         class="tyn-aside-item js-toggle-main"
         v-for="(item, index) in props.conversations"
         :class="{ 'active': item.isActive }"
-        @click="onConversation(item, index)"
+        @click="onConversation"
         :index="index"
         :uid="item.conversationType + '_' + item.conversationId"
         @click.right.prevent="onShowDropmenu"
