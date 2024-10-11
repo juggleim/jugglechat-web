@@ -1,0 +1,29 @@
+{
+  "name": "JuggleChat",
+  "short_name": "JuggleChat",
+  "start_url": "http://localhost:5173/",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "icon_1024.png",
+      "type": "image/png",
+      "sizes": "1024x1024"
+    }
+  ],
+  "screenshots" : [
+    {
+      "src": "images/screenshot.png",
+      "sizes": "2880x1589",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "JuggleChat Desktop App"
+    },
+    {
+      "src": "images/screenshot.png",
+      "sizes": "2880x1589",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "JuggleChat Desktop App"
+    }
+  ]
+}
