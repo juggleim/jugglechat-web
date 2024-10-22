@@ -89,15 +89,16 @@ function onConversation(e) {
   emit("onconversation", item);
   clearUnreadCount(item, index);
 }
-function clearUnreadCount(item, index) {
+async function clearUnreadCount(item, index) {
   let conversation = props.conversations[index];
   conversation.unreadCount = 0;
   let { conversationId, conversationType, latestUnreadIndex } = item;
-  juggle.clearUnreadcount({
+  let result = await juggle.clearUnreadcount({
     conversationId,
     conversationType,
     unreadIndex: latestUnreadIndex
   });
+  console.log('clearunreadcount', result);
 }
 </script>
 

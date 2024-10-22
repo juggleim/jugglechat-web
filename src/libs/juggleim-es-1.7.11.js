@@ -1,6 +1,6 @@
 /*
-* JuggleChat.js v1.7.4
-* (c) 2022-2024 JuggleChat
+* JuggleIM.js v1.7.11
+* (c) 2022-2024 JuggleIM
 * Released under the MIT License.
 */
 const noop = () => {};
@@ -1268,7 +1268,7 @@ let ErrorMessages = [{
   name: 'CONNECT_UNSUPPORT_PLATFORM'
 }, {
   code: 11009,
-  msg: 'App已封禁',
+  msg: 'App 已封禁',
   name: 'CONNECT_APP_BLOCKED'
 }, {
   code: 11010,
@@ -1282,6 +1282,70 @@ let ErrorMessages = [{
   code: 11012,
   msg: '注销下线',
   name: 'CONNECT_USER_LOGOUT'
+}, {
+  code: 11013,
+  msg: '不支持的信令',
+  name: 'CONNECT_SIGNAL_UNSUPPORT'
+}, {
+  code: 11014,
+  msg: '接口调用超频，默认 100 次/秒',
+  name: 'COMMAND_OVER_FREQUENCY'
+}, {
+  code: 10102,
+  msg: '用户不存在',
+  name: 'CONNECT_USER_NOT_EXISTS'
+}, {
+  code: 10104,
+  msg: '时区不合法',
+  name: 'PARAMS_TIMEZONE_ILLEGAL'
+}, {
+  code: 12004,
+  msg: '消息格式不合法',
+  name: 'PARAMS_MESSAGE_ILLEGAL'
+}, {
+  code: 12005,
+  msg: '当前用户被对方拉黑',
+  name: 'REJECTED_BY_BLACKLIST'
+}, {
+  code: 12006,
+  msg: '消息扩展，字段重复',
+  name: 'KV_DUPLICATION'
+}, {
+  code: 12007,
+  msg: '消息命中敏感词策略，被拦截',
+  name: 'MESSAGE_SENSITIVE_WORDS'
+}, {
+  code: 13002,
+  msg: '用户不是群组成员',
+  name: 'GROUP_NOT_GROUP_MEMBER'
+}, {
+  code: 13003,
+  msg: '群组被禁言',
+  name: 'GROUP_BANNED'
+}, {
+  code: 13004,
+  msg: '群成员被禁言',
+  name: 'GROUP_MEMBER_BANNED'
+}, {
+  code: 13005,
+  msg: '群成员数量已达上限',
+  name: 'GROUP_MEMBER_OVERFLOW'
+}, {
+  code: 14004,
+  msg: '聊天室属性不存在',
+  name: 'CHATROOM_KV_NOT_EXISTS'
+}, {
+  code: 14006,
+  msg: '聊天室已被销毁',
+  name: 'CHATROOM_DESTROY'
+}, {
+  code: 14007,
+  msg: '当前用户已被禁言',
+  name: 'CHATROOM_MEMBER_BANNED'
+}, {
+  code: 14008,
+  msg: '当前用户已被封禁',
+  name: 'CHATROOM_MEMBER_BLOCKED'
 }, {
   code: 14001,
   msg: '未加入聊天室',
@@ -6487,7 +6551,7 @@ function ConversationUtils() {
         unreadCount = 0;
       }
       if (!isSender && msgFlag.isCount) {
-        latestUnreadIndex = latestMessage.unreadIndex || 0;
+        latestUnreadIndex = latestMessage.unreadIndex || latestUnreadIndex;
         unreadCount = latestUnreadIndex - latestReadIndex;
       }
       let key = getDraftKey(conversation);
@@ -9662,7 +9726,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.5';
+let VERSION = '1.7.11';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -9679,7 +9743,7 @@ function IO(config) {
     logger
   } = config;
   if (!utils.isArray(navList)) {
-    navList = ['https://nav.juggleim.com'];
+    navList = ['https://nav.fake.com'];
   }
   let ws = {};
   let io = {};
@@ -9692,6 +9756,7 @@ function IO(config) {
   let syncTimer = Timer({
     timeout: SYNC_MESSAGE_TIME
   });
+  let isCurrentFirstConnect = true;
   let connectionState = CONNECT_STATE.DISCONNECTED;
   let reconnectErrors = [ErrorType.CONNECT_APPKEY_IS_REQUIRE.code, ErrorType.CONNECT_TOKEN_NOT_EXISTS.code, ErrorType.CONNECT_APPKEY_NOT_EXISTS.code, ErrorType.CONNECT_TOKEN_ILLEGAL.code, ErrorType.CONNECT_TOKEN_UNAUTHORIZED.code, ErrorType.CONNECT_TOKEN_EXPIRE.code, ErrorType.CONNECT_APP_BLOCKED.code, ErrorType.CONNECT_USER_BLOCKED.code, ErrorType.CONNECT_USER_KICKED.code, ErrorType.CONNECT_USER_LOGOUT.code];
   let updateState = result => {
@@ -10059,12 +10124,27 @@ function IO(config) {
       let {
         ack: {
           code,
-          userId
+          userId,
+          timestamp: ackTime
         }
       } = result;
       let state = CONNECT_STATE.CONNECT_FAILED;
       let error = common.getError(code);
       if (utils.isEqual(code, ErrorType.CONNECT_SUCCESS.code)) {
+        // 会话列表 IM Server 维护，Web 端首次连接，不拉取离线消息，开发者只需要获取最新的会话列表即可
+        if (isCurrentFirstConnect && !config.isPC) {
+          common.updateSyncTime({
+            sentTime: ackTime,
+            isSender: true,
+            io
+          });
+          common.updateSyncTime({
+            sentTime: ackTime,
+            isSender: false,
+            io
+          });
+        }
+        isCurrentFirstConnect = false;
         state = CONNECT_STATE.CONNECTED;
         setCurrentUser({
           id: userId
@@ -11810,13 +11890,16 @@ function Message$1 (io, emitter, logger) {
         content,
         messageId
       } = message;
-      return common.reportLogs({
-        logger,
-        params: {
-          ...content,
-          messageId
-        }
-      });
+      if (utils.isEqual('Web', content.platform)) {
+        return common.reportLogs({
+          logger,
+          params: {
+            ...content,
+            messageId
+          }
+        });
+      }
+      return;
     }
     if (utils.isEqual(message.name, MESSAGE_TYPE.MODIFY)) {
       let {
@@ -14178,7 +14261,7 @@ function Logger(option = {}) {
     getVersion
   } = option;
   let $db = DB({
-    name: `JUGGLEIM_${appkey}`,
+    name: `_IMIIM_${appkey}`,
     tables: [{
       name: TABLE_NAME,
       indexs: [{
