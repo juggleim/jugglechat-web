@@ -231,7 +231,7 @@ function onRemoveConversation(index) {
   return conversationTools.removeConversation(index, state);
 }
 function onClearMessages(index) {
-  let conversation = state.conversations[index];
+  let conversation = state.conversationMap[state.currentTag.id][index];
   state.currentConversation = {};
   return conversationTools.clearMessages(conversation);
 }

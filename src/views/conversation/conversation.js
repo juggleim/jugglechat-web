@@ -5,7 +5,7 @@ import { TRANSFER_TYPE } from "../../common/enum";
 import common from "../../common/common";
 
 let juggle = im.getCurrent();
-let { MessageType, ConversationType, MentionType, UndisturbType } = juggle;
+let { MessageType, ConversationType, MentionType, UndisturbType, UnreadTag } = juggle;
 
 function readMessage(messages){
   if(!utils.isEmpty(messages)){
@@ -317,7 +317,7 @@ function clearMessages(conversation) {
   );
 }
 function removeConversation(index, state) {
-  let conversation = state.conversations[index];
+  let conversation = state.conversationMap[state.currentTag.id][index];
   conversation.isShowDrop = false;
   let { conversationType, conversationId } = conversation;
   juggle.removeConversation({ conversationType, conversationId }).then(() => {
@@ -328,8 +328,8 @@ function removeConversation(index, state) {
     utils.extend(state, { currentConversation: {} });
   }
 }
-function markUnread(index) {
-  let conversation = state.conversations[index];
+function markUnread(index, state) {
+  let conversation = state.conversationMap[state.currentTag.id][index];
   let { unreadTag } = conversation;
   utils.extend(conversation, {
     isShowDrop: false,

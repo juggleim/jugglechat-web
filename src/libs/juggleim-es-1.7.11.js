@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.7.11
+* JuggleIM.js v1.7.15
 * (c) 2022-2024 JuggleIM
 * Released under the MIT License.
 */
@@ -27,6 +27,9 @@ const isNull = str => {
 };
 const isNumber = str => {
   return Object.prototype.toString.call(str) === '[object Number]';
+};
+const _isNaN = str => {
+  return isNaN(Number(str));
 };
 const stringify = obj => {
   return JSON.stringify(obj);
@@ -563,7 +566,8 @@ var utils = {
   formatTime,
   isValidHMTime,
   getRandoms,
-  groupBy
+  groupBy,
+  isNaN: _isNaN
 };
 
 function Emitter () {
@@ -769,6 +773,12 @@ let FUNC_PARAM_CHECKER = {
     name: 'conversationId'
   }, {
     name: 'tid'
+  }, {
+    name: 'sentTime'
+  }, {
+    name: 'messageId'
+  }, {
+    name: 'content'
   }],
   GET_MENTIOIN_MESSAGES: [{
     name: 'conversationType'
@@ -1291,6 +1301,10 @@ let ErrorMessages = [{
   msg: '接口调用超频，默认 100 次/秒',
   name: 'COMMAND_OVER_FREQUENCY'
 }, {
+  code: 11020,
+  msg: '安全域名校验失败',
+  name: 'CONNECT_SECURITY_DOMAIN_ERROR'
+}, {
   code: 10102,
   msg: '用户不存在',
   name: 'CONNECT_USER_NOT_EXISTS'
@@ -1388,7 +1402,7 @@ let ErrorMessages = [{
   name: 'ILLEGAL_TYPE_PARAMS'
 }, {
   code: 25004,
-  msg: '发送超时，连接异常',
+  msg: '连接异常,信令发送超时',
   name: 'COMMAND_FAILED'
 }, {
   code: 25005,
@@ -1430,6 +1444,10 @@ let ErrorMessages = [{
   code: 25014,
   msg: 'SDK 内部正在连接，无需重复调用 connect 方法',
   name: 'REPREAT_CONNECTION'
+}, {
+  code: 25015,
+  msg: '消息重复发送，相同的 tid 且正在发送中，无需再次发送消息',
+  name: 'MESSAGE_SEND_REPETITION'
 }, {
   code: 21200,
   msg: '消息撤回成功',
@@ -1486,7 +1504,6 @@ let MESSAGE_TYPE = {
   // CLIENT_* 约定为客户端定义适用
   CLIENT_REMOVE_MSGS: 'jgc:removemsgs',
   CLIENT_REMOVE_CONVERS: 'jgc:removeconvers',
-  CLIENT_RECALL_MSG: 'jgc:recallmsg',
   CLIENT_MARK_UNREAD: 'jgc:markunread'
 };
 let MENTION_TYPE = {
@@ -5209,6 +5226,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           syncTime: {
             type: "int64",
             id: 2
+          },
+          count: {
+            type: "int32",
+            id: 3
           }
         }
       },
@@ -6547,12 +6568,12 @@ function ConversationUtils() {
         unreadCount = 0;
         latestMessage = conversation.latestMessage;
       }
-      if (unreadCount < 0 || utils.isNull(unreadCount)) {
-        unreadCount = 0;
-      }
       if (!isSender && msgFlag.isCount) {
         latestUnreadIndex = latestMessage.unreadIndex || latestUnreadIndex;
         unreadCount = latestUnreadIndex - latestReadIndex;
+      }
+      if (unreadCount < 0 || utils.isNull(unreadCount)) {
+        unreadCount = 0;
       }
       let key = getDraftKey(conversation);
       let draft = Storage.get(key);
@@ -7006,7 +7027,8 @@ function getPublishBody ({
       flag,
       mergeMsg,
       referMsg,
-      push
+      push,
+      clientMsgId
     } = data;
     content = utils.toJSON(content);
     let codec = $root.lookup('codec.UpMsg');
@@ -7060,6 +7082,7 @@ function getPublishBody ({
       flags: flag,
       referMsg: referMsg,
       mergedMsgs: mergeMsg,
+      clientUid: clientMsgId,
       msgContent: new TextEncoder().encode(content)
     };
     if (push) {
@@ -7219,12 +7242,14 @@ function getQueryBody({
   if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES)) {
     let {
       syncTime,
-      chatroomId
+      chatroomId,
+      count
     } = data;
     let codec = $root.lookup('codec.SyncChatroomReq');
     let message = codec.create({
       syncTime,
-      chatroomId
+      chatroomId,
+      count
     });
     targetId = chatroomId;
     buffer = codec.encode(message).finish();
@@ -7576,7 +7601,7 @@ function getQueryBody({
   }
   if (utils.isEqual(COMMAND_TOPICS.UPDATE_MESSAGE, topic)) {
     let {
-      conversationId: targetId,
+      conversationId,
       conversationType: channelType,
       messageId: msgId,
       content,
@@ -7586,11 +7611,12 @@ function getQueryBody({
     content = utils.toJSON(content);
     let message = codec.create({
       channelType,
-      targetId,
+      targetId: conversationId,
       msgId,
       msgTime,
       msgContent: new TextEncoder().encode(content)
     });
+    targetId = conversationId;
     buffer = codec.encode(message).finish();
   }
   if (utils.isEqual(COMMAND_TOPICS.CLEAR_MESSAGE, topic)) {
@@ -9490,9 +9516,11 @@ function ChatroomSyncer(send, emitter, io, {
         });
         return next();
       }
+      let count = msg.count || 50;
       let data = {
         syncTime: syncTime,
         chatroomId: chatroomId,
+        count: count,
         topic: COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES
       };
       send(SIGNAL_CMD.QUERY, data, ({
@@ -9726,7 +9754,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.11';
+let VERSION = '1.7.15';
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -9774,12 +9802,26 @@ function IO(config) {
     let {
       code
     } = result;
+    let cbs = cache.getAll();
+    utils.forEach(cbs, (val, key) => {
+      if (!utils.isNaN(key)) {
+        let {
+          callback
+        } = val;
+        callback = callback || utils.noop;
+        callback(ErrorType.COMMAND_FAILED);
+        cache.remove(key);
+      }
+    });
     if (!isUserDisconnected && !utils.isInclude(reconnectErrors, code) && !utils.isEqual(connectionState, CONNECT_STATE.DISCONNECTED)) {
-      let user = getCurrentUser();
+      let user = getCurrentUser({
+        ignores: []
+      });
       clearHeart();
       return reconnect(user, ({
         next
       }) => {
+        next = next || utils.noop;
         next();
       });
     }
@@ -10011,8 +10053,8 @@ function IO(config) {
             cmd: _cmd
           });
         }
-        callback(ErrorType.COMMAND_FAILED);
         disconnect();
+        callback(ErrorType.COMMAND_FAILED);
       });
     }
   };
@@ -10233,9 +10275,14 @@ function IO(config) {
           });
         });
       }
+      if (utils.isEqual(code, ErrorType.CONNECT_SECURITY_DOMAIN_ERROR.code)) {
+        // 防止 WebScoket 断开自动重连
+        isUserDisconnected = true;
+      }
       updateState({
         state,
-        user: currentUserInfo
+        user: currentUserInfo,
+        code
       });
       _callback({
         user: currentUserInfo,
@@ -10280,8 +10327,15 @@ function IO(config) {
   let isNeedConnect = () => {
     return utils.isEqual(connectionState, CONNECT_STATE.DISCONNECTED);
   };
-  function getCurrentUser() {
-    return currentUserInfo;
+  function getCurrentUser(options = {}) {
+    let {
+      ignores = ['token']
+    } = options;
+    let user = utils.clone(currentUserInfo);
+    utils.forEach(ignores, key => {
+      delete user[key];
+    });
+    return user;
   }
   function getConfig() {
     return config;
@@ -10983,6 +11037,12 @@ function Conversation$1 (io, emitter) {
   io.on(SIGNAL_NAME.CLIENT_CLEAR_MEMORY_CACHE, () => {
     conversationUtils.clear();
   });
+  let commandNotify = msg => {
+    let config = io.getConfig();
+    if (!config.isPC) {
+      io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, msg);
+    }
+  };
   let getConversations = (params = {}) => {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, params, []);
@@ -11263,6 +11323,16 @@ function Conversation$1 (io, emitter) {
       };
       utils.extend(_params, params);
       io.sendCommand(SIGNAL_CMD.QUERY, _params, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         resolve({
           conversations: result.conversations,
           isFinished: result.isFinished
@@ -11341,6 +11411,7 @@ function Conversation$1 (io, emitter) {
       io.sendCommand(SIGNAL_CMD.QUERY, data, ({
         count
       }) => {
+        count = count || 0;
         resolve({
           count
         });
@@ -11598,9 +11669,8 @@ function Conversation$1 (io, emitter) {
           }
           resolve();
         } else {
-          reject({
-            code
-          });
+          let error = common.getError(code);
+          reject(error);
         }
       });
     });
@@ -11631,12 +11701,19 @@ function Conversation$1 (io, emitter) {
             sentTime: timestamp,
             io
           });
-          io.getConfig();
+          let notify = {
+            name: MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD,
+            content: {
+              id: tag.id,
+              name: tag.name,
+              conversations: []
+            }
+          };
+          commandNotify(notify);
           resolve();
         } else {
-          reject({
-            code
-          });
+          let errorInfo = common.getError(code);
+          reject(errorInfo);
         }
       });
     });
@@ -11667,12 +11744,18 @@ function Conversation$1 (io, emitter) {
             sentTime: timestamp,
             io
           });
-          io.getConfig();
+          let tags = utils.isArray(tag) ? tag : [tag];
+          let notify = {
+            name: MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE,
+            content: {
+              tags
+            }
+          };
+          commandNotify(notify);
           resolve();
         } else {
-          reject({
-            code
-          });
+          let errorInfo = common.getError(code);
+          reject(errorInfo);
         }
       });
     });
@@ -11706,9 +11789,8 @@ function Conversation$1 (io, emitter) {
             tags: _tags
           });
         } else {
-          reject({
-            code
-          });
+          let error = common.getError(code);
+          reject(error);
         }
       });
     });
@@ -11748,12 +11830,18 @@ function Conversation$1 (io, emitter) {
             sentTime: timestamp,
             io
           });
-          io.getConfig();
+          let notify = {
+            name: MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD,
+            content: {
+              id: tag.id,
+              conversations: conversations
+            }
+          };
+          commandNotify(notify);
           resolve();
         } else {
-          reject({
-            code
-          });
+          let error = common.getError(code);
+          reject(error);
         }
       });
     });
@@ -11793,12 +11881,18 @@ function Conversation$1 (io, emitter) {
             sentTime: timestamp,
             io
           });
-          io.getConfig();
+          let notify = {
+            name: MESSAGE_TYPE.COMMAND_REMOVE_CONVERS_FROM_TAG,
+            content: {
+              id: tag.id,
+              conversations: conversations
+            }
+          };
+          commandNotify(notify);
           resolve();
         } else {
-          reject({
-            code
-          });
+          let error = common.getError(code);
+          reject(error);
         }
       });
     });
@@ -11903,19 +11997,24 @@ function Message$1 (io, emitter, logger) {
     }
     if (utils.isEqual(message.name, MESSAGE_TYPE.MODIFY)) {
       let {
+        conversationType,
+        conversationId,
         content: {
           content,
           messageId,
           sentTime
         }
       } = message;
-      let str = utils.decodeBase64(content);
-      let newContent = utils.parse(str);
-      // 将被修改消息的 messageId 和 sentTime 赋值给 message，伪装成 message 对象抛给业务层
-      utils.extend(message, {
-        content: newContent,
+      let newContent = content;
+      if (utils.isBase64(content)) {
+        let str = utils.decodeBase64(content);
+        newContent = utils.parse(str);
+      }
+      return emitter.emit(EVENT.MESSAGE_UPDATED, {
+        conversationType,
+        conversationId,
         messageId,
-        sentTime
+        content: newContent
       });
     }
 
@@ -12017,20 +12116,6 @@ function Message$1 (io, emitter, logger) {
         cleanTime
       });
     }
-    if (utils.isEqual(message.name, MESSAGE_TYPE.MODIFY)) {
-      let {
-        conversationType,
-        conversationId,
-        content,
-        messageId
-      } = message;
-      return emitter.emit(EVENT.MESSAGE_UPDATED, {
-        conversationType,
-        conversationId,
-        messageId,
-        content
-      });
-    }
     if (utils.isEqual(message.name, MESSAGE_TYPE.READ_MSG) || utils.isEqual(message.name, MESSAGE_TYPE.READ_GROUP_MSG)) {
       let {
         conversationType,
@@ -12058,16 +12143,36 @@ function Message$1 (io, emitter, logger) {
       }, message);
     }
   });
+  let commandNotify = msg => {
+    let config = io.getConfig();
+    if (!config.isPC) {
+      io.emit(SIGNAL_NAME.CMD_RECEIVED, msg);
+    }
+  };
   let maps = [[CONVERATION_TYPE.PRIVATE, 'p_msg'], [CONVERATION_TYPE.GROUP, 'g_msg'], [CONVERATION_TYPE.CHATROOM, 'c_msg']];
   let topics = {};
   utils.forEach(maps, map => {
     topics[map[0]] = map[1];
   });
+
+  /*
+    缓存发送的消息，同样的 tid 重复发送消息返回错误，不再调用 socket send 方法，规避消息重复发送
+    sendingMsgMap[tid] = true;  
+  */
+  let sendingMsgMap = {};
+
+  /*
+  缓存发送失败的 clientMsgId，防止未收到 ACK，重发导致接收端消息重复
+  sendMsgMap[tid] = uuid;  
+  */
+  let sendMsgMap = {};
   let sendMessage = (message, callbacks = {}) => {
     return utils.deferred((resolve, reject) => {
-      let error = common.check(io, message, FUNC_PARAM_CHECKER.SENDMSG);
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.SENDMSG, true);
       if (!utils.isEmpty(error)) {
-        return reject(error);
+        return reject({
+          error
+        });
       }
       let {
         referMsg
@@ -12078,8 +12183,19 @@ function Message$1 (io, emitter, logger) {
           messageId
         } = referMsg;
         if (utils.isUndefined(messageIndex) || utils.isUndefined(messageId)) {
-          return reject(ErrorType.SEND_REFER_MESSAGE_ERROR);
+          return reject({
+            error: ErrorType.SEND_REFER_MESSAGE_ERROR
+          });
         }
+      }
+      let sender = io.getCurrentUser() || {};
+      let isSending = sendingMsgMap[message.tid];
+      if (isSending) {
+        return reject({
+          ...message,
+          sender,
+          error: ErrorType.MESSAGE_SEND_REPETITION
+        });
       }
       logger.info({
         tag: LOG_MODULE.MSG_SEND
@@ -12088,7 +12204,14 @@ function Message$1 (io, emitter, logger) {
         onbefore: () => {}
       };
       utils.extend(_callbacks, callbacks);
-      let data = utils.clone(message);
+      let tid = message.tid || utils.getUUID();
+      let clientMsgId = sendMsgMap[tid] || utils.getUUID();
+      sendMsgMap[tid] = clientMsgId;
+      sendingMsgMap[tid] = true;
+      let data = utils.clone({
+        ...message,
+        clientMsgId
+      });
       let {
         name,
         conversationType,
@@ -12105,12 +12228,21 @@ function Message$1 (io, emitter, logger) {
       utils.extend(data, {
         topic
       });
-      let tid = message.tid || utils.getUUID();
       utils.extend(message, {
         tid,
-        sentState: MESSAGE_SENT_STATE.SENDING
+        sentState: MESSAGE_SENT_STATE.SENDING,
+        sender,
+        isSender: true
       });
-      _callbacks.onbefore(message);
+      _callbacks.onbefore(utils.clone(message));
+      if (!io.isConnected()) {
+        delete sendingMsgMap[tid];
+        return reject({
+          ...message,
+          sentState: MESSAGE_SENT_STATE.FAILED,
+          error: ErrorType.CONNECTION_NOT_READY
+        });
+      }
       io.sendCommand(SIGNAL_CMD.PUBLISH, data, ({
         messageId,
         sentTime,
@@ -12119,11 +12251,8 @@ function Message$1 (io, emitter, logger) {
         msgIndex,
         memberCount
       }) => {
-        let sender = io.getCurrentUser() || {};
-        utils.extend(message, {
-          sender,
-          isSender: true
-        });
+        // 不管消息发送成功或失败，清理 tid 发送中的状态
+        delete sendingMsgMap[tid];
         if (code) {
           utils.extend(message, {
             error: {
@@ -12132,8 +12261,11 @@ function Message$1 (io, emitter, logger) {
             },
             sentState: MESSAGE_SENT_STATE.FAILED
           });
-          return reject(message);
+          return reject(utils.clone(message));
         }
+
+        // 消息发送成功，清理缓存消息
+        delete sendMsgMap[tid];
         utils.extend(message, {
           sentTime,
           messageId,
@@ -12247,8 +12379,16 @@ function Message$1 (io, emitter, logger) {
       params = utils.extend(params, conversation);
       io.sendCommand(SIGNAL_CMD.QUERY, params, result => {
         let {
-          messages
+          messages,
+          code,
+          msg
         } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         messageCacher.add(conversation, messages);
         resolve(result);
       });
@@ -12266,9 +12406,18 @@ function Message$1 (io, emitter, logger) {
         userId: user.id
       };
       data = utils.extend(data, params);
-      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        messages
-      }) => {
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          messages,
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         resolve({
           messages
         });
@@ -12300,18 +12449,29 @@ function Message$1 (io, emitter, logger) {
             sentTime: timestamp,
             io
           });
-        }
-        let config = io.getConfig();
-        if (!config.isPC) {
-          let msg = {
-            name: MESSAGE_TYPE.CLEAR_MSG,
-            content: {
-              ...data
-            }
+          let content = {
+            conversationType: params.conversationType,
+            conversationId: params.conversationId,
+            cleanTime: params.time || 0
           };
-          io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, msg);
+          let {
+            senderId
+          } = params;
+          if (!utils.isUndefined(senderId)) {
+            utils.extend(content, {
+              senderId
+            });
+          }
+          let notify = {
+            name: MESSAGE_TYPE.CLEAR_MSG,
+            content: content
+          };
+          commandNotify(notify);
+          resolve();
+        } else {
+          let errorInfo = common.getError(code);
+          reject(errorInfo);
         }
-        resolve();
       });
     });
   };
@@ -12348,18 +12508,34 @@ function Message$1 (io, emitter, logger) {
             sentTime: timestamp,
             io
           });
-        }
-        let config = io.getConfig();
-        if (!config.isPC) {
-          io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, {
-            name: MESSAGE_TYPE.CLIENT_REMOVE_MSGS,
-            content: {
-              messages
-            },
-            ...item
+          let _msgs = utils.map(messages, msg => {
+            let {
+              messageId,
+              tid,
+              conversationType,
+              conversationId
+            } = msg;
+            return {
+              messageId,
+              tid,
+              conversationType,
+              conversationId
+            };
           });
+          let notify = {
+            name: MESSAGE_TYPE.COMMAND_DELETE_MSGS,
+            content: {
+              conversationType: item.conversationType,
+              conversationId: item.conversationId,
+              messages: _msgs
+            }
+          };
+          commandNotify(notify);
+          resolve();
+        } else {
+          let errorInfo = common.getError(code);
+          reject(errorInfo);
         }
-        resolve();
       });
     });
   };
@@ -12409,10 +12585,7 @@ function Message$1 (io, emitter, logger) {
               exts
             }
           });
-          let config = io.getConfig();
-          if (!config.isPC) {
-            io.emit(SIGNAL_NAME.CMD_RECEIVED, msg);
-          }
+          commandNotify(msg);
           utils.clone(msg);
           delete msg.exts;
           utils.extend(msg, {
@@ -12436,6 +12609,21 @@ function Message$1 (io, emitter, logger) {
       if (!utils.isEmpty(error)) {
         return reject(error);
       }
+      messages = utils.isArray(messages) ? messages : [messages];
+      messages = utils.map(messages, message => {
+        let {
+          conversationType,
+          conversationId,
+          messageId,
+          sentTime
+        } = message;
+        return {
+          conversationType,
+          conversationId,
+          messageId,
+          sentTime
+        };
+      });
       let data = {
         topic: COMMAND_TOPICS.READ_MESSAGE,
         messages
@@ -12450,6 +12638,16 @@ function Message$1 (io, emitter, logger) {
             sentTime: timestamp,
             io
           });
+          let conversation = messages[0];
+          let notify = {
+            name: MESSAGE_TYPE.READ_MSG,
+            conversationType: conversation.conversationType,
+            conversationId: conversation.conversationId,
+            content: {
+              msgs: messages
+            }
+          };
+          commandNotify(notify);
         }
         resolve();
       });
@@ -12467,6 +12665,16 @@ function Message$1 (io, emitter, logger) {
       };
       io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
         delete result.index;
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         resolve(result);
       });
     });
@@ -12482,15 +12690,12 @@ function Message$1 (io, emitter, logger) {
         messageId: message.messageId
       });
       let msg = {
-        ...message,
+        ...utils.clone(message),
         name: MESSAGE_TYPE.MODIFY
       };
       let notify = (_msg = {}) => {
         utils.extend(msg, _msg);
-        let config = io.getConfig();
-        if (!config.isPC) {
-          io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, msg);
-        }
+        commandNotify(msg);
       };
       // 兼容 PC 端修改非 content 属性，保证多端行为一致性，直接返回，PC 端会做本地消息 update
       if (utils.isUndefined(message.content)) {
@@ -12502,6 +12707,16 @@ function Message$1 (io, emitter, logger) {
         ...message
       };
       io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         let sender = io.getCurrentUser();
         notify({
           sender,
@@ -12509,10 +12724,10 @@ function Message$1 (io, emitter, logger) {
           isUpdated: true,
           content: {
             messageId: message.messageId,
-            ...message.content
+            content: message.content
           }
         });
-        resolve(msg);
+        resolve();
       });
     });
   };
@@ -12534,10 +12749,19 @@ function Message$1 (io, emitter, logger) {
         userId: user.id,
         ...params
       };
-      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        isFinished,
-        msgs
-      }) => {
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg,
+          isFinished,
+          msgs
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         resolve({
           isFinished,
           msgs
@@ -12560,18 +12784,22 @@ function Message$1 (io, emitter, logger) {
         userId
       };
       io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        cred: {
+        cred,
+        code
+      }) => {
+        cred = cred || {};
+        let {
           token,
           domain,
           type,
           url
-        }
-      }) => {
+        } = cred;
         resolve({
           token,
           domain,
           type,
-          url
+          url,
+          code
         });
       });
     });
@@ -12609,6 +12837,9 @@ function Message$1 (io, emitter, logger) {
       let {
         type
       } = auth;
+      if (utils.isEqual(ErrorType.COMMAND_FAILED.code, auth.code)) {
+        return _callbacks.onerror(ErrorType.COMMAND_FAILED);
+      }
       if (!utils.isEqual(type, uploadType)) {
         return _callbacks.onerror(ErrorType.UPLOAD_PLUGIN_NOTMATCH);
       }
@@ -12629,6 +12860,9 @@ function Message$1 (io, emitter, logger) {
           type: fileType,
           ext
         }).then(cred => {
+          if (utils.isEqual(ErrorType.COMMAND_FAILED.code, cred.code)) {
+            return _callbacks.onerror(ErrorType.COMMAND_FAILED);
+          }
           common.uploadThumbnail(upload, {
             ...params,
             ...cred
@@ -12659,6 +12893,9 @@ function Message$1 (io, emitter, logger) {
           type: fileType,
           ext: 'png'
         }).then(cred => {
+          if (utils.isEqual(ErrorType.COMMAND_FAILED.code, cred.code)) {
+            return _callbacks.onerror(ErrorType.COMMAND_FAILED);
+          }
           common.uploadFrame(upload, {
             ...params,
             ...cred
@@ -12728,7 +12965,7 @@ function Message$1 (io, emitter, logger) {
       fileType: FILE_TYPE.FILE
     };
     return utils.deferred((resolve, reject) => {
-      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE);
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE, true);
       let {
         uploadType
       } = io.getConfig();
@@ -12736,7 +12973,9 @@ function Message$1 (io, emitter, logger) {
         error = ErrorType.UPLOAD_PLUGIN_ERROR;
       }
       if (!utils.isEmpty(error)) {
-        return reject(error);
+        return reject({
+          error
+        });
       }
       logger.info({
         tag: LOG_MODULE.MSG_SEND_FILE,
@@ -12758,12 +12997,28 @@ function Message$1 (io, emitter, logger) {
         size
       };
       onbefore(msg);
+      if (!io.isConnected()) {
+        return reject({
+          tid,
+          sentState: MESSAGE_SENT_STATE.FAILED,
+          error: ErrorType.CONNECTION_NOT_READY
+        });
+      }
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
           sendMessage(message).then(resolve, reject);
         },
-        onerror: callbacks.onerror
+        onerror: error => {
+          if (utils.isEqual(error.code, ErrorType.COMMAND_FAILED.code)) {
+            return reject({
+              tid,
+              sentState: MESSAGE_SENT_STATE.FAILED,
+              error: ErrorType.COMMAND_FAILED
+            });
+          }
+          callbacks.onerror(error, message);
+        }
       });
     });
   };
@@ -12776,7 +13031,7 @@ function Message$1 (io, emitter, logger) {
       scale: message.scale
     };
     return utils.deferred((resolve, reject) => {
-      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE);
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE, true);
       let {
         uploadType
       } = io.getConfig();
@@ -12784,7 +13039,9 @@ function Message$1 (io, emitter, logger) {
         error = ErrorType.UPLOAD_PLUGIN_ERROR;
       }
       if (!utils.isEmpty(error)) {
-        return reject(error);
+        return reject({
+          error
+        });
       }
       logger.info({
         tag: LOG_MODULE.MSG_SEND_FILE,
@@ -12797,12 +13054,28 @@ function Message$1 (io, emitter, logger) {
         sentState: MESSAGE_SENT_STATE.SENDING
       });
       onbefore(message);
+      if (!io.isConnected()) {
+        return reject({
+          tid,
+          sentState: MESSAGE_SENT_STATE.FAILED,
+          error: ErrorType.CONNECTION_NOT_READY
+        });
+      }
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
           sendMessage(message).then(resolve, reject);
         },
-        onerror: callbacks.onerror
+        onerror: error => {
+          if (utils.isEqual(error.code, ErrorType.COMMAND_FAILED.code)) {
+            return reject({
+              tid,
+              sentState: MESSAGE_SENT_STATE.FAILED,
+              error: ErrorType.COMMAND_FAILED
+            });
+          }
+          callbacks.onerror(error, message);
+        }
       });
     });
   };
@@ -12814,7 +13087,7 @@ function Message$1 (io, emitter, logger) {
       fileType: FILE_TYPE.AUDIO
     };
     return utils.deferred((resolve, reject) => {
-      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE);
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE, true);
       let {
         uploadType
       } = io.getConfig();
@@ -12822,7 +13095,9 @@ function Message$1 (io, emitter, logger) {
         error = ErrorType.UPLOAD_PLUGIN_ERROR;
       }
       if (!utils.isEmpty(error)) {
-        return reject(error);
+        return reject({
+          error
+        });
       }
       logger.info({
         tag: LOG_MODULE.MSG_SEND_FILE,
@@ -12835,12 +13110,28 @@ function Message$1 (io, emitter, logger) {
         sentState: MESSAGE_SENT_STATE.SENDING
       });
       onbefore(message);
+      if (!io.isConnected()) {
+        return reject({
+          tid,
+          sentState: MESSAGE_SENT_STATE.FAILED,
+          error: ErrorType.CONNECTION_NOT_READY
+        });
+      }
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
           sendMessage(message).then(resolve, reject);
         },
-        onerror: callbacks.onerror
+        onerror: error => {
+          if (utils.isEqual(error.code, ErrorType.COMMAND_FAILED.code)) {
+            return reject({
+              tid,
+              sentState: MESSAGE_SENT_STATE.FAILED,
+              error: ErrorType.COMMAND_FAILED
+            });
+          }
+          callbacks.onerror(error, message);
+        }
       });
     });
   };
@@ -12853,7 +13144,7 @@ function Message$1 (io, emitter, logger) {
       scale: message.scale
     };
     return utils.deferred((resolve, reject) => {
-      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE);
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.SEND_FILE_MESSAGE, true);
       let {
         uploadType
       } = io.getConfig();
@@ -12861,7 +13152,9 @@ function Message$1 (io, emitter, logger) {
         error = ErrorType.UPLOAD_PLUGIN_ERROR;
       }
       if (!utils.isEmpty(error)) {
-        return reject(error);
+        return reject({
+          error
+        });
       }
       logger.info({
         tag: LOG_MODULE.MSG_SEND_FILE,
@@ -12874,12 +13167,28 @@ function Message$1 (io, emitter, logger) {
         sentState: MESSAGE_SENT_STATE.SENDING
       });
       onbefore(message);
+      if (!io.isConnected()) {
+        return reject({
+          tid,
+          sentState: MESSAGE_SENT_STATE.FAILED,
+          error: ErrorType.CONNECTION_NOT_READY
+        });
+      }
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
           sendMessage(message).then(resolve, reject);
         },
-        onerror: callbacks.onerror
+        onerror: error => {
+          if (utils.isEqual(error.code, ErrorType.COMMAND_FAILED.code)) {
+            return reject({
+              tid,
+              sentState: MESSAGE_SENT_STATE.FAILED,
+              error: ErrorType.COMMAND_FAILED
+            });
+          }
+          callbacks.onerror(error, message);
+        }
       });
     });
   };
@@ -12887,7 +13196,9 @@ function Message$1 (io, emitter, logger) {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, params, FUNC_PARAM_CHECKER.SEND_MERGE_MESSAGE);
       if (!utils.isEmpty(error)) {
-        return reject(error);
+        return reject({
+          error
+        });
       }
       logger.info({
         tag: LOG_MODULE.MSG_SEND_MERGE
@@ -12900,7 +13211,9 @@ function Message$1 (io, emitter, logger) {
         title
       } = params;
       if (messages.length > 20) {
-        return reject(ErrorType.TRANSFER_MESSAGE_COUNT_EXCEED);
+        return reject({
+          error: ErrorType.TRANSFER_MESSAGE_COUNT_EXCEED
+        });
       }
       let mergeMsg = {
         channelType: CONVERATION_TYPE.PRIVATE,
@@ -12955,10 +13268,19 @@ function Message$1 (io, emitter, logger) {
         topic: COMMAND_TOPICS.GET_MERGE_MSGS
       };
       utils.extend(data, params);
-      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        isFinished,
-        messages
-      }) => {
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg,
+          isFinished,
+          messages
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
         resolve({
           isFinished,
           messages
@@ -12981,9 +13303,8 @@ function Message$1 (io, emitter, logger) {
         msg
       }) => {
         if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          return reject({
-            code
-          });
+          let error = common.getError(code);
+          return reject(error);
         }
         resolve({
           message: msg
@@ -13058,17 +13379,23 @@ function Message$1 (io, emitter, logger) {
         reactionId,
         userId
       };
-      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        code,
-        timestamp
-      }) => {
-        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          common.updateSyncTime({
-            isSender: true,
-            sentTime: timestamp,
-            io
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg,
+          timestamp
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
           });
         }
+        common.updateSyncTime({
+          isSender: true,
+          sentTime: timestamp,
+          io
+        });
         resolve();
       });
     });
@@ -13092,17 +13419,23 @@ function Message$1 (io, emitter, logger) {
         reactionId,
         userId
       };
-      io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-        code,
-        timestamp
-      }) => {
-        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
-          common.updateSyncTime({
-            isSender: true,
-            sentTime: timestamp,
-            io
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg,
+          timestamp
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
           });
         }
+        common.updateSyncTime({
+          isSender: true,
+          sentTime: timestamp,
+          io
+        });
         resolve();
       });
     });
@@ -13453,6 +13786,7 @@ function Chatroom$1 (io, emitter, logger) {
       chatroom,
       conversationId: id
     };
+    let count = chatroom.count || 50;
     io.sendCommand(SIGNAL_CMD.QUERY, data, ({
       code
     }) => {
@@ -13469,6 +13803,7 @@ function Chatroom$1 (io, emitter, logger) {
           name: SIGNAL_NAME.S_NTF,
           msg: {
             receiveTime: 0,
+            count: count,
             type: NOTIFY_TYPE.CHATROOM,
             targetId: id
           }

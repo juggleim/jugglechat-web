@@ -93,12 +93,13 @@ async function clearUnreadCount(item, index) {
   let conversation = props.conversations[index];
   conversation.unreadCount = 0;
   let { conversationId, conversationType, latestUnreadIndex } = item;
-  let result = await juggle.clearUnreadcount({
+  let params = {
     conversationId,
     conversationType,
     unreadIndex: latestUnreadIndex
-  });
-  console.log('clearunreadcount', result);
+  };
+  let result = await juggle.clearUnreadcount(params);
+  console.log('clearunreadcount', params);
 }
 </script>
 
