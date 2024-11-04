@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.7.15
+* JuggleIM.js v1.7.17
 * (c) 2022-2024 JuggleIM
 * Released under the MIT License.
 */
@@ -5409,6 +5409,14 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           chatId: {
             type: "string",
             id: 1
+          },
+          chatName: {
+            type: "string",
+            id: 2
+          },
+          isAutoCreate: {
+            type: "bool",
+            id: 3
           }
         }
       },
@@ -7637,12 +7645,14 @@ function getQueryBody({
   if (utils.isEqual(COMMAND_TOPICS.JOIN_CHATROOM, topic)) {
     let {
       chatroom: {
-        id: chatId
+        id: chatId,
+        isAutoCreate
       }
     } = data;
     let codec = $root.lookup('codec.ChatRoomReq');
     let message = codec.create({
-      chatId
+      chatId,
+      isAutoCreate
     });
     targetId = chatId;
     buffer = codec.encode(message).finish();
@@ -8403,13 +8413,13 @@ function Decoder(cache, io) {
           extFields,
           userId,
           updatedTime
-        } = targetUserInfo;
+        } = targetUserInfo || {};
         extFields = utils.toObject(extFields);
         utils.extend(latestMessage, {
-          conversationTitle: nickname,
-          conversationPortrait: userPortrait,
-          conversationExts: extFields,
-          conversationUpdatedTime: updatedTime
+          conversationTitle: nickname || '',
+          conversationPortrait: userPortrait || '',
+          conversationExts: extFields || '',
+          conversationUpdatedTime: updatedTime || 0
         });
         GroupCacher.set(userId, targetUserInfo);
       }
@@ -9304,6 +9314,7 @@ function MessageSyncer(send, emitter, io, {
         messages,
         code
       }) => {
+        messages = messages || [];
         logger.info({
           tag: LOG_MODULE.MSG_SYNC,
           data,
@@ -9514,6 +9525,15 @@ function ChatroomSyncer(send, emitter, io, {
           syncTime,
           msg
         });
+        return next();
+      }
+      if (msg.isNotSync) {
+        logger.info({
+          tag: LOG_MODULE.MSG_SYNC,
+          syncTime,
+          msg
+        });
+        setChatRoomSyncTime(msg.targetId, msg.receiveTime);
         return next();
       }
       let count = msg.count || 50;
@@ -9754,7 +9774,23 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.15';
+let VERSION = '1.7.17';
+
+function NetworkWatcher (callbacks) {
+  let onlineEvent = () => {
+    let event = callbacks.ononline || utils.noop;
+    event();
+  };
+  let watch = () => {
+    if (typeof window == 'object' && window.addEventListener) {
+      window.removeEventListener('online', onlineEvent);
+      window.addEventListener('online', onlineEvent);
+    }
+  };
+  return {
+    watch
+  };
+}
 
 /* 
   fileCompressLimit: 图片缩略图压缩限制，小于设置数值将不执行压缩，单位 KB
@@ -9797,6 +9833,26 @@ function IO(config) {
     timer.pause();
     syncTimer.pause();
   };
+  let networkWatcher = NetworkWatcher({
+    ononline: () => {
+      if (ws.readyState == 3) {
+        console.log('ws.readyState', ws.readyState);
+        let user = getCurrentUser({
+          ignores: []
+        });
+        clearHeart();
+        cache.remove(CONNECT_TOOL.RECONNECT_COUNT);
+        cache.remove(CONNECT_TOOL.RECONNECT_FREQUENCY);
+        return reconnect(user, ({
+          next
+        }) => {
+          next = next || utils.noop;
+          next();
+        });
+      }
+    }
+  });
+  networkWatcher.watch();
   let isUserDisconnected = false;
   let onDisconnect = (result = {}) => {
     let {
@@ -9954,11 +10010,13 @@ function IO(config) {
       });
     });
   };
+  let reconnectTimer = 0;
   let reconnect = ({
     token,
     userId,
     deviceId
   }, callback) => {
+    clearTimeout(reconnectTimer);
     logger.info({
       tag: LOG_MODULE.CON_RECONNECT,
       userId,
@@ -9978,7 +10036,7 @@ function IO(config) {
     let reconnectOpt = cache.get(CONNECT_TOOL.RECONNECT_FREQUENCY);
     let frequency = reconnectOpt.frequency || 1;
     let msec = frequency * 1000;
-    setTimeout(() => {
+    reconnectTimer = setTimeout(() => {
       count += 1;
       cache.set(CONNECT_TOOL.RECONNECT_COUNT, {
         count
@@ -10034,6 +10092,10 @@ function IO(config) {
       index,
       counter
     });
+    if (ws.readyState != 1) {
+      disconnect();
+      return callback(ErrorType.COMMAND_FAILED);
+    }
     ws.send(buffer);
     let _data = utils.clone(data);
     delete _data.messages;
@@ -13767,16 +13829,47 @@ function Chatroom$1 (io, emitter, logger) {
       if (chatroomResult.isJoined) {
         return resolve();
       }
+      let _chatroom = {
+        ...utils.clone(chatroom),
+        isAutoCreate: false
+      };
       logger.info({
         tag: LOG_MODULE.CHATROOM_USER_JOIN,
-        ...chatroom
+        ..._chatroom
       });
-      _joinChatroom(chatroom, {
+      _joinChatroom(_chatroom, {
         success: resolve,
         fail: reject
       });
     });
   };
+  function joinAndCreateChatroom(chatroom) {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, chatroom, FUNC_PARAM_CHECKER.JOINCHATROOM);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        id
+      } = chatroom;
+      let chatroomResult = chatroomCacher$1.get(id);
+      if (chatroomResult.isJoined) {
+        return resolve();
+      }
+      let _chatroom = {
+        ...utils.clone(chatroom),
+        isAutoCreate: true
+      };
+      logger.info({
+        tag: LOG_MODULE.CHATROOM_USER_JOIN,
+        ..._chatroom
+      });
+      _joinChatroom(_chatroom, {
+        success: resolve,
+        fail: reject
+      });
+    });
+  }
   function _joinChatroom(chatroom, callbacks) {
     let {
       id
@@ -13786,10 +13879,15 @@ function Chatroom$1 (io, emitter, logger) {
       chatroom,
       conversationId: id
     };
-    let count = chatroom.count || 50;
-    io.sendCommand(SIGNAL_CMD.QUERY, data, ({
-      code
-    }) => {
+    let count = chatroom.count;
+    if (utils.isUndefined(count)) {
+      count = 50;
+    }
+    io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+      let {
+        code,
+        timestamp
+      } = result;
       logger.info({
         tag: LOG_MODULE.CHATROOM_USER_JOIN,
         ...chatroom,
@@ -13799,10 +13897,13 @@ function Chatroom$1 (io, emitter, logger) {
         chatroomCacher$1.set(chatroom.id, {
           isJoined: true
         });
+        let isNotSync = utils.isEqual(0, count);
+        let _time = isNotSync ? timestamp : 0;
         let syncers = [{
           name: SIGNAL_NAME.S_NTF,
           msg: {
-            receiveTime: 0,
+            receiveTime: _time,
+            isNotSync,
             count: count,
             type: NOTIFY_TYPE.CHATROOM,
             targetId: id
@@ -14011,6 +14112,7 @@ function Chatroom$1 (io, emitter, logger) {
   };
   return {
     joinChatroom,
+    joinAndCreateChatroom,
     quitChatroom,
     setChatroomAttributes,
     getChatroomAttributes,
@@ -14294,6 +14396,9 @@ function Chatroom ($chatroom, {
   let joinChatroom = chatroom => {
     return $chatroom.joinChatroom(chatroom);
   };
+  let joinAndCreateChatroom = chatroom => {
+    return $chatroom.joinAndCreateChatroom(chatroom);
+  };
   let quitChatroom = chatroom => {
     return $chatroom.quitChatroom(chatroom);
   };
@@ -14312,6 +14417,7 @@ function Chatroom ($chatroom, {
   return {
     joinChatroom,
     quitChatroom,
+    joinAndCreateChatroom,
     setChatroomAttributes,
     getChatroomAttributes,
     removeChatroomAttributes,
