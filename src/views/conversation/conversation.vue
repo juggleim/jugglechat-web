@@ -667,6 +667,8 @@ watch(() => state.content, (val) => {
   let str = val.split('')[val.length - 1]
   if (conversationTools.isGroup(state.currentConversation) && utils.isEqual(str, '@')) {
     utils.extend(state, { isShowMention: true });
+  }else{
+    utils.extend(state, { isShowMention: false });
   }
   if (utils.isEmpty(val)) {
     onInputEsc();
