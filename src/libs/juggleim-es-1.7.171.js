@@ -8804,15 +8804,16 @@ function formatConversations$1(conversations, options = {}) {
       });
     }
     if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
+      groupInfo = groupInfo || {
+        extFields: {}
+      };
       let {
         groupName,
         groupPortrait,
         extFields,
         groupId,
         updatedTime
-      } = groupInfo || {
-        extFields: {}
-      };
+      } = groupInfo;
       extFields = utils.toObject(extFields);
       utils.extend(latestMessage, {
         conversationTitle: groupName || '',
@@ -8823,21 +8824,24 @@ function formatConversations$1(conversations, options = {}) {
       GroupCacher.set(groupId, groupInfo);
     }
     if (utils.isEqual(conversationType, CONVERATION_TYPE.PRIVATE)) {
+      targetUserInfo = targetUserInfo || {
+        extFields: {}
+      };
       let {
         userPortrait,
         nickname,
         extFields,
         userId,
         updatedTime
-      } = targetUserInfo || {};
+      } = targetUserInfo;
       extFields = utils.toObject(extFields);
       utils.extend(latestMessage, {
         conversationTitle: nickname || '',
         conversationPortrait: userPortrait || '',
-        conversationExts: extFields || '',
+        conversationExts: extFields,
         conversationUpdatedTime: updatedTime || 0
       });
-      GroupCacher.set(userId, targetUserInfo);
+      UserCacher.set(userId, targetUserInfo);
     }
     let {
       conversationTitle,
