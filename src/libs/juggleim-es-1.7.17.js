@@ -642,6 +642,7 @@ let SIGNAL_NAME = {
   CMD_SYNC_TAG_FINISHED: 'cmd_inner_sync_tags_finished',
   CMD_CHATROOM_EVENT: 'cmd_inner_chatroom_event',
   CMD_CHATROOM_REJOIN: 'cmd_inner_chatroom_rejoin',
+  CMD_RTC_INVITE_EVENT: 'cmd_inner_rtc_invite_event',
   // 与下行信令进行匹配，在 io.js 中进行派发
   S_CONNECT_ACK: 's_connect_ack',
   S_DISCONNECT: 's_disconnect',
@@ -649,6 +650,7 @@ let SIGNAL_NAME = {
   S_QUERY_ACK: 's_query_ack',
   S_NTF: 's_ntf',
   S_CHATROOM_USER_NTF: 's_c_user_ntf',
+  S_RTC_INVITE_NTF: 's_rtc_invite_ntf',
   // PC 端自定义通知
   S_SYNC_CONVERSATION_NTF: 's_sync_conversation_ntf',
   S_PONG: 's_pong',
@@ -1084,7 +1086,17 @@ let COMMAND_TOPICS = {
   CONVERSATION_TAG_ADD: 'tag_add_convers',
   CONVERSATION_TAG_REMOVE: 'tag_del_convers',
   TAG_REMOVE: 'del_user_conver_tags',
-  CONVERSATION_TAG_QUERY: 'qry_user_conver_tags'
+  CONVERSATION_TAG_QUERY: 'qry_user_conver_tags',
+  RTC_CREATE_ROOM: 'rtc_create',
+  RTC_JOIN_ROOM: 'rtc_join',
+  RTC_QUIT_ROOM: 'rtc_quit',
+  RTC_ACCEPT: 'rtc_accept',
+  RTC_DECLINE: 'rtc_decline',
+  RTC_QRY_ROOM: 'rtc_qry',
+  RTC_PING: 'rtc_ping',
+  RTC_INVITE: 'rtc_invite',
+  RTC_UPDATE_STATE: 'rtc_upd_state',
+  RTC_INVITE_EVENT: 'rtc_invite_event'
 };
 let NOTIFY_TYPE = {
   DEFAULT: 0,
@@ -1196,7 +1208,9 @@ let EVENT = {
   CHATROOM_ATTRIBUTE_DELETED: 'chatroom_attr_deleted',
   CHATROOM_DESTROYED: 'chatroom_destroyed',
   CHATROOM_USER_QUIT: 'chatroom_user_quit',
-  CHATROOM_USER_KICKED: 'chatroom_user_kicked'
+  CHATROOM_USER_KICKED: 'chatroom_user_kicked',
+  RTC_ROOM_EVENT: 'rtc_room_event',
+  RTC_INVITE_EVENT: 'rtc_invite_event'
 };
 let CONNECT_STATE = {
   CONNECTED: 0,
@@ -1570,6 +1584,25 @@ let CONVERATION_TAG_TYPE = {
   SYSNTEM: 1,
   GLOBAL: 2
 };
+let RTC_STATE = {
+  NONE: 0,
+  INCOMING: 1,
+  OUTGOING: 2,
+  CONNECTING: 3,
+  CONNECTED: 4
+};
+let RTC_ROOM_TYPE = {
+  ONE_ONE: 0,
+  ONE_MORE: 1
+};
+let RTC_INVITE_TYPE = {
+  NONE: 0,
+  INVITE: 1,
+  ACCEPT: 2,
+  REJECT: 3,
+  CANCEL: 4,
+  TIMEOUT: 5
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1608,7 +1641,10 @@ var ENUM = /*#__PURE__*/Object.freeze({
   UNREAD_TAG: UNREAD_TAG,
   SET_SEARCH_CONTENT_TYPE: SET_SEARCH_CONTENT_TYPE,
   CONVERSATION_TAG: CONVERSATION_TAG,
-  CONVERATION_TAG_TYPE: CONVERATION_TAG_TYPE
+  CONVERATION_TAG_TYPE: CONVERATION_TAG_TYPE,
+  RTC_STATE: RTC_STATE,
+  RTC_ROOM_TYPE: RTC_ROOM_TYPE,
+  RTC_INVITE_TYPE: RTC_INVITE_TYPE
 });
 
 function Cache () {
@@ -6025,6 +6061,176 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           SystemTag: 1,
           GlobalTag: 2
         }
+      },
+      RtcRoomReq: {
+        fields: {
+          roomType: {
+            type: "RtcRoomType",
+            id: 1
+          },
+          roomId: {
+            type: "string",
+            id: 2
+          },
+          joinMember: {
+            type: "RtcMember",
+            id: 3
+          }
+        }
+      },
+      RtcRoomType: {
+        values: {
+          OneOne: 0,
+          OneMore: 1
+        }
+      },
+      RtcMember: {
+        fields: {
+          member: {
+            type: "UserInfo",
+            id: 1
+          },
+          rtcState: {
+            type: "RtcState",
+            id: 2
+          },
+          cameraEnable: {
+            type: "int32",
+            id: 3
+          },
+          micEnable: {
+            type: "int32",
+            id: 4
+          },
+          callTime: {
+            type: "int64",
+            id: 5
+          },
+          connectTime: {
+            type: "int64",
+            id: 6
+          },
+          hangupTime: {
+            type: "int64",
+            id: 7
+          },
+          inviter: {
+            type: "UserInfo",
+            id: 8
+          }
+        }
+      },
+      RtcState: {
+        values: {
+          RtcStateDefault: 0,
+          RtcIncoming: 1,
+          RtcOutgoing: 2,
+          RtcConnecting: 3,
+          RtcConnected: 4
+        }
+      },
+      RtcRoom: {
+        fields: {
+          roomType: {
+            type: "RtcRoomType",
+            id: 1
+          },
+          roomId: {
+            type: "string",
+            id: 2
+          },
+          owner: {
+            type: "UserInfo",
+            id: 3
+          },
+          members: {
+            rule: "repeated",
+            type: "RtcMember",
+            id: 51
+          }
+        }
+      },
+      RtcInviteReq: {
+        fields: {
+          targetIds: {
+            rule: "repeated",
+            type: "string",
+            id: 1
+          },
+          roomType: {
+            type: "RtcRoomType",
+            id: 2
+          },
+          roomId: {
+            type: "string",
+            id: 3
+          },
+          rtcChannel: {
+            type: "RtcChannel",
+            id: 4
+          }
+        }
+      },
+      InviteType: {
+        values: {
+          RtcInvite: 0,
+          RtcAccept: 1,
+          RtcHangup: 2
+        }
+      },
+      RtcInviteEvent: {
+        fields: {
+          inviteType: {
+            type: "InviteType",
+            id: 1
+          },
+          user: {
+            type: "UserInfo",
+            id: 2
+          },
+          room: {
+            type: "RtcRoom",
+            id: 3
+          },
+          targetUsers: {
+            rule: "repeated",
+            type: "UserInfo",
+            id: 4
+          }
+        }
+      },
+      RtcAnswerReq: {
+        fields: {
+          targetId: {
+            type: "string",
+            id: 1
+          },
+          roomId: {
+            type: "string",
+            id: 2
+          }
+        }
+      },
+      RtcChannel: {
+        values: {
+          Zego: 0
+        }
+      },
+      RtcAuth: {
+        fields: {
+          zegoAuth: {
+            type: "ZegoAuth",
+            id: 1
+          }
+        }
+      },
+      ZegoAuth: {
+        fields: {
+          token: {
+            type: "string",
+            id: 1
+          }
+        }
       }
     }
   }
@@ -7846,6 +8052,111 @@ function getQueryBody({
     targetId = userId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isInclude([COMMAND_TOPICS.RTC_CREATE_ROOM, COMMAND_TOPICS.RTC_JOIN_ROOM], topic)) {
+    let {
+      room,
+      user
+    } = data;
+    let {
+      id,
+      type,
+      option = {}
+    } = room;
+    let {
+      cameraEnable = false,
+      micEnable = false
+    } = option;
+    let codec = $root.lookup('codec.RtcRoomReq');
+    let message = codec.create({
+      roomId: id,
+      roomType: type,
+      joinMember: {
+        member: user,
+        rtcState: RTC_STATE.NONE,
+        cameraEnable,
+        micEnable
+      }
+    });
+    targetId = user.id;
+    if (utils.isEqual(COMMAND_TOPICS.RTC_JOIN_ROOM, topic)) {
+      targetId = room.id;
+    }
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.RTC_QUIT_ROOM, topic)) {
+    let {
+      room
+    } = data;
+    let codec = $root.lookup('codec.RtcRoomReq');
+    let message = codec.create({
+      roomId: room.id,
+      roomType: room.type
+    });
+    targetId = room.id;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.RTC_QRY_ROOM, topic)) {
+    let {
+      room
+    } = data;
+    let codec = $root.lookup('codec.Nil');
+    let message = codec.create({});
+    targetId = room.id;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.RTC_PING, topic)) {
+    let {
+      room
+    } = data;
+    let codec = $root.lookup('codec.Nil');
+    let message = codec.create({});
+    targetId = room.id;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.RTC_INVITE, topic)) {
+    let {
+      roomId,
+      roomType,
+      memberIds,
+      channel,
+      user
+    } = data;
+    let codec = $root.lookup('codec.RtcInviteReq');
+    let message = codec.create({
+      roomId: roomId,
+      roomType: roomType,
+      targetIds: memberIds,
+      rtcChannel: channel
+    });
+    targetId = user.id;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.RTC_UPDATE_STATE, topic)) {
+    let {
+      memberId,
+      state,
+      roomId
+    } = data;
+    let codec = $root.lookup('codec.RtcMember');
+    let message = codec.create({
+      member: {
+        userId: memberId
+      },
+      rtcState: state
+    });
+    targetId = roomId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isInclude([COMMAND_TOPICS.RTC_ACCEPT, COMMAND_TOPICS.RTC_DECLINE], topic)) {
+    let {
+      roomId,
+      user
+    } = data;
+    let codec = $root.lookup('codec.Nil');
+    let message = codec.create({});
+    targetId = roomId;
+    buffer = codec.encode(message).finish();
+  }
   let codec = $root.lookup('codec.QueryMsgBody');
   let message = codec.create({
     index,
@@ -7977,6 +8288,1138 @@ var UserCacher = {
   ...$userCacher
 };
 
+function msgFormat(msg, {
+  currentUser
+}) {
+  let {
+    converTags,
+    undisturbType,
+    msgExtSet,
+    senderId,
+    unreadIndex,
+    memberCount,
+    referMsg,
+    readCount,
+    msgId,
+    msgTime,
+    msgType,
+    msgContent,
+    type: conversationType,
+    targetId: conversationId,
+    mentionInfo,
+    isSend,
+    msgIndex,
+    isRead,
+    flags,
+    targetUserInfo,
+    groupInfo
+  } = msg;
+  let content = '';
+  if (msgContent && msgContent.length > 0) {
+    content = new TextDecoder().decode(msgContent);
+    content = utils.parse(content);
+  }
+
+  // 服务端返回数据有 targetUserInfo 和 groupInfo 为 null 情况，此处补充 targetId，方便本地有缓存时获取信息
+  targetUserInfo = targetUserInfo || {
+    userId: senderId
+  };
+  groupInfo = groupInfo || {
+    groupId: conversationId
+  };
+
+  // 默认更新内存数据
+  let userId = targetUserInfo.userId;
+  let groupId = groupInfo.groupId;
+  GroupCacher.set(groupId, groupInfo);
+  UserCacher.set(userId, targetUserInfo);
+  let targetUser = common.formatUser(targetUserInfo);
+
+  // 特性检查，如果没有 name 尝试从内存获取信息
+  if (utils.isUndefined(targetUser.name)) {
+    let _user = UserCacher.get(userId);
+    targetUser = utils.isEmpty(_user) ? {
+      id: userId
+    } : _user;
+  }
+  if (utils.isUndefined(groupInfo.groupName)) {
+    let _group = GroupCacher.get(groupId);
+    groupInfo = utils.isEmpty(_group) ? {
+      id: groupId
+    } : _group;
+  }
+  if (mentionInfo) {
+    let {
+      targetUsers,
+      mentionType
+    } = mentionInfo;
+    let members = utils.map(targetUsers, user => {
+      user = common.formatUser(user);
+      return user;
+    });
+    mentionInfo = {
+      mentionType,
+      members
+    };
+  }
+  let newRefer = {};
+  if (referMsg) {
+    let rcontent = referMsg.msgContent || '';
+    if (rcontent.length != 0) {
+      rcontent = new TextDecoder().decode(rcontent);
+      newRefer.content = utils.parse(rcontent);
+    }
+    referMsg.targetUserInfo = common.formatUser(referMsg.targetUserInfo || {});
+    utils.extend(newRefer, {
+      name: referMsg.msgType,
+      messageId: referMsg.messageIndex,
+      messageIndex: referMsg.msgIndex,
+      sentTime: referMsg.msgTime,
+      sender: referMsg.targetUserInfo
+    });
+  }
+  let msgFlag = common.formatter.toMsg(flags);
+  let user = currentUser;
+  let reactions = {};
+  if (msgExtSet) {
+    msgExtSet = utils.map(msgExtSet, item => {
+      let {
+        key
+      } = item;
+      item.key = unescape(key);
+      return item;
+    });
+    msgExtSet = utils.clone(msgExtSet);
+    reactions = utils.groupBy(msgExtSet, ['key']);
+  }
+  converTags = converTags || [];
+  let tags = utils.map(converTags, item => {
+    let {
+      tag: id,
+      tagName: name,
+      tagType: type
+    } = item;
+    return {
+      id,
+      name,
+      type
+    };
+  });
+  let _message = {
+    conversationType,
+    conversationId,
+    conversationTitle: '',
+    conversationPortrait: '',
+    conversationExts: {},
+    sender: utils.clone(targetUser),
+    messageId: msgId,
+    tid: msgId,
+    sentTime: msgTime,
+    name: msgType,
+    isSender: utils.isEqual(user.id, senderId),
+    messageIndex: msgIndex,
+    mentionInfo,
+    isRead: !!isRead,
+    isUpdated: msgFlag.isUpdated,
+    isMuted: msgFlag.isMute,
+    isMass: msgFlag.isMass,
+    referMsg: newRefer,
+    sentState: MESSAGE_SENT_STATE.SUCCESS,
+    undisturbType: undisturbType || 0,
+    unreadIndex: unreadIndex || 0,
+    flags,
+    reactions,
+    tags
+  };
+  if (_message.isSender) {
+    utils.extend(_message.sender, user);
+  }
+  if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
+    let {
+      groupName,
+      groupPortrait,
+      extFields,
+      groupId,
+      updatedTime
+    } = groupInfo || {
+      extFields: {}
+    };
+    extFields = utils.toObject(extFields);
+    utils.extend(_message, {
+      conversationTitle: groupName || '',
+      conversationPortrait: groupPortrait || '',
+      conversationExts: extFields,
+      conversationUpdatedTime: groupInfo.updatedTime || 0,
+      unreadCount: memberCount - readCount,
+      readCount: readCount
+    });
+  }
+  if (utils.isEqual(conversationType, CONVERATION_TYPE.PRIVATE)) {
+    utils.extend(_message, {
+      conversationTitle: targetUser.name,
+      conversationPortrait: targetUser.portrait,
+      conversationExts: targetUser.exts,
+      conversationUpdatedTime: targetUser.updatedTime
+    });
+  }
+  if (utils.isInclude([MESSAGE_TYPE.RECALL_INFO, MESSAGE_TYPE.RECALL], msgType)) {
+    content = utils.rename(content, {
+      msg_id: 'messageId',
+      msg_time: 'sentTime'
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.MODIFY, msgType)) {
+    content = utils.rename(content, {
+      msg_type: 'name',
+      msg_content: 'content',
+      msg_id: 'messageId',
+      msg_seq: 'messageIndex',
+      msg_time: 'sentTime'
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.READ_MSG, msgType)) {
+    delete content.index_scopes;
+    let {
+      msgs
+    } = content;
+    msgs = utils.map(msgs, ({
+      msg_id: messageId
+    }) => {
+      return {
+        messageId
+      };
+    });
+    utils.extend(content, {
+      msgs
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.READ_GROUP_MSG, msgType)) {
+    let {
+      msgs
+    } = content;
+    msgs = utils.map(msgs, ({
+      msg_id,
+      member_count,
+      read_count
+    }) => {
+      return {
+        messageId: msg_id,
+        unreadCount: member_count - read_count,
+        readCount: read_count
+      };
+    });
+    utils.extend(content, {
+      msgs
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.CLEAR_UNREAD, msgType)) {
+    let {
+      conversations
+    } = content;
+    conversations = utils.map(conversations, ({
+      channel_type,
+      target_id,
+      latest_read_index
+    }) => {
+      return {
+        conversationType: channel_type,
+        conversationId: target_id,
+        unreadIndex: latest_read_index
+      };
+    });
+    utils.extend(content, {
+      conversations
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_UNDISTURB, msgType)) {
+    let {
+      conversations
+    } = content;
+    conversations = utils.map(conversations, item => {
+      return {
+        conversationId: item.target_id,
+        conversationType: item.channel_type,
+        undisturbType: item.undisturb_type
+      };
+    });
+    utils.extend(content, {
+      conversations
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_TOPCONVERS, msgType)) {
+    let {
+      conversations
+    } = content;
+    conversations = utils.map(conversations, item => {
+      return {
+        conversationId: item.target_id,
+        conversationType: item.channel_type,
+        isTop: Boolean(item.is_top)
+      };
+    });
+    utils.extend(content, {
+      conversations
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_REMOVE_CONVERS, msgType)) {
+    let {
+      conversations
+    } = content;
+    conversations = utils.map(conversations, item => {
+      return {
+        conversationId: item.target_id,
+        conversationType: item.channel_type,
+        time: msg.msgTime
+      };
+    });
+    utils.extend(content, {
+      conversations
+    });
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_DELETE_MSGS, msgType)) {
+    let msgs = utils.map(content.msgs, item => {
+      return {
+        tid: item.msg_id,
+        messageId: item.msg_id,
+        conversationId: msg.targetId,
+        conversationType: content.channel_type
+      };
+    });
+    content = {
+      conversationId: msg.targetId,
+      conversationType: content.channel_type,
+      messages: msgs
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.CLEAR_MSG, msgType)) {
+    content = {
+      cleanTime: content.clean_time,
+      conversationType: content.channel_type,
+      conversationId: msg.targetId,
+      senderId: content.sender_id
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_ADD_CONVER, msgType)) {
+    let _conversation = content.conversation;
+    let {
+      target_id,
+      channel_type,
+      sort_time,
+      sync_time,
+      target_user_info = {}
+    } = _conversation;
+    let {
+      nickname,
+      user_portrait,
+      ext_fields,
+      updated_time
+    } = target_user_info;
+    content = {
+      conversationId: target_id,
+      conversationType: channel_type,
+      conversationTitle: nickname,
+      conversationPortrait: user_portrait,
+      conversationExts: ext_fields,
+      latestMessage: {
+        conversationId: target_id,
+        conversationType: channel_type
+      },
+      unreadCount: 0,
+      updatedTime: updated_time,
+      sortTime: sort_time,
+      syncTime: sync_time
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_CLEAR_TOTALUNREAD, msgType)) {
+    content = {
+      clearTime: content.clear_time
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD, msgType)) {
+    let {
+      tag,
+      tag_name,
+      convers
+    } = content;
+    convers = convers || [];
+    convers = utils.map(convers, item => {
+      return {
+        conversationId: item.target_id,
+        conversationType: item.channel_type
+      };
+    });
+    content = {
+      id: tag,
+      name: tag_name,
+      conversations: convers
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE, msgType)) {
+    let {
+      tags
+    } = content;
+    tags = utils.map(tags, tag => {
+      return {
+        id: tag.tag
+      };
+    });
+    content = {
+      tags
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_REMOVE_CONVERS_FROM_TAG, msgType)) {
+    let {
+      tag: id,
+      convers
+    } = content;
+    convers = utils.map(convers, item => {
+      return {
+        conversationId: item.target_id,
+        conversationType: item.channel_type
+      };
+    });
+    content = {
+      id,
+      conversations: convers
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_MARK_UNREAD, msgType)) {
+    let list = content.conversations;
+    let conversations = utils.map(list, item => {
+      let {
+        unread_tag,
+        channel_type,
+        target_id
+      } = item;
+      return {
+        conversationId: target_id,
+        conversationType: channel_type,
+        unreadTag: unread_tag
+      };
+    });
+    content = {
+      conversations
+    };
+  }
+  if (utils.isEqual(MESSAGE_TYPE.COMMAND_MSG_EXSET, msgType)) {
+    let {
+      channel_type,
+      msg_id,
+      exts
+    } = content;
+    let reactions = utils.map(exts, item => {
+      let {
+        is_del,
+        timestamp,
+        key,
+        value
+      } = item;
+      key = unescape(key);
+      return {
+        isRemove: Boolean(is_del),
+        key,
+        value,
+        timestamp
+      };
+    });
+    content = {
+      conversationId,
+      conversationType,
+      messageId: msg_id,
+      reactions
+    };
+  }
+  utils.extend(_message, {
+    content
+  });
+  return _message;
+}
+function formatConversations$1(conversations, options = {}) {
+  return conversations.map(conversation => {
+    let {
+      msg,
+      targetId,
+      unreadCount,
+      sortTime: _sortTime,
+      topUpdatedTime,
+      targetUserInfo,
+      groupInfo,
+      syncTime,
+      undisturbType,
+      mentions,
+      channelType: conversationType,
+      latestReadIndex,
+      latestUnreadIndex,
+      isTop,
+      unreadTag,
+      converTags
+    } = conversation;
+    if (!msg) {
+      msg = {
+        msgContent: []
+      };
+    }
+    let {
+      topic,
+      currentUser
+    } = options;
+    utils.extend(msg, {
+      targetId
+    });
+    unreadCount = unreadCount || 0;
+    unreadTag = unreadTag || 0;
+    mentions = mentions || {};
+    if (!utils.isEmpty(mentions)) {
+      let {
+        isMentioned,
+        senders,
+        mentionMsgs
+      } = mentions;
+      senders = utils.map(senders, sender => {
+        return common.formatUser(sender);
+      });
+      mentionMsgs = utils.map(mentionMsgs, msg => {
+        let {
+          senderId,
+          msgId,
+          msgTime
+        } = msg;
+        return {
+          senderId,
+          messageId: msgId,
+          sentTime: msgTime
+        };
+      });
+      mentions = {
+        isMentioned: isMentioned,
+        senders: senders,
+        msgs: mentionMsgs,
+        count: mentionMsgs.length
+      };
+    }
+    let latestMessage = {};
+    if (!utils.isEqual(msg.msgContent.length, 0)) {
+      latestMessage = msgFormat(msg, {
+        currentUser
+      });
+    }
+    if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
+      let {
+        groupName,
+        groupPortrait,
+        extFields,
+        groupId,
+        updatedTime
+      } = groupInfo || {
+        extFields: {}
+      };
+      extFields = utils.toObject(extFields);
+      utils.extend(latestMessage, {
+        conversationTitle: groupName || '',
+        conversationPortrait: groupPortrait || '',
+        conversationExts: extFields,
+        conversationUpdatedTime: updatedTime || 0
+      });
+      GroupCacher.set(groupId, groupInfo);
+    }
+    if (utils.isEqual(conversationType, CONVERATION_TYPE.PRIVATE)) {
+      let {
+        userPortrait,
+        nickname,
+        extFields,
+        userId,
+        updatedTime
+      } = targetUserInfo || {};
+      extFields = utils.toObject(extFields);
+      utils.extend(latestMessage, {
+        conversationTitle: nickname || '',
+        conversationPortrait: userPortrait || '',
+        conversationExts: extFields || '',
+        conversationUpdatedTime: updatedTime || 0
+      });
+      GroupCacher.set(userId, targetUserInfo);
+    }
+    let {
+      conversationTitle,
+      conversationPortrait,
+      conversationExts,
+      conversationUpdatedTime
+    } = latestMessage;
+    if (utils.isEqual(COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS, topic)) {
+      _sortTime = topUpdatedTime;
+    }
+    converTags = converTags || [];
+    let tags = utils.map(converTags, item => {
+      let {
+        tag: id,
+        tagName: name,
+        tagType: type
+      } = item;
+      return {
+        id,
+        name,
+        type
+      };
+    });
+    return {
+      conversationType,
+      conversationId: targetId,
+      unreadCount,
+      sortTime: _sortTime,
+      latestMessage,
+      conversationTitle,
+      conversationPortrait,
+      conversationUpdatedTime,
+      conversationExts,
+      mentions,
+      syncTime,
+      undisturbType: undisturbType || 0,
+      latestReadIndex,
+      latestUnreadIndex,
+      unreadTag,
+      tags,
+      isTop: !!isTop
+    };
+  });
+}
+function formatRTCRoom(result) {
+  let {
+    roomId,
+    roomType,
+    members
+  } = result;
+  members = utils.map(members, item => {
+    let {
+      member,
+      rtcState: state,
+      cameraEnable,
+      micEnable,
+      callTime,
+      connectTime,
+      hangupTime,
+      inviter
+    } = item;
+    member = common.formatUser(member);
+    inviter = common.formatUser(inviter);
+    return {
+      member,
+      rtcState: state,
+      cameraEnable,
+      micEnable,
+      callTime,
+      connectTime,
+      hangupTime,
+      inviter
+    };
+  });
+  return {
+    room: {
+      id: roomId,
+      type: roomType
+    },
+    members: members
+  };
+}
+var tools$1 = {
+  msgFormat,
+  formatConversations: formatConversations$1,
+  formatRTCRoom
+};
+
+function getQueryAckBody(stream, {
+  cache,
+  currentUser
+}) {
+  let codec = $root.lookup('codec.QueryAckMsgBody');
+  let qryAckMsgBody = codec.decode(stream);
+  let {
+    index,
+    data,
+    code,
+    timestamp
+  } = qryAckMsgBody;
+  let {
+    topic,
+    targetId
+  } = cache.get(index);
+  let result = {};
+  if (utils.isInclude([COMMAND_TOPICS.HISTORY_MESSAGES, COMMAND_TOPICS.SYNC_MESSAGES, COMMAND_TOPICS.GET_MSG_BY_IDS, COMMAND_TOPICS.GET_MERGE_MSGS], topic)) {
+    result = getMessagesHandler(index, data, {
+      currentUser
+    });
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES)) {
+    result = getChatroomMsgsHandler(index, data, {
+      currentUser
+    });
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_ATTRS)) {
+    result = getChatroomAttrsHandler(index, data, {
+      targetId
+    });
+  }
+  if (utils.isInclude([COMMAND_TOPICS.CONVERSATIONS, COMMAND_TOPICS.SYNC_CONVERSATIONS, COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS], topic)) {
+    result = getConversationsHandler(index, data, {
+      topic,
+      currentUser
+    });
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_CONVERSATION)) {
+    result = getConversationHandler(index, data);
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_UNREAD_TOTLAL_CONVERSATION)) {
+    result = getTotalUnread(index, data);
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_READ_MESSAGE_DETAIL)) {
+    result = getMessageReadDetails(index, data);
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_MENTION_MSGS)) {
+    result = getMentionMessages(index, data, {
+      currentUser
+    });
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_FILE_TOKEN)) {
+    result = getFileToken(index, data);
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_USER_INFO)) {
+    result = getUserInfo(index, data);
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_ALL_DISTURB)) {
+    result = getAllDisturb(index, data);
+  }
+  if (utils.isInclude([COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES, COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES], topic)) {
+    result = getChatroomSetAttrs(index, data);
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_FIRST_UNREAD_MSG)) {
+    result = getMessage(index, data, {
+      currentUser
+    });
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.CONVERSATION_TAG_QUERY)) {
+    result = getConversationTags(index, data);
+  }
+  if (utils.isInclude([COMMAND_TOPICS.RTC_ACCEPT, COMMAND_TOPICS.RTC_INVITE], topic)) {
+    result = getRTCAuth(index, data);
+  }
+  if (utils.isInclude([COMMAND_TOPICS.RTC_CREATE_ROOM, COMMAND_TOPICS.RTC_JOIN_ROOM, COMMAND_TOPICS.RTC_QRY_ROOM], topic)) {
+    result = getRTCRoom(index, data);
+  }
+  result = utils.extend(result, {
+    code,
+    timestamp,
+    index
+  });
+  return result;
+}
+function getRTCAuth(index, data) {
+  let payload = $root.lookup('codec.RtcAuth');
+  let auth = payload.decode(data);
+  return {
+    index,
+    auth
+  };
+}
+function getChatroomSetAttrs(index, data) {
+  let payload = $root.lookup('codec.ChatAttBatchResp');
+  let {
+    attResps
+  } = payload.decode(data);
+  let success = [],
+    fail = [];
+  utils.forEach(attResps, attr => {
+    let {
+      code = 0,
+      key,
+      attTime: updateTime,
+      msgTime: messageTime
+    } = attr;
+    let _attr = {
+      code,
+      key,
+      updateTime,
+      messageTime
+    };
+    if (utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
+      success.push(_attr);
+    } else {
+      let error = common.getError(code);
+      utils.extend(_attr, error);
+      fail.push(_attr);
+    }
+  });
+  return {
+    index,
+    success,
+    fail
+  };
+}
+function getMentionMessages(index, data, {
+  currentUser
+}) {
+  let payload = $root.lookup('codec.QryMentionMsgsResp');
+  let {
+    mentionMsgs,
+    isFinished
+  } = payload.decode(data);
+  let msgs = utils.map(mentionMsgs, msg => {
+    return tools$1.msgFormat(msg, {
+      currentUser
+    });
+  });
+  return {
+    index,
+    msgs,
+    isFinished
+  };
+}
+function getFileToken(index, data) {
+  let payload = $root.lookup('codec.QryUploadTokenResp');
+  let result = payload.decode(data);
+  let {
+    ossType
+  } = result;
+  let cred = {
+    type: ossType
+  };
+  if (utils.isEqual(ossType, UPLOAD_TYPE.QINIU)) {
+    let {
+      qiniuCred
+    } = result;
+    utils.extend(cred, qiniuCred);
+  }
+  if (utils.isEqual(ossType, UPLOAD_TYPE.ALI)) {
+    let {
+      preSignResp
+    } = result;
+    utils.extend(cred, preSignResp);
+  }
+  return {
+    index,
+    cred
+  };
+}
+function getUserInfo(index, data) {
+  let payload = $root.lookup('codec.UserInfo');
+  let user = payload.decode(data);
+  return {
+    index,
+    user
+  };
+}
+function getAllDisturb(index, data) {
+  let payload = $root.lookup('codec.UserUndisturb');
+  let params = payload.decode(data);
+  let {
+    timezone,
+    rules = []
+  } = params;
+  let type = params.switch ? UNDISTURB_TYPE.UNDISTURB : UNDISTURB_TYPE.DISTURB;
+  let times = [];
+  utils.forEach(rules, ({
+    start,
+    end
+  }) => {
+    times.push({
+      start,
+      end
+    });
+  });
+  return {
+    index,
+    type,
+    timezone,
+    times
+  };
+}
+function getMessageReadDetails(index, data) {
+  let payload = $root.lookup('codec.QryReadDetailResp');
+  let {
+    readCount,
+    memberCount,
+    readMembers,
+    unreadMembers
+  } = payload.decode(data);
+  readMembers = utils.map(readMembers, item => {
+    return {
+      member: common.formatUser(item.member),
+      readTime: item.time
+    };
+  });
+  unreadMembers = utils.map(unreadMembers, item => {
+    return {
+      member: common.formatUser(item.member),
+      readTime: item.time
+    };
+  });
+  return {
+    index,
+    readCount,
+    unreadCount: memberCount - readCount,
+    readMembers,
+    unreadMembers
+  };
+}
+function getTotalUnread(index, data) {
+  let payload = $root.lookup('codec.QryTotalUnreadCountResp');
+  let {
+    totalCount: count
+  } = payload.decode(data);
+  return {
+    index,
+    count
+  };
+}
+function getConversationHandler(index, data, {
+  currentUser
+}) {
+  let payload = $root.lookup('codec.Conversation');
+  let item = payload.decode(data);
+  let conversation = {};
+  if (!item.msg) {
+    conversation = {};
+  } else {
+    let conversations = tools$1.formatConversations([item], {
+      currentUser
+    });
+    conversation = conversations[0] || conversation;
+  }
+  return {
+    conversation,
+    index
+  };
+}
+function getConversationsHandler(index, data, options = {}) {
+  let payload = $root.lookup('codec.QryConversationsResp');
+  let {
+    conversations,
+    isFinished
+  } = payload.decode(data);
+  conversations = tools$1.formatConversations(conversations, options);
+  return {
+    conversations,
+    isFinished,
+    index
+  };
+}
+function getChatroomAttrsHandler(index, data, {
+  targetId
+}) {
+  let payload = $root.lookup('codec.SyncChatroomAttResp');
+  let result = payload.decode(data);
+  let {
+    atts
+  } = result;
+  atts = utils.map(atts, attr => {
+    let {
+      key,
+      value,
+      attTime: updateTime,
+      userId,
+      optType: type
+    } = attr;
+    return {
+      key,
+      value,
+      updateTime,
+      userId,
+      type
+    };
+  });
+  return {
+    attrs: atts,
+    chatroomId: targetId,
+    index
+  };
+}
+function getConversationTags(index, data) {
+  let payload = $root.lookup('codec.UserConverTags');
+  let result = payload.decode(data);
+  let {
+    tags
+  } = result;
+  tags = utils.map(tags, tag => {
+    let {
+      tag: id,
+      tagName,
+      tagType
+    } = tag;
+    return {
+      id,
+      name: tagName,
+      type: tagType
+    };
+  });
+  return {
+    tags,
+    index
+  };
+}
+function getChatroomMsgsHandler(index, data, {
+  currentUser
+}) {
+  let payload = $root.lookup('codec.SyncChatroomMsgResp');
+  let result = payload.decode(data);
+  let {
+    msgs
+  } = result;
+  let messages = utils.map(msgs, msg => {
+    return tools$1.msgFormat(msg, {
+      currentUser
+    });
+  });
+  return {
+    messages,
+    index
+  };
+}
+function getMessage(index, data, {
+  currentUser
+}) {
+  let payload = $root.lookup('codec.DownMsg');
+  let _msg = payload.decode(data);
+  if (!_msg.msgId) {
+    return {
+      index,
+      msg: {}
+    };
+  }
+  let msg = tools$1.msgFormat(_msg, {
+    currentUser
+  });
+  return {
+    index,
+    msg
+  };
+}
+function getMessagesHandler(index, data, {
+  currentUser
+}) {
+  let payload = $root.lookup('codec.DownMsgSet');
+  let result = payload.decode(data);
+  let {
+    isFinished,
+    msgs,
+    targetUserInfo,
+    groupInfo
+  } = result;
+  let messages = utils.map(msgs, msg => {
+    // sync_msgs 和 getHistoryMessages 共用此方法，但 sync_msgs 的用户信息携带在消息里，历史消息在 pb 结构外侧与 msgs 同级，此处做兼容处理
+    if (targetUserInfo) {
+      utils.extend(msg, {
+        targetUserInfo
+      });
+    }
+    if (groupInfo) {
+      utils.extend(msg, {
+        groupInfo
+      });
+    }
+    return tools$1.msgFormat(msg, {
+      currentUser
+    });
+  });
+  return {
+    isFinished,
+    messages,
+    index
+  };
+}
+function getRTCRoom(index, data) {
+  let payload = $root.lookup('codec.RtcRoom');
+  let result = payload.decode(data);
+  return {
+    room: tools$1.formatRTCRoom(result)
+  };
+}
+
+function getPublishMsgBody(stream, {
+  currentUser
+}) {
+  let codec = $root.lookup('codec.PublishMsgBody');
+  let publishMsgBody = codec.decode(stream);
+  let {
+    targetId,
+    data,
+    topic,
+    timestamp,
+    index
+  } = publishMsgBody;
+  let _msg = {};
+  let _name = SIGNAL_NAME.CMD_RECEIVED;
+
+  // 收到 NTF 直接返回，通过 sync_msgs 同步消息
+  if (utils.isEqual(topic, COMMAND_TOPICS.NTF)) {
+    let payload = $root.lookup('codec.Notify');
+    let message = payload.decode(data);
+    let {
+      syncTime: receiveTime,
+      type,
+      chatroomId
+    } = message;
+    _msg = {
+      topic,
+      receiveTime,
+      type,
+      targetId: chatroomId
+    };
+    _name = SIGNAL_NAME.S_NTF;
+  } else if (utils.isEqual(topic, COMMAND_TOPICS.MSG)) {
+    let payload = $root.lookup('codec.DownMsg');
+    let message = payload.decode(data);
+    _msg = tools$1.msgFormat(message, {
+      currentUser
+    });
+  } else if (utils.isEqual(topic, COMMAND_TOPICS.CHATROOM_USER_NTF)) {
+    let payload = $root.lookup('codec.ChrmEvent');
+    let message = payload.decode(data);
+    let {
+      chatId,
+      eventTime,
+      eventType
+    } = message;
+    _msg = {
+      chatroomId: chatId,
+      time: eventTime,
+      type: eventType
+    };
+    _name = SIGNAL_NAME.S_CHATROOM_USER_NTF;
+  } else if (utils.isEqual(topic, COMMAND_TOPICS.RTC_INVITE_EVENT)) {
+    let payload = $root.lookup('codec.RtcInviteEvent');
+    let result = payload.decode(data);
+    let {
+      room,
+      inviteType,
+      targetUsers = [],
+      user
+    } = result;
+    user = common.formatUser(user || {});
+    let members = utils.map(targetUsers, target => {
+      return common.formatUser(target);
+    });
+    let {
+      roomId,
+      roomType
+    } = room;
+    _msg = {
+      roomId,
+      roomType,
+      eventType: inviteType,
+      user,
+      members
+    };
+    _name = SIGNAL_NAME.S_RTC_INVITE_NTF;
+  } else {
+    console.log('unkown topic', topic);
+  }
+  utils.extend(_msg, {
+    ackIndex: index
+  });
+  return {
+    _msg,
+    _name
+  };
+}
+
 function Decoder(cache, io) {
   let imsocket = $root.lookup('codec.ImWebsocketMsg');
   let decode = buffer => {
@@ -7990,6 +9433,7 @@ function Decoder(cache, io) {
     let xors = cache.get(STORAGE.CRYPTO_RANDOM);
     let stream = common.decrypto(msg.payload, xors);
     let codec = null;
+    let currentUser = io.getCurrentUser();
     switch (cmd) {
       case SIGNAL_CMD.CONNECT_ACK:
         codec = $root.lookup('codec.ConnectAckMsgBody');
@@ -8023,15 +9467,22 @@ function Decoder(cache, io) {
         };
         break;
       case SIGNAL_CMD.PUBLISH:
+        currentUser = io.getCurrentUser();
         let {
           _msg,
           _name
-        } = publishHandler(stream);
+        } = getPublishMsgBody(stream, {
+          currentUser
+        });
         name = _name;
         result = _msg;
         break;
       case SIGNAL_CMD.QUERY_ACK:
-        result = queryAckHandler(stream);
+        currentUser = io.getCurrentUser();
+        result = getQueryAckBody(stream, {
+          cache,
+          currentUser
+        });
         name = SIGNAL_NAME.S_QUERY_ACK;
         break;
       case SIGNAL_CMD.PONG:
@@ -8055,1001 +9506,6 @@ function Decoder(cache, io) {
       name
     };
   };
-  function publishHandler(stream) {
-    let codec = $root.lookup('codec.PublishMsgBody');
-    let publishMsgBody = codec.decode(stream);
-    let {
-      targetId,
-      data,
-      topic,
-      timestamp,
-      index
-    } = publishMsgBody;
-    let _msg = {};
-    let _name = SIGNAL_NAME.CMD_RECEIVED;
-
-    // 收到 NTF 直接返回，通过 sync_msgs 同步消息
-    if (utils.isEqual(topic, COMMAND_TOPICS.NTF)) {
-      let payload = $root.lookup('codec.Notify');
-      let message = payload.decode(data);
-      let {
-        syncTime: receiveTime,
-        type,
-        chatroomId
-      } = message;
-      _msg = {
-        topic,
-        receiveTime,
-        type,
-        targetId: chatroomId
-      };
-      _name = SIGNAL_NAME.S_NTF;
-    } else if (utils.isEqual(topic, COMMAND_TOPICS.MSG)) {
-      let payload = $root.lookup('codec.DownMsg');
-      let message = payload.decode(data);
-      _msg = msgFormat(message);
-    } else if (utils.isEqual(topic, COMMAND_TOPICS.CHATROOM_USER_NTF)) {
-      let payload = $root.lookup('codec.ChrmEvent');
-      let message = payload.decode(data);
-      let {
-        chatId,
-        eventTime,
-        eventType
-      } = message;
-      _msg = {
-        chatroomId: chatId,
-        time: eventTime,
-        type: eventType
-      };
-      _name = SIGNAL_NAME.S_CHATROOM_USER_NTF;
-    } else {
-      console.log('unkown topic', topic);
-    }
-    utils.extend(_msg, {
-      ackIndex: index
-    });
-    return {
-      _msg,
-      _name
-    };
-  }
-  function queryAckHandler(stream) {
-    let codec = $root.lookup('codec.QueryAckMsgBody');
-    let qryAckMsgBody = codec.decode(stream);
-    let {
-      index,
-      data,
-      code,
-      timestamp
-    } = qryAckMsgBody;
-    let {
-      topic,
-      targetId
-    } = cache.get(index);
-    let result = {};
-    if (utils.isInclude([COMMAND_TOPICS.HISTORY_MESSAGES, COMMAND_TOPICS.SYNC_MESSAGES, COMMAND_TOPICS.GET_MSG_BY_IDS, COMMAND_TOPICS.GET_MERGE_MSGS], topic)) {
-      result = getMessagesHandler(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_MESSAGES)) {
-      result = getChatroomMsgsHandler(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.SYNC_CHATROOM_ATTRS)) {
-      result = getChatroomAttrsHandler(index, data, {
-        targetId
-      });
-    }
-    if (utils.isInclude([COMMAND_TOPICS.CONVERSATIONS, COMMAND_TOPICS.SYNC_CONVERSATIONS, COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS], topic)) {
-      result = getConversationsHandler(index, data, {
-        topic
-      });
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_CONVERSATION)) {
-      result = getConversationHandler(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_UNREAD_TOTLAL_CONVERSATION)) {
-      result = getTotalUnread(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_READ_MESSAGE_DETAIL)) {
-      result = getMessageReadDetails(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_MENTION_MSGS)) {
-      result = getMentionMessages(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_FILE_TOKEN)) {
-      result = getFileToken(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_USER_INFO)) {
-      result = getUserInfo(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_ALL_DISTURB)) {
-      result = getAllDisturb(index, data);
-    }
-    if (utils.isInclude([COMMAND_TOPICS.REMOVE_CHATROOM_ATTRIBUTES, COMMAND_TOPICS.SET_CHATROOM_ATTRIBUTES], topic)) {
-      result = getChatroomSetAttrs(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.GET_FIRST_UNREAD_MSG)) {
-      result = getMessage(index, data);
-    }
-    if (utils.isEqual(topic, COMMAND_TOPICS.CONVERSATION_TAG_QUERY)) {
-      result = getConversationTags(index, data);
-    }
-    result = utils.extend(result, {
-      code,
-      timestamp,
-      index
-    });
-    return result;
-  }
-  function getChatroomSetAttrs(index, data) {
-    let payload = $root.lookup('codec.ChatAttBatchResp');
-    let {
-      attResps
-    } = payload.decode(data);
-    let success = [],
-      fail = [];
-    utils.forEach(attResps, attr => {
-      let {
-        code = 0,
-        key,
-        attTime: updateTime,
-        msgTime: messageTime
-      } = attr;
-      let _attr = {
-        code,
-        key,
-        updateTime,
-        messageTime
-      };
-      if (utils.isEqual(code, ErrorType.COMMAND_SUCCESS.code)) {
-        success.push(_attr);
-      } else {
-        let error = common.getError(code);
-        utils.extend(_attr, error);
-        fail.push(_attr);
-      }
-    });
-    return {
-      index,
-      success,
-      fail
-    };
-  }
-  function getMentionMessages(index, data) {
-    let payload = $root.lookup('codec.QryMentionMsgsResp');
-    let {
-      mentionMsgs,
-      isFinished
-    } = payload.decode(data);
-    let msgs = utils.map(mentionMsgs, msg => {
-      return msgFormat(msg);
-    });
-    return {
-      index,
-      msgs,
-      isFinished
-    };
-  }
-  function getFileToken(index, data) {
-    let payload = $root.lookup('codec.QryUploadTokenResp');
-    let result = payload.decode(data);
-    let {
-      ossType
-    } = result;
-    let cred = {
-      type: ossType
-    };
-    if (utils.isEqual(ossType, UPLOAD_TYPE.QINIU)) {
-      let {
-        qiniuCred
-      } = result;
-      utils.extend(cred, qiniuCred);
-    }
-    if (utils.isEqual(ossType, UPLOAD_TYPE.ALI)) {
-      let {
-        preSignResp
-      } = result;
-      utils.extend(cred, preSignResp);
-    }
-    return {
-      index,
-      cred
-    };
-  }
-  function getUserInfo(index, data) {
-    let payload = $root.lookup('codec.UserInfo');
-    let user = payload.decode(data);
-    return {
-      index,
-      user
-    };
-  }
-  function getAllDisturb(index, data) {
-    let payload = $root.lookup('codec.UserUndisturb');
-    let params = payload.decode(data);
-    let {
-      timezone,
-      rules = []
-    } = params;
-    let type = params.switch ? UNDISTURB_TYPE.UNDISTURB : UNDISTURB_TYPE.DISTURB;
-    let times = [];
-    utils.forEach(rules, ({
-      start,
-      end
-    }) => {
-      times.push({
-        start,
-        end
-      });
-    });
-    return {
-      index,
-      type,
-      timezone,
-      times
-    };
-  }
-  function getMessageReadDetails(index, data) {
-    let payload = $root.lookup('codec.QryReadDetailResp');
-    let {
-      readCount,
-      memberCount,
-      readMembers,
-      unreadMembers
-    } = payload.decode(data);
-    readMembers = utils.map(readMembers, item => {
-      return {
-        member: common.formatUser(item.member),
-        readTime: item.time
-      };
-    });
-    unreadMembers = utils.map(unreadMembers, item => {
-      return {
-        member: common.formatUser(item.member),
-        readTime: item.time
-      };
-    });
-    return {
-      index,
-      readCount,
-      unreadCount: memberCount - readCount,
-      readMembers,
-      unreadMembers
-    };
-  }
-  function getTotalUnread(index, data) {
-    let payload = $root.lookup('codec.QryTotalUnreadCountResp');
-    let {
-      totalCount: count
-    } = payload.decode(data);
-    return {
-      index,
-      count
-    };
-  }
-  function formatConversations(conversations, options = {}) {
-    return conversations.map(conversation => {
-      let {
-        msg,
-        targetId,
-        unreadCount,
-        sortTime: _sortTime,
-        topUpdatedTime,
-        targetUserInfo,
-        groupInfo,
-        syncTime,
-        undisturbType,
-        mentions,
-        channelType: conversationType,
-        latestReadIndex,
-        latestUnreadIndex,
-        isTop,
-        unreadTag,
-        converTags
-      } = conversation;
-      if (!msg) {
-        msg = {
-          msgContent: []
-        };
-      }
-      utils.extend(msg, {
-        targetId
-      });
-      unreadCount = unreadCount || 0;
-      unreadTag = unreadTag || 0;
-      mentions = mentions || {};
-      if (!utils.isEmpty(mentions)) {
-        let {
-          isMentioned,
-          senders,
-          mentionMsgs
-        } = mentions;
-        senders = utils.map(senders, sender => {
-          return common.formatUser(sender);
-        });
-        mentionMsgs = utils.map(mentionMsgs, msg => {
-          let {
-            senderId,
-            msgId,
-            msgTime
-          } = msg;
-          return {
-            senderId,
-            messageId: msgId,
-            sentTime: msgTime
-          };
-        });
-        mentions = {
-          isMentioned: isMentioned,
-          senders: senders,
-          msgs: mentionMsgs,
-          count: mentionMsgs.length
-        };
-      }
-      let latestMessage = {};
-      if (!utils.isEqual(msg.msgContent.length, 0)) {
-        latestMessage = msgFormat(msg);
-      }
-      if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
-        let {
-          groupName,
-          groupPortrait,
-          extFields,
-          groupId,
-          updatedTime
-        } = groupInfo;
-        extFields = utils.toObject(extFields);
-        utils.extend(latestMessage, {
-          conversationTitle: groupName,
-          conversationPortrait: groupPortrait,
-          conversationExts: extFields,
-          conversationUpdatedTime: updatedTime
-        });
-        GroupCacher.set(groupId, groupInfo);
-      }
-      if (utils.isEqual(conversationType, CONVERATION_TYPE.PRIVATE)) {
-        let {
-          userPortrait,
-          nickname,
-          extFields,
-          userId,
-          updatedTime
-        } = targetUserInfo || {};
-        extFields = utils.toObject(extFields);
-        utils.extend(latestMessage, {
-          conversationTitle: nickname || '',
-          conversationPortrait: userPortrait || '',
-          conversationExts: extFields || '',
-          conversationUpdatedTime: updatedTime || 0
-        });
-        GroupCacher.set(userId, targetUserInfo);
-      }
-      let {
-        conversationTitle,
-        conversationPortrait,
-        conversationExts,
-        conversationUpdatedTime
-      } = latestMessage;
-      let {
-        topic
-      } = options;
-      if (utils.isEqual(COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS, topic)) {
-        _sortTime = topUpdatedTime;
-      }
-      converTags = converTags || [];
-      let tags = utils.map(converTags, item => {
-        let {
-          tag: id,
-          tagName: name,
-          tagType: type
-        } = item;
-        return {
-          id,
-          name,
-          type
-        };
-      });
-      return {
-        conversationType,
-        conversationId: targetId,
-        unreadCount,
-        sortTime: _sortTime,
-        latestMessage,
-        conversationTitle,
-        conversationPortrait,
-        conversationUpdatedTime,
-        conversationExts,
-        mentions,
-        syncTime,
-        undisturbType: undisturbType || 0,
-        latestReadIndex,
-        latestUnreadIndex,
-        unreadTag,
-        tags,
-        isTop: !!isTop
-      };
-    });
-  }
-  function getConversationHandler(index, data) {
-    let payload = $root.lookup('codec.Conversation');
-    let item = payload.decode(data);
-    let conversation = {};
-    if (!item.msg) {
-      conversation = {};
-    } else {
-      let conversations = formatConversations([item]);
-      conversation = conversations[0] || conversation;
-    }
-    return {
-      conversation,
-      index
-    };
-  }
-  function getConversationsHandler(index, data, options = {}) {
-    let payload = $root.lookup('codec.QryConversationsResp');
-    let {
-      conversations,
-      isFinished
-    } = payload.decode(data);
-    conversations = formatConversations(conversations, options);
-    return {
-      conversations,
-      isFinished,
-      index
-    };
-  }
-  function getChatroomAttrsHandler(index, data, {
-    targetId
-  }) {
-    let payload = $root.lookup('codec.SyncChatroomAttResp');
-    let result = payload.decode(data);
-    let {
-      atts
-    } = result;
-    atts = utils.map(atts, attr => {
-      let {
-        key,
-        value,
-        attTime: updateTime,
-        userId,
-        optType: type
-      } = attr;
-      return {
-        key,
-        value,
-        updateTime,
-        userId,
-        type
-      };
-    });
-    return {
-      attrs: atts,
-      chatroomId: targetId,
-      index
-    };
-  }
-  function getConversationTags(index, data) {
-    let payload = $root.lookup('codec.UserConverTags');
-    let result = payload.decode(data);
-    let {
-      tags
-    } = result;
-    tags = utils.map(tags, tag => {
-      let {
-        tag: id,
-        tagName,
-        tagType
-      } = tag;
-      return {
-        id,
-        name: tagName,
-        type: tagType
-      };
-    });
-    return {
-      tags,
-      index
-    };
-  }
-  function getChatroomMsgsHandler(index, data) {
-    let payload = $root.lookup('codec.SyncChatroomMsgResp');
-    let result = payload.decode(data);
-    let {
-      msgs
-    } = result;
-    let messages = utils.map(msgs, msg => {
-      return msgFormat(msg);
-    });
-    return {
-      messages,
-      index
-    };
-  }
-  function getMessage(index, data) {
-    let payload = $root.lookup('codec.DownMsg');
-    let _msg = payload.decode(data);
-    if (!_msg.msgId) {
-      return {
-        index,
-        msg: {}
-      };
-    }
-    let msg = msgFormat(_msg);
-    return {
-      index,
-      msg
-    };
-  }
-  function getMessagesHandler(index, data) {
-    let payload = $root.lookup('codec.DownMsgSet');
-    let result = payload.decode(data);
-    let {
-      isFinished,
-      msgs,
-      targetUserInfo,
-      groupInfo
-    } = result;
-    let messages = utils.map(msgs, msg => {
-      // sync_msgs 和 getHistoryMessages 共用此方法，但 sync_msgs 的用户信息携带在消息里，历史消息在 pb 结构外侧与 msgs 同级，此处做兼容处理
-      if (targetUserInfo) {
-        utils.extend(msg, {
-          targetUserInfo
-        });
-      }
-      if (groupInfo) {
-        utils.extend(msg, {
-          groupInfo
-        });
-      }
-      return msgFormat(msg);
-    });
-    return {
-      isFinished,
-      messages,
-      index
-    };
-  }
-  function msgFormat(msg) {
-    let {
-      converTags,
-      undisturbType,
-      msgExtSet,
-      senderId,
-      unreadIndex,
-      memberCount,
-      referMsg,
-      readCount,
-      msgId,
-      msgTime,
-      msgType,
-      msgContent,
-      type: conversationType,
-      targetId: conversationId,
-      mentionInfo,
-      isSend,
-      msgIndex,
-      isRead,
-      flags,
-      targetUserInfo,
-      groupInfo
-    } = msg;
-    let content = '';
-    if (msgContent && msgContent.length > 0) {
-      content = new TextDecoder().decode(msgContent);
-      content = utils.parse(content);
-    }
-
-    // 服务端返回数据有 targetUserInfo 和 groupInfo 为 null 情况，此处补充 targetId，方便本地有缓存时获取信息
-    targetUserInfo = targetUserInfo || {
-      userId: senderId
-    };
-    groupInfo = groupInfo || {
-      groupId: conversationId
-    };
-
-    // 默认更新内存数据
-    let userId = targetUserInfo.userId;
-    let groupId = groupInfo.groupId;
-    GroupCacher.set(groupId, groupInfo);
-    UserCacher.set(userId, targetUserInfo);
-    let targetUser = common.formatUser(targetUserInfo);
-
-    // 特性检查，如果没有 name 尝试从内存获取信息
-    if (utils.isUndefined(targetUser.name)) {
-      let _user = UserCacher.get(userId);
-      targetUser = utils.isEmpty(_user) ? {
-        id: userId
-      } : _user;
-    }
-    if (utils.isUndefined(groupInfo.groupName)) {
-      let _group = GroupCacher.get(groupId);
-      groupInfo = utils.isEmpty(_group) ? {
-        id: groupId
-      } : _group;
-    }
-    if (mentionInfo) {
-      let {
-        targetUsers,
-        mentionType
-      } = mentionInfo;
-      let members = utils.map(targetUsers, user => {
-        user = common.formatUser(user);
-        return user;
-      });
-      mentionInfo = {
-        mentionType,
-        members
-      };
-    }
-    let newRefer = {};
-    if (referMsg) {
-      let rcontent = referMsg.msgContent || '';
-      if (rcontent.length != 0) {
-        rcontent = new TextDecoder().decode(rcontent);
-        newRefer.content = utils.parse(rcontent);
-      }
-      referMsg.targetUserInfo = common.formatUser(referMsg.targetUserInfo || {});
-      utils.extend(newRefer, {
-        name: referMsg.msgType,
-        messageId: referMsg.messageIndex,
-        messageIndex: referMsg.msgIndex,
-        sentTime: referMsg.msgTime,
-        sender: referMsg.targetUserInfo
-      });
-    }
-    let msgFlag = common.formatter.toMsg(flags);
-    let user = io.getCurrentUser();
-    let reactions = {};
-    if (msgExtSet) {
-      msgExtSet = utils.map(msgExtSet, item => {
-        let {
-          key
-        } = item;
-        item.key = unescape(key);
-        return item;
-      });
-      msgExtSet = utils.clone(msgExtSet);
-      reactions = utils.groupBy(msgExtSet, ['key']);
-    }
-    converTags = converTags || [];
-    let tags = utils.map(converTags, item => {
-      let {
-        tag: id,
-        tagName: name,
-        tagType: type
-      } = item;
-      return {
-        id,
-        name,
-        type
-      };
-    });
-    let _message = {
-      conversationType,
-      conversationId,
-      conversationTitle: '',
-      conversationPortrait: '',
-      conversationExts: {},
-      sender: utils.clone(targetUser),
-      messageId: msgId,
-      tid: msgId,
-      sentTime: msgTime,
-      name: msgType,
-      isSender: utils.isEqual(user.id, senderId),
-      messageIndex: msgIndex,
-      mentionInfo,
-      isRead: !!isRead,
-      isUpdated: msgFlag.isUpdated,
-      isMuted: msgFlag.isMute,
-      isMass: msgFlag.isMass,
-      referMsg: newRefer,
-      sentState: MESSAGE_SENT_STATE.SUCCESS,
-      undisturbType: undisturbType || 0,
-      unreadIndex: unreadIndex || 0,
-      flags,
-      reactions,
-      tags
-    };
-    if (_message.isSender) {
-      utils.extend(_message.sender, user);
-    }
-    if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
-      let {
-        groupName,
-        groupPortrait,
-        extFields
-      } = groupInfo || {
-        extFields: {}
-      };
-      extFields = utils.toObject(extFields);
-      utils.extend(_message, {
-        conversationTitle: groupName,
-        conversationPortrait: groupPortrait,
-        conversationExts: extFields,
-        conversationUpdatedTime: groupInfo.updatedTime,
-        unreadCount: memberCount - readCount,
-        readCount: readCount
-      });
-    }
-    if (utils.isEqual(conversationType, CONVERATION_TYPE.PRIVATE)) {
-      utils.extend(_message, {
-        conversationTitle: targetUser.name,
-        conversationPortrait: targetUser.portrait,
-        conversationExts: targetUser.exts,
-        conversationUpdatedTime: targetUser.updatedTime
-      });
-    }
-    if (utils.isInclude([MESSAGE_TYPE.RECALL_INFO, MESSAGE_TYPE.RECALL], msgType)) {
-      content = utils.rename(content, {
-        msg_id: 'messageId',
-        msg_time: 'sentTime'
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.MODIFY, msgType)) {
-      content = utils.rename(content, {
-        msg_type: 'name',
-        msg_content: 'content',
-        msg_id: 'messageId',
-        msg_seq: 'messageIndex',
-        msg_time: 'sentTime'
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.READ_MSG, msgType)) {
-      delete content.index_scopes;
-      let {
-        msgs
-      } = content;
-      msgs = utils.map(msgs, ({
-        msg_id: messageId
-      }) => {
-        return {
-          messageId
-        };
-      });
-      utils.extend(content, {
-        msgs
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.READ_GROUP_MSG, msgType)) {
-      let {
-        msgs
-      } = content;
-      msgs = utils.map(msgs, ({
-        msg_id,
-        member_count,
-        read_count
-      }) => {
-        return {
-          messageId: msg_id,
-          unreadCount: member_count - read_count,
-          readCount: read_count
-        };
-      });
-      utils.extend(content, {
-        msgs
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.CLEAR_UNREAD, msgType)) {
-      let {
-        conversations
-      } = content;
-      conversations = utils.map(conversations, ({
-        channel_type,
-        target_id,
-        latest_read_index
-      }) => {
-        return {
-          conversationType: channel_type,
-          conversationId: target_id,
-          unreadIndex: latest_read_index
-        };
-      });
-      utils.extend(content, {
-        conversations
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_UNDISTURB, msgType)) {
-      let {
-        conversations
-      } = content;
-      conversations = utils.map(conversations, item => {
-        return {
-          conversationId: item.target_id,
-          conversationType: item.channel_type,
-          undisturbType: item.undisturb_type
-        };
-      });
-      utils.extend(content, {
-        conversations
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_TOPCONVERS, msgType)) {
-      let {
-        conversations
-      } = content;
-      conversations = utils.map(conversations, item => {
-        return {
-          conversationId: item.target_id,
-          conversationType: item.channel_type,
-          isTop: Boolean(item.is_top)
-        };
-      });
-      utils.extend(content, {
-        conversations
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_REMOVE_CONVERS, msgType)) {
-      let {
-        conversations
-      } = content;
-      conversations = utils.map(conversations, item => {
-        return {
-          conversationId: item.target_id,
-          conversationType: item.channel_type,
-          time: msg.msgTime
-        };
-      });
-      utils.extend(content, {
-        conversations
-      });
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_DELETE_MSGS, msgType)) {
-      let msgs = utils.map(content.msgs, item => {
-        return {
-          tid: item.msg_id,
-          messageId: item.msg_id,
-          conversationId: msg.targetId,
-          conversationType: content.channel_type
-        };
-      });
-      content = {
-        conversationId: msg.targetId,
-        conversationType: content.channel_type,
-        messages: msgs
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.CLEAR_MSG, msgType)) {
-      content = {
-        cleanTime: content.clean_time,
-        conversationType: content.channel_type,
-        conversationId: msg.targetId,
-        senderId: content.sender_id
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_ADD_CONVER, msgType)) {
-      let _conversation = content.conversation;
-      let {
-        target_id,
-        channel_type,
-        sort_time,
-        sync_time,
-        target_user_info = {}
-      } = _conversation;
-      let {
-        nickname,
-        user_portrait,
-        ext_fields,
-        updated_time
-      } = target_user_info;
-      content = {
-        conversationId: target_id,
-        conversationType: channel_type,
-        conversationTitle: nickname,
-        conversationPortrait: user_portrait,
-        conversationExts: ext_fields,
-        latestMessage: {
-          conversationId: target_id,
-          conversationType: channel_type
-        },
-        unreadCount: 0,
-        updatedTime: updated_time,
-        sortTime: sort_time,
-        syncTime: sync_time
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_CLEAR_TOTALUNREAD, msgType)) {
-      content = {
-        clearTime: content.clear_time
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_ADD, msgType)) {
-      let {
-        tag,
-        tag_name,
-        convers
-      } = content;
-      convers = convers || [];
-      convers = utils.map(convers, item => {
-        return {
-          conversationId: item.target_id,
-          conversationType: item.channel_type
-        };
-      });
-      content = {
-        id: tag,
-        name: tag_name,
-        conversations: convers
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_CONVERSATION_TAG_REMOVE, msgType)) {
-      let {
-        tags
-      } = content;
-      tags = utils.map(tags, tag => {
-        return {
-          id: tag.tag
-        };
-      });
-      content = {
-        tags
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_REMOVE_CONVERS_FROM_TAG, msgType)) {
-      let {
-        tag: id,
-        convers
-      } = content;
-      convers = utils.map(convers, item => {
-        return {
-          conversationId: item.target_id,
-          conversationType: item.channel_type
-        };
-      });
-      content = {
-        id,
-        conversations: convers
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_MARK_UNREAD, msgType)) {
-      let list = content.conversations;
-      let conversations = utils.map(list, item => {
-        let {
-          unread_tag,
-          channel_type,
-          target_id
-        } = item;
-        return {
-          conversationId: target_id,
-          conversationType: channel_type,
-          unreadTag: unread_tag
-        };
-      });
-      content = {
-        conversations
-      };
-    }
-    if (utils.isEqual(MESSAGE_TYPE.COMMAND_MSG_EXSET, msgType)) {
-      let {
-        channel_type,
-        msg_id,
-        exts
-      } = content;
-      let reactions = utils.map(exts, item => {
-        let {
-          is_del,
-          timestamp,
-          key,
-          value
-        } = item;
-        key = unescape(key);
-        return {
-          isRemove: Boolean(is_del),
-          key,
-          value,
-          timestamp
-        };
-      });
-      content = {
-        conversationId,
-        conversationType,
-        messageId: msg_id,
-        reactions
-      };
-    }
-    utils.extend(_message, {
-      content
-    });
-    return _message;
-  }
   return {
     decode
   };
@@ -10365,6 +10821,20 @@ function IO(config) {
     if (utils.isEqual(name, SIGNAL_NAME.S_PONG)) {
       logger.info({
         tag: LOG_MODULE.HB_STOP
+      });
+    }
+    if (utils.isEqual(name, SIGNAL_NAME.S_RTC_INVITE_NTF)) {
+      let {
+        roomId,
+        roomType,
+        eventType,
+        user
+      } = result;
+      emitter.emit(SIGNAL_NAME.CMD_RTC_INVITE_EVENT, {
+        eventType,
+        user,
+        roomId,
+        roomType
       });
     }
     cache.remove(index);
@@ -14487,6 +14957,247 @@ var Desktop = {
   init: init$1
 };
 
+function RTCSignal ({
+  io,
+  emitter,
+  logger
+}) {
+  io.on(SIGNAL_NAME.CMD_RTC_INVITE_EVENT, notify => {
+    return emitter.emit(EVENT.RTC_INVITE_EVENT, notify);
+  });
+
+  /* let room = { type, id, members } */
+  let createRTCRoom = room => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.RTC_CREATE_ROOM,
+        user: user,
+        room
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve({
+            room
+          });
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+
+  /* let room = { type, id, members } */
+  let joinRTCRoom = room => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.RTC_JOIN_ROOM,
+        user: user,
+        room
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve({
+            room
+          });
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+
+  /* let room = { type, id } */
+  let quitRTCRoom = room => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.RTC_QUIT_ROOM,
+        user: user,
+        room
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve({
+            room
+          });
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+
+  /* let options = { roomId } */
+  let acceptRTC = options => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.RTC_ACCEPT,
+        user: user,
+        ...options
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve(result);
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+  /* let options = { room: { id }, inviter: { id: '' } } */
+  let declineRTC = options => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.RTC_DECLINE,
+        user: user,
+        options
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve();
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+
+  /* let room = { id } */
+  let queryRTCRoom = room => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.RTC_QRY_ROOM,
+        user: user,
+        room
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          room: _room
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve({
+            ..._room
+          });
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+
+  /* let room = { id } */
+  let pingRTC = room => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        user: user,
+        room: room,
+        topic: COMMAND_TOPICS.RTC_PING
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve({
+            room
+          });
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+
+  /* let options = { 
+    roomId: '',
+    roomType: roomType,
+    memberIds: memberIds,
+    channel: 0
+  */
+  let inviteRTC = options => {
+    return utils.deferred((resolve, reject) => {
+      let user = io.getCurrentUser();
+      let data = {
+        ...options,
+        topic: COMMAND_TOPICS.RTC_INVITE,
+        user: user
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve(result);
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+  /* 
+    let options = {
+      roomId: '',
+      memberId: '',
+      state: CALL_STATE.INCOMMING    
+    };
+  */
+  let updateRTCState = options => {
+    return utils.deferred((resolve, reject) => {
+      io.getCurrentUser();
+      let data = {
+        ...options,
+        topic: COMMAND_TOPICS.RTC_UPDATE_STATE
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code
+        } = result;
+        if (utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return resolve();
+        }
+        let error = common.getError(code);
+        reject(error);
+      });
+    });
+  };
+  return {
+    createRTCRoom,
+    joinRTCRoom,
+    quitRTCRoom,
+    queryRTCRoom,
+    pingRTC,
+    inviteRTC,
+    acceptRTC,
+    declineRTC,
+    updateRTCState,
+    $emitter: emitter,
+    isConnected: io.isConnected,
+    getCurrentUser: io.getCurrentUser
+  };
+}
+
 /* 
   let option = {
     name: 'dbname',
@@ -14859,7 +15570,16 @@ let init = config => {
       logger
     });
   }
-  return {
+  let plugins = {
+    call: () => {
+      return RTCSignal({
+        io,
+        emitter,
+        logger
+      });
+    }
+  };
+  let _export = {
     ...provider.socket,
     ...provider.message,
     ...provider.conversation,
@@ -14867,6 +15587,19 @@ let init = config => {
     ...emitter,
     registerMessage: common.registerMessage,
     isDesktop: common.isDesktop,
+    install: plugin => {
+      if (!utils.isObject(plugin)) {
+        return;
+      }
+      let {
+        name
+      } = plugin;
+      let func = plugins[name] || function () {
+        return {};
+      };
+      let apis = func();
+      return apis;
+    },
     Event: EVENT,
     ConnectionState: CONNECT_STATE,
     ConversationType: CONVERATION_TYPE,
@@ -14882,6 +15615,7 @@ let init = config => {
     UnreadTag: UNREAD_TAG,
     ConversationTagType: CONVERATION_TAG_TYPE
   };
+  return _export;
 };
 var client = {
   init,
