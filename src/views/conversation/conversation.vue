@@ -42,7 +42,7 @@ let WithoutMessage = shallowRef(Without);
 
 
 let juggle = im.getCurrent();
-let { MessageType, Event, ConversationType, MentionType } = juggle;
+let { MessageType, Event, ConversationType, MentionType, SentState } = juggle;
 
 let context = getCurrentInstance();
 
@@ -78,7 +78,14 @@ let state = reactive({
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
   console.log('---------', message)
   if (conversationTools.isSameConversation(message, state)) {
-    state.messages.unshift(message);
+    let index = utils.find(state.messages, (msg) => {
+      return utils.isEqual(msg.messageId, message.messageId)
+    });
+    if(index == -1){
+      state.messages.unshift(message);
+    }else{
+      state.messages.splice(index, 1, message);
+    }
     scrollBottom();
     conversationTools.readMessage([message]);
     conversationTools.clearUnreadCount(message)
@@ -348,6 +355,7 @@ function onSend() {
   juggle.sendMessage(msg,  {
     onbefore: (message) => {
       message.sentTime = Date.now();
+      message.sentState = SentState.SENDING;
       state.messages.unshift(message);
     }
   }).then(({ sentTime, messageId }) => {
@@ -356,12 +364,18 @@ function onSend() {
     let index = utils.find(state.messages, (m) => { return utils.isEqual(m.tid, msg.tid)});
     let _msg = state.messages[index];
     if(_msg){
-      utils.extend(_msg, { sentTime, messageId })
+      utils.extend(_msg, { sentTime, messageId, sentState: SentState.SUCCESS })
     }
     console.log('send successfully', msg);
     onCancelReply();
-  }, (error) => {
+  }, ({ error }) => {
     console.log(error);
+    let index = utils.find(state.messages, (m) => { return utils.isEqual(m.tid, msg.tid)});
+    let _msg = state.messages[index];
+    if(_msg){
+      utils.extend(_msg, { sentState: SentState.FAILED });
+    }
+    context.proxy.$toast({ text: `消息发送失败: ${error.code}`, icon: 'error' });
     isSending = false;
   });
 }
@@ -662,7 +676,26 @@ function inputFocus(){
   let { messageInput } = context.refs;
   messageInput.focus();
 }
-
+function onResendMessage({ message }){
+  let index = utils.find(state.messages, (m) => { return utils.isEqual(m.tid, message.tid)});
+  let _msg = state.messages[index];
+  juggle.sendMessage(message,  {
+    onbefore: () => {
+      let _msg = state.messages[index];
+      _msg.sentState = SentState.SENDING;      
+    }
+  }).then(({ sentTime, messageId }) => {
+    if(_msg){
+      utils.extend(_msg, { sentTime, messageId, sentState: SentState.SUCCESS })
+    }
+    console.log('re send successfully', _msg);
+  }, ({ error }) => {
+    if(_msg){
+      utils.extend(_msg, { sentState: SentState.FAILED });
+    }
+    context.proxy.$toast({ text: `消息发送失败: ${error.code}`, icon: 'error' });
+  });
+}
 watch(() => state.content, (val) => {
   let str = val.split('')[val.length - 1]
   if (conversationTools.isGroup(state.currentConversation) && utils.isEqual(str, '@')) {
@@ -718,7 +751,7 @@ watch(() => state.content, (val) => {
             <span class="tyn-transfer wr" v-if="state.isShowTransfer" :class="{'wr-success-square': message.isSelected, 'wr-square': !message.isSelected}" @click="onSelected(message)"></span>
             <div class="tyn-reply-item" :class="[message.isSender ? 'outgoing' : 'ingoing', state.isShowTransfer ? 'tny-message' : '']"  @click="onSelected(message)">
               <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" @onrecall="onRecall"
-                @onmodify="onModifyText" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Text>
+                @onmodify="onModifyText" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction" @onresend="onResendMessage"></Text>
               <ImageMessage v-else-if="utils.isEqual(message.name, MessageType.IMAGE)" :message="message"
                 @onrecall="onRecall" @onpreview="onPreviewImage" @ontransfer="onShowTransfer" @onreply="onReply"  @onreaction="onReaction"></ImageMessage>
               <File v-else-if="utils.isEqual(message.name, MessageType.FILE)" :message="message" 

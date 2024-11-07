@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps(['message', 'isRead']);
-const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction']);
+const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction', 'onresend']);
 
 import { reactive, watch } from "vue";
 import GroupReads from "./group-reads.vue";
@@ -100,6 +100,9 @@ function onChoiceEmoji(item){
   emit('onreaction', { ...item, message: props.message });
 }
 
+function onResend(){
+  emit('onresend', { message: props.message });
+}
 </script>
 
 <template>
@@ -130,7 +133,7 @@ function onChoiceEmoji(item){
 
         <div class="wr message-state wr-circle" @click.stop="onShowReadDetail(true)"
           :class="{ 'wr-dui': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.unreadCount == 0, 'message-read': props.message.isRead && !messageUtils.isGroup(props.message) || props.message.readCount > 0 }"
-          v-if="props.message.isSender && !props.isRead">
+          v-if="props.message.sentState == 2 && props.message.isSender && !props.isRead">
 
           <div v-if="messageUtils.isGroup(props.message) && props.message.readCount > 0 && props.message.unreadCount > 0"
             class="message-group-state"
@@ -142,6 +145,10 @@ function onChoiceEmoji(item){
           <div class="modal-backdrop fade show modal-tp-backdrop" @click.stop="onShowReadDetail(false)"
             v-if="state.isShowGroupDetail" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"></div>
         </div>
+
+        <div class="wr message-state message-send-loading message-sending" v-if="props.message.sentState == 1"></div>
+        <div class="wr wr-failed message-state message-failed" v-if="props.message.sentState == 3" @click.stop="onResend"></div>
+
         <div class="jg-message-senttime">{{ utils.formatTimetoHM(props.message.sentTime) }}</div>
       </div>
       <ul class="tyn-reply-tools">

@@ -1569,3 +1569,21 @@
 .fs10{
   font-size: 10px;
 }
+.message-sending{
+
+}
+.message-failed::before{
+  font-weight: 700;
+  color: #e90f0f;
+}
+.message-send-loading {
+  width: 10px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(farthest-side, #2196F3 49%, #0000) top / 0px 2px no-repeat, conic-gradient(#0000 31%, #a1a7ef);
+  -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 2px), #000 0);
+  animation: l13 1s infinite linear;
+}
+@keyframes l13{ 
+  100%{transform: rotate(1turn)}
+}
