@@ -317,7 +317,7 @@ function clearMessages(conversation) {
   );
 }
 function removeConversation(index, state) {
-  let conversation = state.conversationMap[state.currentTag.id][index];
+  let conversation = state.conversationMap[state.currentTag.id].splice(index, 1)[0];
   conversation.isShowDrop = false;
   let { conversationType, conversationId } = conversation;
   juggle.removeConversation({ conversationType, conversationId }).then(() => {
