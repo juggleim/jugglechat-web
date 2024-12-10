@@ -21,6 +21,8 @@ let state = reactive({
   list: [],
   activeCallId: '',
   callTime: '',
+  isMuteSpeaker: false,
+  isMuteMic: false
 });
 
 let clocker = Clocker();
@@ -57,7 +59,18 @@ juggleCall.on(CallEvent.CALL_FINISHED, (event) => {
 function onHangup() {
   emit("onhangup", { callId: state.activeCallId, isOneSelf: true });
 }
-
+function onmutemic(){
+  let { isMuteMic, activeCallId } = state;
+  state.isMuteMic = !isMuteMic;
+  let session = juggleCall.getSession({ callId: activeCallId })
+  session.muteMicrophone(state.isMuteMic);
+}
+function onmutespeaker(){
+  let { isMuteSpeaker, activeCallId } = state;
+  state.isMuteSpeaker = !isMuteSpeaker;
+  let session = juggleCall.getSession({ callId: activeCallId })
+  session.muteSpeaker(state.isMuteSpeaker);
+}
 watch(() => props.isShow, () => {
   if (!props.isShow) {
     utils.extend(state, { list: [], callTime: '' });
@@ -109,18 +122,18 @@ function createVideoBox(userId){
             </div>
           </div>
           <div class="jcall-tools">
-            <div class="jcall-tool">
-              <div class="jcall-tool-icon wr wr-rtc-mutemic"></div>
-              <div class="jcall-tool-label">麦克风</div>
+            <div class="jcall-tool" @click="onmutemic">
+              <div class="jcall-tool-icon wr wr-rtc-mutemic" :class="{ 'jc-tool-active': !state.isMuteMic }"></div>
+              <div class="jcall-tool-label" :class="{ 'jc-tool-active': !state.isMuteMic }">{{ state.isMuteMic ? '麦克风已禁用' : '麦克风已启用' }}</div>
             </div>
-            <div class="jcall-tool">
-              <div class="jcall-tool-icon wr wr-rtc-ummutespeaker jc-tool-active"></div>
-              <div class="jcall-tool-label">扬声器</div>
+            <div class="jcall-tool" @click="onmutespeaker">
+              <div class="jcall-tool-icon wr wr-rtc-ummutespeaker"  :class="{ 'jc-tool-active': !state.isMuteSpeaker }"></div>
+              <div class="jcall-tool-label"  :class="{ 'jc-tool-active': !state.isMuteSpeaker }">{{ state.isMuteSpeaker ? '扬声器已关闭' : '扬声器已打开'}}</div>
             </div>
-            <div class="jcall-tool">
+            <!-- <div class="jcall-tool" @click="on">
               <div class="jcall-tool-icon wr wr-rtc-mutecamera"></div>
               <div class="jcall-tool-label">摄像头</div>
-            </div>
+            </div> -->
             <!-- <div class="jcall-tool">
               <div class="jcall-tool-icon wr wr-rtc-add"></div>
               <div class="jcall-tool-label">邀请</div>

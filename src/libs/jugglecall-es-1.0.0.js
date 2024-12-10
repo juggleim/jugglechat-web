@@ -1768,13 +1768,11 @@ function Zego ({
     zg.destroyStream(localStream);
     zg.logoutRoom(room.id);
   };
-  let muteMicrophone = (isEnable = true) => {
-    let instance = zg.createRangeAudioInstance();
-    instance.enableMicrophone(isEnable);
+  let muteMicrophone = (isMute = true) => {
+    zg.muteMicrophone(isMute);
   };
-  let muteSpeaker = (isEnable = true) => {
-    let instance = zg.createRangeAudioInstance();
-    instance.enableSpeaker(isEnable);
+  let muteSpeaker = (isMute = true) => {
+    zg.muteAllPlayAudioStreams(isMute);
   };
   return {
     joinRoom,

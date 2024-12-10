@@ -1696,9 +1696,7 @@
   justify-content: center;
   cursor: pointer;
 }
-.jc-tool-active::before{
-  color: #FFF !important;
-}
+
 .jcall-tool-icon{
   height: 30px;
 }
@@ -1709,13 +1707,15 @@
 .jcall-tool .jcall-tool-icon::before{
   font-size: 22px;
 }
-.jcall-tool .wr-rtc-add::before{
-  color: #FFF;
-}
+
 .jcall-tool-label{
   font-size: 10px;
   height: 20px;
-  color: #FFF;
+}
+
+.jc-tool-active,
+.jc-tool-active::before{
+  color: #FFF !important;
 }
 .jg-op-icon::before{
   font-size: 20px;
@@ -1749,6 +1749,7 @@
   font-weight: 700;
   margin-bottom: 6px;
   text-align: center;
+  color: #FAFAFA;
 }
 .jgcall-invite-tools{
   display: flex;
