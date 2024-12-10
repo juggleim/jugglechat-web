@@ -3,9 +3,10 @@ import im from "../common/im";
 import { reactive, watch, getCurrentInstance } from "vue";
 import utils from "../common/utils";
 import { User } from "../services/index";
-import { RESPONSE } from "../common/enum";
+import { RESPONSE, EVENT_NAME } from "../common/enum";
 import common from "../common/common";
 import Clocker from "../common/clock";
+import emitter from "../common/emmit";
 
 const props = defineProps(["isShow", "members", "callid"]);
 const emit = defineEmits(["onhangup"]);
@@ -44,12 +45,13 @@ juggleCall.on(CallEvent.MEMBER_QUIT, (event) => {
 juggleCall.on(CallEvent.CALL_CONNECTED, () => {
   clocker.start(({ time }) => {
     state.callTime = time;
-  });
+  }); 
 });
 
 juggleCall.on(CallEvent.CALL_FINISHED, (event) => {
   clocker.stop();
   console.log('CallEvent.CALL_FINISHED', event);
+  emitter.$emit(EVENT_NAME.ON_CALL_FINISHED, event)
 });
 
 function onHangup() {

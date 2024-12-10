@@ -20,8 +20,7 @@ import conversationHandler from "./conversation-handler";
 import conversationTopHandler from "./conversation-top-handler";
 import conversationRemoveHandler from "./conversation-remove-handler";
 import ConversationBody from "./conversation-body.vue";
-import ModalCall from "../../components/modal-call.vue";
-import CallCore from "./call";
+
 
 /* 
 会话列表支持多分组
@@ -37,8 +36,6 @@ let {
 
 let juggle = im.getCurrent();
 
-let juggleCall = im.getRTCEngine();
-let { CallEvent } = im;
 
 let { UnreadTag, UndisturbType } = juggle;
 let { Event, ConnectionState, MentionType, MessageType } = juggle;
@@ -53,13 +50,7 @@ let state = reactive({
   isShowGroupMemberManager: false,
   conversationMap: {},
   currentTag: { id: CONVERATION_TAG_ID.ALL },
-  
-  isShowCall: false,
-  activeCallId: '',
-  callMembers: []
 });
-
-let callCore = CallCore(state);
 
 emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   let { type, id, avatar, name} = friend;
@@ -76,33 +67,6 @@ emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   state.currentConversation = conversation;
 });
 
-juggleCall.on(CallEvent.INVITED, ({ target }) => {
-  let { callId } = target;
-  state.activeCallId = callId;
-  // 可能会有多个 CallId，显示多个呼叫
-  let session = juggleCall.getSession({ callId })
-  let members = session.members;
-  console.log('CallEvent.INVITED', session)
-  emitter.$emit(EVENT_NAME.ON_SHOW_CALL_DIALOG, { isShow: true, members, isCall: false })
-  setTimeout(() => {
-    session.accept();
-  }, 3000)
-  
-});
-
-emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall }) => {
-  let { currentConversation } = state;
-  // 暂时支持单聊
-  if(!conversationTools.isGroup(currentConversation)){
-    state.callMembers = members;
-    if(isCall){
-      let session = juggleCall.create();
-      state.activeCallId = session.callId;
-      session.startSingleCall({ memberId:  currentConversation.conversationId });
-    }
-  }
-  state.isShowCall = isShow;
-});
 
 function onShowDropmenu(e) {
   let current = e.currentTarget;
@@ -461,6 +425,6 @@ function onTagConversationChanged({ removes, adds, tag }){
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
     <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" ></Conversation>
-    <ModalCall :is-show="state.isShowCall" :members="state.callMembers" :callid="state.activeCallId" @onhangup="callCore.onHangup"></ModalCall>
+    
   </div>
 </template>

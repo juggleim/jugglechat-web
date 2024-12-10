@@ -1723,4 +1723,42 @@
 .jg-rtc-btn::before{
   font-size: 18px;
 }
+
+.jcall-invite-box{
+  background: #000000cf;
+  border-radius: 6px;
+  left: auto;
+  top: 50px;
+  right: -40px;
+}
+
+.jcall-invite-box .modal-dialog{
+  width: 170px;
+}
+.jcall-invite-box .modal-content{
+  border-radius: 6px;
+}
+.jcall-invite-box .modal-body{
+  height: 70px;
+  display: flex;
+  font-size: 14px;
+  padding: 10px;
+}
+.jgcall-invite-title{
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  text-align: center;
+}
+.jgcall-invite-tools{
+  display: flex;
+  justify-content: space-around;
+}
+.jgcall-invite-tool{
+  cursor: pointer;
+  margin-right: 10px;
+}
+.jgcall-invite-tool::before{
+  font-size: 20px;
+}
 /* Call End*/
