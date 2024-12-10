@@ -3,12 +3,14 @@ import { STORAGE, RESPONSE, EVENT_NAME } from '../common/enum';
 import Storage from '../common/storage';
 import EventSent from '../common/eventsent';
 import emitter from "../common/emmit";
+import { CONFIG } from '../config';
 
 function request(url, options = {}){
   let user = Storage.get(STORAGE.USER_TOKEN) || {};
   let { authorization } = user;
   let headers = {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    AppKey: CONFIG.appkey
   };
   if(authorization){
     headers['Authorization'] = authorization;

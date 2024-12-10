@@ -1,10 +1,13 @@
-import JuggleChat from "../libs/juggleim-es-1.7.171";
+import JuggleChat from "../libs/juggleim-es-1.7.20";
+import JuggleCall from "../libs/jugglecall-es-1.0.0";
+
 // import JuggleChat from "jugglechat-websdk";
 import { CONFIG } from "../config";
 import utils from "./utils";
 import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
 import emitter from "../common/emmit";
 import Storage from "../common/storage";
+
 
 let option = { appkey: CONFIG.appkey, upload: OSS, navList: CONFIG.navList };
 let juggle = JuggleChat.init(option);
@@ -13,10 +16,20 @@ juggle.registerMessage([
   { name: MSG_NAME.FRIEND_NTF,  isCount: true, isStorage: true },
 ])
 
+let zg = new ZegoExpressEngine(CONFIG.rtcAppId);
+zg.setLogConfig({ logLevel: 'disable' })
+// zg.setDebugVerbose(false);
+let client = juggle.install({ name: 'call' });
+let juggleCall = JuggleCall.init({ client, engine: zg  });
+let { CallEvent } = JuggleCall;
+
 function getCurrent(){
   return juggle;
 }
 
+function getRTCEngine(){
+  return juggleCall;
+}
 function connect(user, callbacks){
   let { Event, ConnectionState, ErrorType } = juggle;
   if(juggle.isConnected()){
@@ -111,4 +124,6 @@ export default {
   msgShortFormat,
   mentionShortFormat,
   isUnreadTag,
+  CallEvent,
+  getRTCEngine,
 }

@@ -9,6 +9,8 @@ let EVENT_NAME = {
   ON_GROUP_MEMBER_REMOVED: 'on_group_member_removed',
 
   ON_CONVERSATION_TAG_CHANGED: 'on_conversation_tag_changed',
+
+  ON_SHOW_CALL_DIALOG: 'on_show_call_dialog',
 };
 export let STORAGE = {
   PREFIX: 'jgweb',

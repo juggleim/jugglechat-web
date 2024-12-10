@@ -1,8 +1,8 @@
 @font-face {
   font-family: 'wr';  /* Project id 4376445 */
-  src: url('//at.alicdn.com/t/c/font_4376445_j0ikt82yhwk.woff2?t=1732869428695') format('woff2'),
-  url('//at.alicdn.com/t/c/font_4376445_j0ikt82yhwk.woff?t=1732869428695') format('woff'),
-  url('//at.alicdn.com/t/c/font_4376445_j0ikt82yhwk.ttf?t=1732869428695') format('truetype');
+  src: url('//at.alicdn.com/t/c/font_4376445_ps2kyvp9hhg.woff2?t=1733751079287') format('woff2'),
+  url('//at.alicdn.com/t/c/font_4376445_ps2kyvp9hhg.woff?t=1733751079287') format('woff'),
+  url('//at.alicdn.com/t/c/font_4376445_ps2kyvp9hhg.ttf?t=1733751079287') format('truetype');
 }
 
 .wr::before,
@@ -286,6 +286,9 @@
   content: '\e7f4';
 }
 
+.wr-rtc-add::before{
+  content: '\e7d6';
+}
 .wr-rtc-mic::before{
   content: '\e7c8';
 }
@@ -307,12 +310,14 @@
 .wr-rtc-status-hangup::before{
   content: '\e7ce';
 }
-
+.wr-rtc-ummutespeaker:before {
+  content: '\e7d5';
+}
 .wr-rtc-accept::before{
   content: '\e770';
   color: #008000;
 }
 .wr-rtc-hangup::before{
   content: '\e728';
-  color: #ff0000;
+  color: #ff0000 !important;
 }

@@ -1589,13 +1589,138 @@
 }
 
 /* Call */
+.call-modal{
+  --bs-modal-width: unset;
+  max-width: 600px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1400;
+  display: none;
+}
+.call-modal-backdrop{
+  display: none;
+}
+.call-modal.show,
+.call-modal-backdrop.show{
+  display: block;
+}
+.call-dialog{
+  min-width: 200px;
+}
+.jcall-header{
+  display: flex;
+  justify-content: center;
+  font-size: 10px;
+  color: #FAFAFA;
+  padding: 4px 0;
+  height: 24px;
+}
+.jcall-container{
+  padding: 0;
+  background-color: #000000bf;
+}
+.jcall-users{
+  min-height: 200px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-height: 600px;
+}
+.jcall-user{
+  height: 200px;
+  width: 200px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  background-color: #00000017;
+  position: relative;
+}
+.jcall-user-video{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.jcall-video-box{
+  height: 100%;
+  width: 100%;
+}
+.jcall-video-box video{
+  object-fit: cover !important;
+}
+.jcall-user-loading{
+  height: 100%;
+  width: 100%;
+  background-color: #00000094;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loader-content {
+  width: 12px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: l5 1s infinite linear alternate;
+}
+@keyframes l5 {
+    0%  {box-shadow: 20px 0 #fafafa5e, -20px 0 #0002;background: #000 }
+    33% {box-shadow: 20px 0 #000, -20px 0 #fafafa5e;background: #0002}
+    66% {box-shadow: 20px 0 #0002,-20px 0 #000; background: #fafafa5e}
+    100%{box-shadow: 20px 0 #fafafa5e,-20px 0 #000; background: #000 }
+}
+
+.jcall-username{
+  position: absolute;
+  bottom: 0px;
+  color: #FAFAFA;
+  font-size: 10px;
+  width: 100%;
+  padding: 2px 4px;
+  font-weight: 700;
+  z-index: 99;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px -29px 22px -18px inset;
+}
+.jcall-tools{
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content:space-around;
+}
+.jcall-tool{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.jc-tool-active::before{
+  color: #FFF !important;
+}
+.jcall-tool-icon{
+  height: 30px;
+}
+.jcall-tool-icon::before{
+  font-size: 26px;
+  color: #dcdcdc3b;
+}
+.jcall-tool .jcall-tool-icon::before{
+  font-size: 22px;
+}
+.jcall-tool .wr-rtc-add::before{
+  color: #FFF;
+}
+.jcall-tool-label{
+  font-size: 10px;
+  height: 20px;
+  color: #FFF;
+}
 .jg-op-icon::before{
   font-size: 20px;
 }
 .jg-rtc-btn::before{
   font-size: 18px;
-}
-.call-content{
-  background-color: #000000bf;
 }
 /* Call End*/

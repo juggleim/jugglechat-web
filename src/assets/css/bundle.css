@@ -6228,11 +6228,11 @@ button {
   --bs-modal-bg: var(--bs-gray-800);
 }
 
-@media (min-width: 576px) {
+/* @media (min-width: 576px) {
   .modal-dialog {
     width: var(--bs-modal-width);
   }
-}
+} */
 .tooltip {
   --bs-tooltip-zindex: 1080;
   --bs-tooltip-max-width: 200px;

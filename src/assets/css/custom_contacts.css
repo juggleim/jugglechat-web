@@ -1,7 +1,6 @@
 @media (min-width: 992px){
   .tyn-profile-cover-image {
     height: 100px;
-    background-image: url(../images/cover/1.jpg);
     background-repeat: no-repeat;
     background-position: top;
     background-size: cover;

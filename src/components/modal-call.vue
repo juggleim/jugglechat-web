@@ -1,69 +1,136 @@
 <script setup>
 import im from "../common/im";
-import { reactive, watch } from "vue";
+import { reactive, watch, getCurrentInstance } from "vue";
 import utils from "../common/utils";
 import { User } from "../services/index";
 import { RESPONSE } from "../common/enum";
 import common from "../common/common";
+import Clocker from "../common/clock";
 
-const props = defineProps(["isShow"]);
+const props = defineProps(["isShow", "members", "callid"]);
 const emit = defineEmits(["onhangup"]);
+
+const context = getCurrentInstance();
+
+let { CallEvent } = im;
 let juggle = im.getCurrent();
+let juggleCall = im.getRTCEngine();
 
 let state = reactive({
-  isConnected: false
+  list: [],
+  activeCallId: '',
+  callTime: '',
 });
-function onHangup() {
-  emit("onhangup", {});
-}
-watch(
-  () => props.isShow,
-  () => {
-    if (!props.isShow) {
-      utils.extend(state, {});
-    }
+
+let clocker = Clocker();
+
+juggleCall.on(CallEvent.MEMBER_JOINED, (event) => {
+  console.log('CallEvent.MEMBER_JOINED', event);
+  let { target: { callId, member } } = event;
+  let session = juggleCall.getSession({ callId });
+  let userId = member.id;
+  let el = createVideoBox(userId);
+  session.setVideoView([{ userId, videoElement: el }]);
+});
+juggleCall.on(CallEvent.MEMBER_QUIT, (event) => {
+  console.log('CallEvent.MEMBER_QUIT', event);
+  let { target: { member, callId } } = event;
+  removeUser(member);
+  let session = juggleCall.getSession({ callId });
+  if(!session.isMultiCall){
+    emit("onhangup", { callId: state.activeCallId, isOneSelf: false });
   }
-);
+});
+juggleCall.on(CallEvent.CALL_CONNECTED, () => {
+  clocker.start(({ time }) => {
+    state.callTime = time;
+  });
+});
+
+juggleCall.on(CallEvent.CALL_FINISHED, (event) => {
+  clocker.stop();
+  console.log('CallEvent.CALL_FINISHED', event);
+});
+
+function onHangup() {
+  emit("onhangup", { callId: state.activeCallId, isOneSelf: true });
+}
+
+watch(() => props.isShow, () => {
+  if (!props.isShow) {
+    utils.extend(state, { list: [], callTime: '' });
+  }else{
+    state.activeCallId = props.callid;
+    utils.forEach(props.members, (member) => {
+      let { id, name, portrait } = member;
+      state.list.push({ id, name, portrait, isLoading: true });
+    });
+  }
+});
+
+function removeUser(user){
+  let index = utils.find(state.list, (item) =>{
+    return utils.isEqual(item.id, user.id);
+  });
+  if(index > -1){
+    state.list.splice(index, 1);
+  }
+}
+
+function createVideoBox(userId){
+  let { refs } = context;
+  let node = document.createElement('div');
+  node.id = `v_rtc_${userId}`;
+  node.className = 'jcall-video-box';
+  let parent = refs.rtcusers.querySelector(`div[uid="${userId}"]`);
+  if(parent){
+    let videoBox = parent.querySelector('.jcall-user-video');
+    videoBox.appendChild(node);
+  }
+  return node;
+}
+
 </script>
 <template>
-  <div class="modal tyn-modal" :class="[props.isShow ? 'fade show' : '']">
-    <div class="modal-dialog modal-sm modal-friend-add">
+  <div class="call-modal" :class="[props.isShow ? 'show' : '']">
+    <div class="modal-dialog modal-friend-add call-dialog">
       <div class="modal-content border-0 call-content">
-        <div class="modal-body">
-          <div class="tyn-chat-call tyn-chat-call-video">
-            <div class="tyn-chat-call-stack">
-              <div class="tyn-chat-call-cover">
-                <!-- <img src="images/v-cover/1.jpg" alt /> -->
+        <div class="modal-body jcall-container">
+          <div class="jcall-header">{{ state.callTime }}</div>
+          <div class="jcall-users" ref="rtcusers">
+            <div class="jcall-user" :uid="user.id" v-for="user in state.list" :style="{ 'background-image': 'url('+ user.portrait +')' }">
+              <div class="jcall-user-loading" v-if="user.isLoading">
+                <div class="loader-content"></div>
               </div>
+              <div class="jcall-username">{{ user.name }}</div>
+              <div class="jcall-user-video"></div>
             </div>
-            <div class="tyn-chat-call-stack on-dark">
-              <div class="tyn-media-group p-4">
-                <div class="tyn-media-col align-self-start pt-3">
-                  <div class="tyn-media-row has-dot-sap">
-                    <span class="meta">Talking With ...</span>
-                  </div>
-                  <div class="tyn-media-row">
-                    <h6 class="name">Konstantin Frank</h6>
-                  </div>
-                  <div class="tyn-media-row has-dot-sap">
-                    <span class="content">02:09 min</span>
-                  </div>
-                </div>
-                <div class="tyn-media tyn-media-1x1_3 tyn-size-3xl border border-1 border-dark">
-                  <!-- <img src="images/v-cover/2.jpg" alt /> -->
-                </div>
-              </div>
-              <ul class="tyn-list-inline gap gap-3 mx-auto py-4 justify-content-center mt-auto">
-                <li v-if="state.isConnected"><button class="btn btn-icon btn-pill jg-rtc-btn btn-light wr wr-rtc-mic"></button></li>
-                <li v-if="state.isConnected"><button class="btn btn-icon btn-pill jg-rtc-btn btn-light wr wr-rtc-camera"></button></li>
-                <li v-if="!state.isConnected"><button class="btn btn-icon btn-pill jg-rtc-btn btn-light wr wr-rtc-accept"></button></li>
-                <li><button class="btn btn-icon btn-pill jg-rtc-btn btn-light wr wr-rtc-hangup" @click="onHangup"></button></li>
-              </ul>
+          </div>
+          <div class="jcall-tools">
+            <div class="jcall-tool">
+              <div class="jcall-tool-icon wr wr-rtc-mutemic"></div>
+              <div class="jcall-tool-label">麦克风</div>
+            </div>
+            <div class="jcall-tool">
+              <div class="jcall-tool-icon wr wr-rtc-ummutespeaker jc-tool-active"></div>
+              <div class="jcall-tool-label">扬声器</div>
+            </div>
+            <div class="jcall-tool">
+              <div class="jcall-tool-icon wr wr-rtc-mutecamera"></div>
+              <div class="jcall-tool-label">摄像头</div>
+            </div>
+            <!-- <div class="jcall-tool">
+              <div class="jcall-tool-icon wr wr-rtc-add"></div>
+              <div class="jcall-tool-label">邀请</div>
+            </div> -->
+            <div class="jcall-tool" @click="onHangup">
+              <div class="jcall-tool-icon wr wr-rtc-hangup"></div>
+              <div class="jcall-tool-label">挂断</div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="modal-backdrop fade" :class="{ 'show': props.isShow }"></div>
   </div>
+  <div class="modal-backdrop call-modal-backdrop" :class="{ 'show': props.isShow }"></div>
 </template>

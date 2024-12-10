@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.7.17
+* JuggleIM.js v1.7.20
 * (c) 2022-2024 JuggleIM
 * Released under the MIT License.
 */
@@ -643,6 +643,7 @@ let SIGNAL_NAME = {
   CMD_CHATROOM_EVENT: 'cmd_inner_chatroom_event',
   CMD_CHATROOM_REJOIN: 'cmd_inner_chatroom_rejoin',
   CMD_RTC_INVITE_EVENT: 'cmd_inner_rtc_invite_event',
+  CMD_RTC_ROOM_EVENT: 'cmd_inner_rtc_room_event',
   // 与下行信令进行匹配，在 io.js 中进行派发
   S_CONNECT_ACK: 's_connect_ack',
   S_DISCONNECT: 's_disconnect',
@@ -651,6 +652,7 @@ let SIGNAL_NAME = {
   S_NTF: 's_ntf',
   S_CHATROOM_USER_NTF: 's_c_user_ntf',
   S_RTC_INVITE_NTF: 's_rtc_invite_ntf',
+  S_RTC_ROOM_EVENT: 's_rtc_room_event_ntf',
   // PC 端自定义通知
   S_SYNC_CONVERSATION_NTF: 's_sync_conversation_ntf',
   S_PONG: 's_pong',
@@ -842,6 +844,11 @@ let FUNC_PARAM_CHECKER = {
     name: 'messageId'
   }],
   GET_FIRST_UNREAD_MSG: [{
+    name: 'conversationType'
+  }, {
+    name: 'conversationId'
+  }],
+  SUBSCRIBE_MESSAGE: [{
     name: 'conversationType'
   }, {
     name: 'conversationId'
@@ -1091,12 +1098,13 @@ let COMMAND_TOPICS = {
   RTC_JOIN_ROOM: 'rtc_join',
   RTC_QUIT_ROOM: 'rtc_quit',
   RTC_ACCEPT: 'rtc_accept',
-  RTC_DECLINE: 'rtc_decline',
+  RTC_HANGUP: 'rtc_hangup',
   RTC_QRY_ROOM: 'rtc_qry',
   RTC_PING: 'rtc_ping',
   RTC_INVITE: 'rtc_invite',
   RTC_UPDATE_STATE: 'rtc_upd_state',
-  RTC_INVITE_EVENT: 'rtc_invite_event'
+  RTC_INVITE_EVENT: 'rtc_invite_event',
+  RTC_ROOM_EVENT: 'rtc_room_event'
 };
 let NOTIFY_TYPE = {
   DEFAULT: 0,
@@ -1210,7 +1218,8 @@ let EVENT = {
   CHATROOM_USER_QUIT: 'chatroom_user_quit',
   CHATROOM_USER_KICKED: 'chatroom_user_kicked',
   RTC_ROOM_EVENT: 'rtc_room_event',
-  RTC_INVITE_EVENT: 'rtc_invite_event'
+  RTC_INVITE_EVENT: 'rtc_invite_event',
+  RTC_FINISHED_1V1_EVENT: 'rtc_finished_1v1_event'
 };
 let CONNECT_STATE = {
   CONNECTED: 0,
@@ -1511,6 +1520,7 @@ let MESSAGE_TYPE = {
   COMMAND_LOG_REPORT: 'jg:logcmd',
   COMMAND_MSG_EXSET: 'jg:msgexset',
   COMMAND_CONVERSATION_TAG_ADD: 'jg:tagaddconvers',
+  COMMAND_RTC_1V1_FINISHED: 'jg:callfinishntf',
   // 删除 TAG 下会话
   COMMAND_REMOVE_CONVERS_FROM_TAG: 'jg:tagdelconvers',
   // 删除 TAG 
@@ -1603,6 +1613,9 @@ let RTC_INVITE_TYPE = {
   CANCEL: 4,
   TIMEOUT: 5
 };
+let RTC_CHANNEL = {
+  ZEGO: 0
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1644,7 +1657,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   CONVERATION_TAG_TYPE: CONVERATION_TAG_TYPE,
   RTC_STATE: RTC_STATE,
   RTC_ROOM_TYPE: RTC_ROOM_TYPE,
-  RTC_INVITE_TYPE: RTC_INVITE_TYPE
+  RTC_INVITE_TYPE: RTC_INVITE_TYPE,
+  RTC_CHANNEL: RTC_CHANNEL
 });
 
 function Cache () {
@@ -6094,29 +6108,21 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "RtcState",
             id: 2
           },
-          cameraEnable: {
-            type: "int32",
-            id: 3
-          },
-          micEnable: {
-            type: "int32",
-            id: 4
-          },
           callTime: {
             type: "int64",
-            id: 5
+            id: 3
           },
           connectTime: {
             type: "int64",
-            id: 6
+            id: 4
           },
           hangupTime: {
             type: "int64",
-            id: 7
+            id: 5
           },
           inviter: {
             type: "UserInfo",
-            id: 8
+            id: 6
           }
         }
       },
@@ -6168,7 +6174,17 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           rtcChannel: {
             type: "RtcChannel",
             id: 4
+          },
+          rtcMediaType: {
+            type: "RtcMediaType",
+            id: 5
           }
+        }
+      },
+      RtcMediaType: {
+        values: {
+          RtcAudio: 0,
+          RtcVideo: 1
         }
       },
       InviteType: {
@@ -6230,6 +6246,47 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "string",
             id: 1
           }
+        }
+      },
+      RtcRoomEvent: {
+        fields: {
+          roomEventType: {
+            type: "RtcRoomEventType",
+            id: 1
+          },
+          members: {
+            rule: "repeated",
+            type: "RtcMember",
+            id: 2
+          },
+          room: {
+            type: "RtcRoom",
+            id: 3
+          },
+          reason: {
+            type: "RtcRoomQuitReason",
+            id: 4
+          },
+          eventTime: {
+            type: "int64",
+            id: 5
+          }
+        }
+      },
+      RtcRoomEventType: {
+        values: {
+          DefaultRtcRoomEvent: 0,
+          RtcJoin: 1,
+          RtcQuit: 2,
+          RtcDestroy: 3,
+          RtcStateChg: 4
+        }
+      },
+      RtcRoomQuitReason: {
+        values: {
+          Active: 0,
+          CallTimeout: 1,
+          PingTimeout: 2
         }
       }
     }
@@ -8128,7 +8185,7 @@ function getQueryBody({
       targetIds: memberIds,
       rtcChannel: channel
     });
-    targetId = user.id;
+    targetId = roomId;
     buffer = codec.encode(message).finish();
   }
   if (utils.isEqual(COMMAND_TOPICS.RTC_UPDATE_STATE, topic)) {
@@ -8147,7 +8204,7 @@ function getQueryBody({
     targetId = roomId;
     buffer = codec.encode(message).finish();
   }
-  if (utils.isInclude([COMMAND_TOPICS.RTC_ACCEPT, COMMAND_TOPICS.RTC_DECLINE], topic)) {
+  if (utils.isInclude([COMMAND_TOPICS.RTC_ACCEPT, COMMAND_TOPICS.RTC_HANGUP], topic)) {
     let {
       roomId,
       user
@@ -9402,16 +9459,61 @@ function getPublishMsgBody(stream, {
     });
     let {
       roomId,
-      roomType
+      roomType,
+      members: existsMembers
     } = room;
+    existsMembers = existsMembers || [];
+    existsMembers = utils.map(existsMembers, ({
+      member,
+      rtcState
+    }) => {
+      member = common.formatUser(member);
+      utils.extend(member, {
+        status: rtcState
+      });
+      return member;
+    });
     _msg = {
       roomId,
       roomType,
       eventType: inviteType,
       user,
-      members
+      members,
+      existsMembers
     };
     _name = SIGNAL_NAME.S_RTC_INVITE_NTF;
+  } else if (utils.isEqual(topic, COMMAND_TOPICS.RTC_ROOM_EVENT)) {
+    let payload = $root.lookup('codec.RtcRoomEvent');
+    let result = payload.decode(data);
+    let {
+      roomEventType,
+      members,
+      room,
+      reason
+    } = result;
+    members = members || [];
+    members = utils.map(members, ({
+      member,
+      rtcState
+    }) => {
+      member = common.formatUser(member);
+      utils.extend(member, {
+        status: rtcState
+      });
+      return member;
+    });
+    let {
+      owner
+    } = room;
+    owner = common.formatUser(owner || {});
+    room.owner = owner;
+    _msg = {
+      roomEventType,
+      room,
+      members,
+      reason
+    };
+    _name = SIGNAL_NAME.S_RTC_ROOM_EVENT;
   } else {
     console.log('unkown topic', topic);
   }
@@ -10234,7 +10336,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.17';
+let VERSION = '1.7.20';
 
 function NetworkWatcher (callbacks) {
   let onlineEvent = () => {
@@ -10271,6 +10373,7 @@ function IO(config) {
   }
   let ws = {};
   let io = {};
+  let serverProviderCallback = utils.noop;
   let cache = Cache();
   let decoder = Decoder(cache, io);
   let encoder = Encoder(cache);
@@ -10293,22 +10396,24 @@ function IO(config) {
     timer.pause();
     syncTimer.pause();
   };
+  function forceReconnect() {
+    let user = getCurrentUser({
+      ignores: []
+    });
+    clearHeart();
+    cache.remove(CONNECT_TOOL.RECONNECT_COUNT);
+    cache.remove(CONNECT_TOOL.RECONNECT_FREQUENCY);
+    return reconnect(user, ({
+      next
+    }) => {
+      next = next || utils.noop;
+      next();
+    });
+  }
   let networkWatcher = NetworkWatcher({
     ononline: () => {
       if (ws.readyState == 3) {
-        console.log('ws.readyState', ws.readyState);
-        let user = getCurrentUser({
-          ignores: []
-        });
-        clearHeart();
-        cache.remove(CONNECT_TOOL.RECONNECT_COUNT);
-        cache.remove(CONNECT_TOOL.RECONNECT_FREQUENCY);
-        return reconnect(user, ({
-          next
-        }) => {
-          next = next || utils.noop;
-          next();
-        });
+        forceReconnect();
       }
     }
   });
@@ -10382,6 +10487,17 @@ function IO(config) {
       Network.detect(servers, (domain, error) => {
         // 如果嗅探失败，返回连接断开，同时清理已缓存的 CMP 地址
         if (error) {
+          serverProviderCallback(result => {
+            result = utils.isObject(result) ? result : {};
+            let {
+              serverUrls
+            } = result;
+            serverUrls = serverUrls || [];
+            if (serverUrls.length > 0) {
+              serverList = serverUrls.concat(serverUrls);
+              forceReconnect();
+            }
+          });
           clearLocalServers(userId);
           return reconnect({
             token,
@@ -10532,6 +10648,7 @@ function IO(config) {
   };
   let userDisconnect = () => {
     isUserDisconnected = true;
+    connectionState = CONNECT_STATE.DISCONNECTED;
     disconnect();
   };
   let sendCommand = (cmd, data, callback) => {
@@ -10559,6 +10676,11 @@ function IO(config) {
     ws.send(buffer);
     let _data = utils.clone(data);
     delete _data.messages;
+    if (_data.user) {
+      _data.user = {
+        id: _data.user.id
+      };
+    }
     logger.info({
       tag: LOG_MODULE.WS_SEND,
       cmd,
@@ -10680,7 +10802,7 @@ function IO(config) {
       callback(data);
     }
     if (utils.isEqual(cmd, SIGNAL_CMD.QUERY_ACK)) {
-      callback(result);
+      callback && callback(result);
     }
     if (utils.isEqual(cmd, SIGNAL_CMD.CONNECT_ACK)) {
       isUserDisconnected = false;
@@ -10828,17 +10950,20 @@ function IO(config) {
       });
     }
     if (utils.isEqual(name, SIGNAL_NAME.S_RTC_INVITE_NTF)) {
+      emitter.emit(SIGNAL_NAME.CMD_RTC_INVITE_EVENT, result);
+    }
+    if (utils.isEqual(name, SIGNAL_NAME.S_RTC_ROOM_EVENT)) {
       let {
-        roomId,
-        roomType,
-        eventType,
-        user
+        roomEventType,
+        room,
+        members,
+        reason
       } = result;
-      emitter.emit(SIGNAL_NAME.CMD_RTC_INVITE_EVENT, {
-        eventType,
-        user,
-        roomId,
-        roomType
+      emitter.emit(SIGNAL_NAME.CMD_RTC_ROOM_EVENT, {
+        roomEventType,
+        room,
+        members,
+        reason
       });
     }
     cache.remove(index);
@@ -10897,6 +11022,9 @@ function IO(config) {
     isConnected,
     isNeedConnect,
     getCurrentUser,
+    setServerUrlProider: callback => {
+      serverProviderCallback = callback;
+    },
     getVersion: () => {
       return VERSION;
     },
@@ -12553,6 +12681,9 @@ function Message$1 (io, emitter, logger) {
         content: newContent
       });
     }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_RTC_1V1_FINISHED)) {
+      return emitter.emit(EVENT.RTC_FINISHED_1V1_EVENT, message);
+    }
 
     // 收到非聊天室消息一定要更新会话列表
     io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, utils.clone(message));
@@ -12925,7 +13056,7 @@ function Message$1 (io, emitter, logger) {
             msg
           });
         }
-        messageCacher.add(conversation, messages);
+        // messageCacher.add(conversation, messages);
         resolve(result);
       });
     });
@@ -13976,6 +14107,91 @@ function Message$1 (io, emitter, logger) {
       });
     });
   };
+
+  /* 
+     let subscribeMsgCache = {
+      conversationType_convesationId: { 
+        timer: '定时器',
+        time: '上一次的获取时间'
+      }
+    }
+  */
+  let subscribeMsgCache = {};
+  let _getSubId = conversation => {
+    let {
+      conversationId,
+      conversationType
+    } = conversation;
+    return `${conversationType}_${conversationId}`;
+  };
+  let subscribeMessage = (conversation, option) => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, conversation, FUNC_PARAM_CHECKER.SUBSCRIBE_MESSAGE);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let subId = _getSubId(conversation);
+      let subInfo = subscribeMsgCache[subId];
+      if (subInfo) {
+        return resolve();
+      }
+      subInfo = {
+        timer: 0,
+        time: 0
+      };
+      subscribeMsgCache[subId] = subInfo;
+      let defOption = {
+        ms: 3 * 1000
+      };
+      if (!utils.isObject(option) || !utils.isNumber(option.ms)) {
+        option = defOption;
+      }
+      let fetchMsgs = params => {
+        getMessages(params).then(result => {
+          let {
+            messages
+          } = result;
+          messages = messages || [];
+          let message = messages[messages.length - 1];
+          if (message) {
+            subInfo.time = message.sentTime;
+          }
+          utils.forEach(messages, message => {
+            io.emit(SIGNAL_NAME.CMD_RECEIVED, message);
+          });
+        }).catch(utils.noop);
+      };
+      let firstParams = {
+        ...conversation,
+        time: 0
+      };
+      fetchMsgs(firstParams);
+      subInfo.timer = setInterval(() => {
+        let params = {
+          ...conversation,
+          time: subInfo.time,
+          count: 200,
+          order: MESSAGE_ORDER.FORWARD
+        };
+        fetchMsgs(params);
+      }, option.ms);
+    });
+  };
+  let unsubscribeMessage = conversation => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, conversation, FUNC_PARAM_CHECKER.SUBSCRIBE_MESSAGE, true);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let subId = _getSubId(conversation);
+      let subInfo = subscribeMsgCache[subId];
+      if (subInfo) {
+        clearInterval(subInfo.timer);
+        delete subscribeMsgCache[subId];
+      }
+      resolve();
+    });
+  };
   return {
     sendMessage,
     sendMassMessage,
@@ -14002,6 +14218,8 @@ function Message$1 (io, emitter, logger) {
     searchMessages,
     addMessageReaction,
     removeMessageReaction,
+    subscribeMessage,
+    unsubscribeMessage,
     _uploadFile
   };
 }
@@ -14087,9 +14305,16 @@ function Socket$1 (io, emitter, logger) {
       return reject(ErrorType.SDK_FUNC_NOT_DEFINED);
     });
   };
+  let setServerUrlProider = callback => {
+    if (!utils.isFunction(callback)) {
+      callback = utils.noop;
+    }
+    io.setServerUrlProider(callback);
+  };
   return {
     connect,
     disconnect,
+    setServerUrlProider,
     getDevice: getDevice,
     isConnected: io.isConnected,
     getCurrentUser: io.getCurrentUser
@@ -14679,6 +14904,12 @@ function Message ($message, {
 }) {
   let funcs = ['sendMessage', 'updateMessageAttr', 'removeMessages', 'sendMassMessage', 'getMessagesByIds', 'clearMessage', 'recallMessage', 'readMessage', 'getMessageReadDetails', 'updateMessage', 'insertMessage', 'getMentionMessages', 'getFileToken', 'sendFileMessage', 'sendImageMessage', 'sendVoiceMessage', 'sendVideoMessage', 'sendMergeMessage', 'getMergeMessages', 'setSearchContent', 'addMessageReaction', 'removeMessageReaction', 'getFirstUnreadMessage'];
   let invokes = common.formatProvider(funcs, $message);
+  invokes.subscribeMessage = conversation => {
+    return webAgent.subscribeMessage(conversation);
+  };
+  invokes.unsubscribeMessage = conversation => {
+    return webAgent.unsubscribeMessage(conversation);
+  };
   invokes.getMessages = conversation => {
     return utils.deferred((resolve, reject) => {
       let {
@@ -14810,9 +15041,14 @@ function Message ($message, {
   return invokes;
 }
 
-function Socket ($socket) {
+function Socket ($socket, {
+  webAgent
+}) {
   let funcs = ['connect', 'disconnect', 'getDevice', 'isConnected', 'getCurrentUser'];
   let invokes = common.formatProvider(funcs, $socket);
+  invokes.setServerUrlProider = callback => {
+    webAgent.setServerUrlProider(callback);
+  };
   return invokes;
 }
 
@@ -14929,7 +15165,9 @@ let init$1 = ({
     Storage,
     logger
   });
-  let socket = Socket(pc.socket);
+  let socket = Socket(pc.socket, {
+    webAgent: web.socket
+  });
   let conversation = Conversation(pc.conversation, {
     webAgent: web.conversation,
     conversationUtils
@@ -14968,6 +15206,9 @@ function RTCSignal ({
 }) {
   io.on(SIGNAL_NAME.CMD_RTC_INVITE_EVENT, notify => {
     return emitter.emit(EVENT.RTC_INVITE_EVENT, notify);
+  });
+  io.on(SIGNAL_NAME.CMD_RTC_ROOM_EVENT, notify => {
+    return emitter.emit(EVENT.RTC_ROOM_EVENT, notify);
   });
 
   /* let room = { type, id, members } */
@@ -15063,14 +15304,14 @@ function RTCSignal ({
       });
     });
   };
-  /* let options = { room: { id }, inviter: { id: '' } } */
-  let declineRTC = options => {
+  /* let room = { id }*/
+  let hangupRTC = room => {
     return utils.deferred((resolve, reject) => {
       let user = io.getCurrentUser();
       let data = {
-        topic: COMMAND_TOPICS.RTC_DECLINE,
+        topic: COMMAND_TOPICS.RTC_HANGUP,
         user: user,
-        options
+        roomId: room.id
       };
       io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
         let {
@@ -15144,6 +15385,7 @@ function RTCSignal ({
     return utils.deferred((resolve, reject) => {
       let user = io.getCurrentUser();
       let data = {
+        channel: RTC_CHANNEL.ZEGO,
         ...options,
         topic: COMMAND_TOPICS.RTC_INVITE,
         user: user
@@ -15194,7 +15436,7 @@ function RTCSignal ({
     pingRTC,
     inviteRTC,
     acceptRTC,
-    declineRTC,
+    hangupRTC,
     updateRTCState,
     $emitter: emitter,
     isConnected: io.isConnected,
@@ -15550,7 +15792,9 @@ let init = config => {
   });
   let io = IO(config);
   function getCurrentUser() {
-    return io.getCurrentUser();
+    return io.getCurrentUser({
+      ignores: []
+    });
   }
   function getVersion() {
     return io.getVersion();

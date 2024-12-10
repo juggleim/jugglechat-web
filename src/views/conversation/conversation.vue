@@ -7,7 +7,6 @@ import Emoji from "../../components/emoji.vue"
 import ModalTransfer from "../../components/modal-transfer.vue";
 import ModalImgSender from "../../components/modal-img-sender.vue";
 import ModalMergeMsgs from "../../components/modal-merge-msgs.vue";
-import ModalCall from "../../components/modal-call.vue";
 import Mention from "../../components/mention.vue";
 import Transfer from "../../components/transfer-panel.vue";
 import Reply from "../../components/reply.vue";
@@ -15,7 +14,6 @@ import Aside from "./aside.vue";
 import { reactive, shallowRef, watch, nextTick, getCurrentInstance } from "vue";
 import { preview } from 'vue3-image-preview';
 import im from "../../common/im";
-import CallCore from "./call";
 
 import Text from '../../components/message-text.vue';
 import File from '../../components/message-file.vue';
@@ -75,11 +73,7 @@ let state = reactive({
   transferMsgs: [],
   currentMergeMessage: {},
   imgSender: {},
-
-  isShowCall: false,
 });
-
-let callCore = CallCore(state);
 
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
   console.log('---------', message)
@@ -665,7 +659,15 @@ function getMembers() {
 }
 
 function onShowCall(isShow){
-  state.isShowCall = isShow;
+  let user = juggle.getCurrentUser();
+  let { currentConversation } = state;
+  if(!conversationTools.isGroup(currentConversation)){
+    let members = [
+      { id: currentConversation.conversationId, name: currentConversation.conversationTitle, portrait: currentConversation.conversationPortrait },
+      { id: user.id, name: user.name, portrait: user.portrait }
+    ];
+    emitter.$emit(EVENT_NAME.ON_SHOW_CALL_DIALOG, { isShow, members, isCall: true });
+  }
 }
 
 getMembers();
@@ -745,8 +747,8 @@ watch(() => state.content, (val) => {
         </div>
       </div>
       <ul class="tyn-list-inline gap gap-3 ms-auto">
-        <li><button class="btn btn-icon btn-light wr wr-rtc-mic jg-op-icon" @click="onShowCall(true)"></button></li>
-        <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true)"></button></li>
+        <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-mic jg-op-icon" @click="onShowCall(true)"></button></li>
+        <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true)"></button></li>
         <li><button class="btn btn-icon btn-light wr wr-more-dot" @click="onShowAside"></button></li>
       </ul>
       <!-- <Search :is-show="state.isShowSearch" @onHideSearch="onHideSearch()"/> -->
@@ -808,7 +810,6 @@ watch(() => state.content, (val) => {
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
     <ModalMergeMsgs :is-show="!utils.isEmpty(state.currentMergeMessage)" :message="state.currentMergeMessage" @oncancel="onCancelMergeDetail"></ModalMergeMsgs>
     <ModalImgSender :is-show="!utils.isEmpty(state.imgSender)" :img="state.imgSender" :conversation="state.currentConversation" @oncancel="onShowImgSender({})" @onconfirm="onConfirmImgSender"></ModalImgSender>
-    <ModalCall :is-show="state.isShowCall" @onhangup="callCore.onHangup"></ModalCall>
     <div class="modal-backdrop fade show" v-if="state.isShowAside" @click="onShowAside()"></div>  
   </div>
 </template>

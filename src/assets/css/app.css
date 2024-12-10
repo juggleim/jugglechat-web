@@ -1309,7 +1309,6 @@ dl {
   background: linear-gradient(to right, var(--tyn-theme-accent) 50%, var(--tyn-theme-alt) 50%);
 }
 .tyn-chat-call {
-  --call-screen-height:520px;
   display: flex;
   flex-direction: column;
   height: var(--call-screen-height);
