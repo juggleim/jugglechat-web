@@ -307,7 +307,7 @@
 .wr-rtc-status-incoming::before{
   content: '\e7d2';
 }
-.wr-rtc-status-hangup::before{
+.wr-rtc-status-hangup::after{
   content: '\e7ce';
 }
 .wr-rtc-ummutespeaker:before {

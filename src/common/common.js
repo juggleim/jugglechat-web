@@ -285,6 +285,16 @@ function formatMention(conversation) {
   }
   return utils.extend(conversation, { f_mentionContent });
 }
+function formatSeconds(times) {
+  var hh = parseInt(times / 60 / 60 );
+  hh = hh < 10 ? '0' + hh : hh;
+  var mm = parseInt(times / 60 % 60);
+  mm = mm < 10 ? '0' + mm : mm;
+  var ss = parseInt(times % 60);
+  ss = ss < 10 ? '0' + ss : ss;
+  let seconds =  mm + ':' + ss;
+  return seconds;
+}
 export default {
  isElementTop,
  getAvatar,
@@ -298,4 +308,5 @@ export default {
  isConversationElementTop,
  getConversationTime,
  formatMention,
+ formatSeconds,
 }

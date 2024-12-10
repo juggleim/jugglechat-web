@@ -1187,6 +1187,10 @@ let CHATROOM_EVENT_TYPE = {
   KICK: 2,
   FALLOUT: 3
 };
+let MEDIA_TYPE = {
+  AUDIO: 0,
+  VIDEO: 1
+};
 
 // 以下是对外暴露枚举
 let EVENT = {
@@ -1510,6 +1514,7 @@ let MESSAGE_TYPE = {
   MODIFY: 'jg:modify',
   CLEAR_MSG: 'jg:cleanmsg',
   CLEAR_UNREAD: 'jg:clearunread',
+  CALL_1V1_FINISHED: 'jg:callfinishntf',
   COMMAND_DELETE_MSGS: 'jg:delmsgs',
   COMMAND_UNDISTURB: 'jg:undisturb',
   COMMAND_TOPCONVERS: 'jg:topconvers',
@@ -1636,6 +1641,7 @@ var ENUM = /*#__PURE__*/Object.freeze({
   LOG_MODULE: LOG_MODULE,
   CHATROOM_ATTR_OP_TYPE: CHATROOM_ATTR_OP_TYPE,
   CHATROOM_EVENT_TYPE: CHATROOM_EVENT_TYPE,
+  MEDIA_TYPE: MEDIA_TYPE,
   EVENT: EVENT,
   CONNECT_STATE: CONNECT_STATE,
   CONVERATION_TYPE: CONVERATION_TYPE,
@@ -8176,14 +8182,16 @@ function getQueryBody({
       roomType,
       memberIds,
       channel,
-      user
+      user,
+      mediaType
     } = data;
     let codec = $root.lookup('codec.RtcInviteReq');
     let message = codec.create({
       roomId: roomId,
       roomType: roomType,
       targetIds: memberIds,
-      rtcChannel: channel
+      rtcChannel: channel,
+      rtcMediaType: mediaType
     });
     targetId = roomId;
     buffer = codec.encode(message).finish();
@@ -12681,9 +12689,10 @@ function Message$1 (io, emitter, logger) {
         content: newContent
       });
     }
-    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_RTC_1V1_FINISHED)) {
-      return emitter.emit(EVENT.RTC_FINISHED_1V1_EVENT, message);
-    }
+
+    // if(utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_RTC_1V1_FINISHED)){
+    //   return emitter.emit(EVENT.RTC_FINISHED_1V1_EVENT, message);
+    // }
 
     // 收到非聊天室消息一定要更新会话列表
     io.emit(SIGNAL_NAME.CMD_CONVERSATION_CHANGED, utils.clone(message));
@@ -15379,7 +15388,8 @@ function RTCSignal ({
     roomId: '',
     roomType: roomType,
     memberIds: memberIds,
-    channel: 0
+    channel: 0,
+    rtcMediaType: 1
   */
   let inviteRTC = options => {
     return utils.deferred((resolve, reject) => {

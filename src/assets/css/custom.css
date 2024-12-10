@@ -1761,4 +1761,7 @@
 .jgcall-invite-tool::before{
   font-size: 20px;
 }
+.tyn-reply-call-text{
+  font-size: 12px;
+}
 /* Call End*/

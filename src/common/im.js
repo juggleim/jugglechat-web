@@ -21,7 +21,7 @@ zg.setLogConfig({ logLevel: 'disable' })
 // zg.setDebugVerbose(false);
 let client = juggle.install({ name: 'call' });
 let juggleCall = JuggleCall.init({ client, engine: zg  });
-let { CallEvent } = JuggleCall;
+let { CallEvent, CallFinishedReason } = JuggleCall;
 
 function getCurrent(){
   return juggle;
@@ -86,6 +86,9 @@ function msgShortFormat(message){
   if(utils.isEqual(name, MSG_NAME.FRIEND_NTF)){
     shortName = `[添加好友通知]`;
   }
+  if(utils.isEqual(name, MessageType.CALL_1V1_FINISHED)){
+    shortName = `[音视频通话]`;
+  }
   if(utils.isEqual(name, MessageType.RECALL_INFO)){
     let label = isSender ? '你' : sender.name;
     shortName = `${label} 撤回了一条消息`;
@@ -125,5 +128,6 @@ export default {
   mentionShortFormat,
   isUnreadTag,
   CallEvent,
+  CallFinishedReason,
   getRTCEngine,
 }

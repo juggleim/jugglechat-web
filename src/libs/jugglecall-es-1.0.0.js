@@ -658,6 +658,10 @@ let ROOM_TYPE = {
   ONE_ONE: 0,
   ONE_MORE: 1
 };
+let MEDIA_TYPE = {
+  AUDIO: 0,
+  VIDEO: 1
+};
 let ErrorMessages = [{
   code: 25000,
   msg: '参数缺失，请检查传入参数',
@@ -1081,7 +1085,8 @@ function CallSession(_info, {
         let {
           options: {
             memberIds,
-            roomType
+            roomType,
+            isEnableCamera
           }
         } = target;
         let isMultiCall = utils.isEqual(ROOM_TYPE.ONE_MORE, roomType);
@@ -1110,6 +1115,7 @@ function CallSession(_info, {
         client.inviteRTC({
           roomId: callInfo.callId,
           roomType: roomType,
+          mediaType: isEnableCamera ? MEDIA_TYPE.VIDEO : MEDIA_TYPE.AUDIO,
           memberIds: memberIds
         }).then(async result => {
           sessionEmitter.emit(SIGNAL_NAME.RTC_MEMBER_JOINED, {
@@ -2119,13 +2125,15 @@ function Factory ({
     create,
     clear,
     getSessions,
-    getSession
+    getSession,
+    convertMsgReason: common.get1v1Reason
   };
 }
 
 let globalFactory = {};
 var index = {
   CallEvent: EVENT_NAME,
+  CallFinishedReason: CALL_FINISHED_REASON,
   /* 
     let config = {
       // 即构的 RTC SDK 实例
