@@ -24,7 +24,7 @@ function onaccept(){
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-body">
-          <div class="jgcall-invite-title">{{ props.inviter.name || '' }} 邀请你视频通话</div>
+          <div class="jgcall-invite-title">{{ props.inviter.name || '' }} 邀请你音视频通话</div>
           <ul class="jgcall-invite-tools">
             <li class="jgcall-invite-tool wr wr-rtc-accept" @click="onaccept"></li>
             <li class="jgcall-invite-tool wr wr-rtc-hangup" @click="onhangup"></li>

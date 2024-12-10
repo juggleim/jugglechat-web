@@ -15,6 +15,7 @@ import conversationTools from "../conversation/conversation";
 let juggle = im.getCurrent();
 let juggleCall = im.getRTCEngine();
 let { CallEvent } = im;
+let { MediaType } = juggle;
 
 let state = reactive({
   isShowCall: false,
@@ -30,14 +31,18 @@ juggleCall.on(CallEvent.INVITED, ({ target }) => {
   state.callNotifyList.push(session);
 });
 
-emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall, isMulti }) => {
+emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall, isMulti, mediaType }) => {
   // 暂时支持单聊
   if(!isMulti){
     state.callMembers = members;
     if(isCall){
       let session = juggleCall.create();
       state.activeCallId = session.callId;
-      session.startSingleCall({ memberId: members[0].id });
+      let isEnableCamera = true;
+      if(utils.isEqual(mediaType, MediaType.AUDIO)){
+        isEnableCamera = false;
+      }
+      session.startSingleCall({ memberId: members[0].id, isEnableCamera });
     }
   }
   state.isShowCall = isShow;

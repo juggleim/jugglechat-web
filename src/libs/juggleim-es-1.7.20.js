@@ -15871,7 +15871,8 @@ let init = config => {
     UndisturbType: UNDISTURB_TYPE,
     SentState: MESSAGE_SENT_STATE,
     UnreadTag: UNREAD_TAG,
-    ConversationTagType: CONVERATION_TAG_TYPE
+    ConversationTagType: CONVERATION_TAG_TYPE,
+    MediaType: MEDIA_TYPE
   };
   return _export;
 };
@@ -15890,7 +15891,8 @@ var client = {
   UndisturbType: UNDISTURB_TYPE,
   SentState: MESSAGE_SENT_STATE,
   UnreadTag: UNREAD_TAG,
-  ConversationTagType: CONVERATION_TAG_TYPE
+  ConversationTagType: CONVERATION_TAG_TYPE,
+  MediaType: MEDIA_TYPE
 };
 
 var index = {
