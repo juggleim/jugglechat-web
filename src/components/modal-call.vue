@@ -22,12 +22,13 @@ let juggleCall = im.getRTCEngine();
 let state = reactive({
   list: [],
   activeCallId: '',
-  callTime: '',
+  callTime: '00:00:00',
   isMuteSpeaker: false,
   isMuteMic: false,
   session: {},
   friends: [],
-  isShowInvite: false
+  isShowInvite: false,
+  isMin: false
 });
 
 let clocker = Clocker();
@@ -184,13 +185,21 @@ function isHiddenVideo(userId){
   }
   return node.style.display == 'none';
 }
+function onMinWindow(isMin){
+  state.isMin = isMin;
+}
 </script>
 <template>
-  <div class="call-modal" :class="[props.isShow ? 'show' : '']">
+  <div class="call-modal" :class="[props.isShow ? 'show' : '', state.isMin ? 'jcall-modal-min' : '']">
     <div class="modal-dialog modal-friend-add call-dialog">
       <div class="modal-content border-0 call-content">
         <div class="modal-body jcall-container">
-          <div class="jcall-header">{{ state.callTime }}</div>
+          <div class="jcall-header">
+            <div class="jgcall-time">{{ state.callTime }}</div>
+            <ul class="jgcall-mtools">
+              <li class="jgcall-mtool wr wr-min jc-tool-active" @click="onMinWindow(true)"></li>
+            </ul>
+          </div>
           <div class="jcall-users" ref="rtcusers">
             <div class="jcall-user" :uid="user.id" v-for="user in state.list" :style="{ 'background-image': 'url('+ user.portrait +')' }">
               <div class="jcall-user-loading" v-if="user.isLoading">
@@ -256,5 +265,5 @@ function isHiddenVideo(userId){
       </div>
     </div>
   </div>
-  <div class="modal-backdrop call-modal-backdrop" :class="{ 'show': props.isShow }"></div>
+  <div class="jcall-min-box" v-if="state.isMin" @click="onMinWindow(false)">{{ state.callTime }}</div>
 </template>

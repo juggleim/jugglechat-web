@@ -286,6 +286,10 @@
   content: '\e7f4';
 }
 
+.wr-min::before{
+  content: '\e643';
+}
+
 .wr-rtc-add::before{
   content: '\e7d6';
 }

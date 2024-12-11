@@ -1611,11 +1611,13 @@
 }
 .jcall-header{
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   font-size: 10px;
   color: #FAFAFA;
-  padding: 4px 0;
+  padding: 4px;
   height: 24px;
+  align-items: center;
+  background-color: #00000078;
 }
 .jcall-container{
   padding: 0;
@@ -1812,5 +1814,46 @@
   background-color: #03a703;
   border-radius: 2px;
   padding: 1px 8px;
+}
+
+.jcall-modal-min{
+  position: relative;
+  opacity: 0;
+}
+.jcall-min-box{
+  position: fixed;
+  right: 50px;
+  bottom: 200px;
+  z-index: 1400;
+  height: 60px;
+  width: 60px;
+  cursor: pointer;
+  background: #008000c9;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 #008000c9;
+  animation: l2 1.5s infinite linear;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #FFF;
+  font-size: 10px;
+  font-weight: 700;
+}
+.jcall-min-box:before,
+.jcall-min-box:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 rgba(31, 142, 3, 0.267);
+  animation: inherit;
+  animation-delay: -0.5s;
+}
+.jcall-min-box:after {
+  animation-delay: -1s;
+}
+@keyframes l2 {
+  100% {box-shadow: 0 0 0 20px #0000}
 }
 /* Call End*/

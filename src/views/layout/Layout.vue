@@ -13,6 +13,7 @@ import { EVENT_NAME } from "../../common/enum";
 import conversationTools from "../conversation/conversation";
 import Ringing from "../../common/ringing";
 
+let context = getCurrentInstance();
 
 let juggle = im.getCurrent();
 let juggleCall = im.getRTCEngine();
@@ -39,6 +40,9 @@ juggleCall.on(CallEvent.INVITED, ({ target }) => {
 });
 
 emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall, isMulti, mediaType }) => {
+  if(state.isShowCall){
+    return context.proxy.$toast({ text: `正在通话中`, icon: 'error' });
+  }
   state.callMembers = members;
   if(isCall){
     let session = juggleCall.create();
