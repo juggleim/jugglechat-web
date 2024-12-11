@@ -1923,7 +1923,7 @@ function Zego ({
       }).then(async isJoined => {
         if (isJoined) {
           let uid = utils.getUUID();
-          let streamID = `${uid}_${userId}`;
+          let streamID = `${uid}+++${userId}`;
           localStream = await zg.createZegoStream({
             camera: {
               video: isEnableCamera,
