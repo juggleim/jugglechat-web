@@ -63,7 +63,7 @@ emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
     f_mentionContent: '',
     shortName: '新朋友',
   }
-  state.conversationMap[state.currentTag.id].unshift(conversation);
+  onConversationChanged({ conversations: [conversation] })
   state.currentConversation = conversation;
 });
 

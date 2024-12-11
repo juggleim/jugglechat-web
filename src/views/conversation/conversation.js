@@ -62,8 +62,13 @@ function getMessages(isFirst, callback, state, props) {
       }
 
       utils.extend(message, { isSelected: false, sender })
-      state.messages.push(message);
-      
+
+      let numIndex = utils.find(state.messages, (msg) => {
+        return utils.isEqual(msg.messageId, message.messageId);
+      });
+      if(numIndex == -1){
+        state.messages.push(message);
+      }
       if(isGroup(message)){
         if(!message.isSender){
           unReadMsgs.push(message);
