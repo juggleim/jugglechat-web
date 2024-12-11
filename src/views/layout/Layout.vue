@@ -32,17 +32,21 @@ juggleCall.on(CallEvent.INVITED, ({ target }) => {
 });
 
 emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall, isMulti, mediaType }) => {
-  // 暂时支持单聊
-  if(!isMulti){
-    state.callMembers = members;
-    if(isCall){
-      let session = juggleCall.create();
-      state.activeCallId = session.callId;
-      let isEnableCamera = true;
-      if(utils.isEqual(mediaType, MediaType.AUDIO)){
-        isEnableCamera = false;
-      }
-      session.startSingleCall({ memberId: members[0].id, isEnableCamera });
+  state.callMembers = members;
+  if(isCall){
+    let session = juggleCall.create();
+    state.activeCallId = session.callId;
+    let isEnableCamera = true;
+    if(utils.isEqual(mediaType, MediaType.AUDIO)){
+      isEnableCamera = false;
+    }
+    if(isMulti){
+      let memberIds = utils.map(members, (member) => {
+        return member.id;
+      });
+      session.startMultiCall({ memberIds, isEnableCamera });
+    }else{
+      session.startSingleCall({ memberId: members[1].id, isEnableCamera });
     }
   }
   state.isShowCall = isShow;

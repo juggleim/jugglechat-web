@@ -2,11 +2,12 @@
 import im from "../common/im";
 import { reactive, watch, getCurrentInstance } from "vue";
 import utils from "../common/utils";
-import { User } from "../services/index";
-import { RESPONSE, EVENT_NAME } from "../common/enum";
+import { User, Friend } from "../services/index";
+import { RESPONSE, EVENT_NAME, STORAGE } from "../common/enum";
 import common from "../common/common";
 import Clocker from "../common/clock";
 import emitter from "../common/emmit";
+import Storage from "../common/storage";
 
 const props = defineProps(["isShow", "members", "callid"]);
 const emit = defineEmits(["onhangup"]);
@@ -22,7 +23,10 @@ let state = reactive({
   activeCallId: '',
   callTime: '',
   isMuteSpeaker: false,
-  isMuteMic: false
+  isMuteMic: false,
+  session: {},
+  friends: [],
+  isShowInvite: false
 });
 
 let clocker = Clocker();
@@ -76,9 +80,13 @@ watch(() => props.isShow, () => {
     utils.extend(state, { list: [], callTime: '' });
   }else{
     state.activeCallId = props.callid;
+    state.session = juggleCall.getSession({ callId: props.callid });
     utils.forEach(props.members, (member) => {
       let { id, name, portrait } = member;
       state.list.push({ id, name, portrait, isLoading: true });
+    });
+    getFriends((items) => {
+      utils.extend(state, { friends: items })
     });
   }
 });
@@ -105,6 +113,19 @@ function createVideoBox(userId){
   return node;
 }
 
+function getFriends(callback) {
+  let user = Storage.get(STORAGE.USER_TOKEN);
+  Friend.getList({ startUserId: '', count: 50, userId: user.id }).then((result) => {
+    let { data: { items } } = result;
+    callback(items.concat(items));
+  });
+}
+function onSelected(item) {
+  item.isTransferChecked = !item.isTransferChecked;
+}
+function onInvite(isShow){
+  state.isShowInvite = isShow;
+}
 </script>
 <template>
   <div class="call-modal" :class="[props.isShow ? 'show' : '']">
@@ -134,15 +155,43 @@ function createVideoBox(userId){
               <div class="jcall-tool-icon wr wr-rtc-mutecamera"></div>
               <div class="jcall-tool-label">摄像头</div>
             </div> -->
-            <!-- <div class="jcall-tool">
-              <div class="jcall-tool-icon wr wr-rtc-add"></div>
-              <div class="jcall-tool-label">邀请</div>
-            </div> -->
+            <div class="jcall-tool" v-if="state.session.isMultiCall" @click="onInvite(true)">
+              <div class="jcall-tool-icon wr wr-rtc-add jc-tool-active"></div>
+              <div class="jcall-tool-label jc-tool-active">邀请成员</div>
+            </div>
             <div class="jcall-tool" @click="onHangup">
               <div class="jcall-tool-icon wr wr-rtc-hangup"></div>
-              <div class="jcall-tool-label">挂断</div>
+              <div class="jcall-tool-label jc-tool-active">挂断</div>
             </div>
           </div>
+        </div>
+        <div class="jcall-members-box" :class="{ 'jcall-mbox-show': state.isShowInvite }">
+          <ul class="jgcall-mtools">
+            <li class="jgcall-mtool wr wr-close jc-tool-active" @click="onInvite(false)"></li>
+          </ul>
+          <ul class="jgcall-members">
+            <li class="jgcall-member" v-for="item in state.friends" @click="onSelected(item)">
+              <div class="form-check form-check-algin">
+                <span class="wr tyn-tfcontact-s"
+                  :class="[item.isTransferChecked ? 'wr-success-square tyn-contact-checked' : 'wr-square', item.disabled ? 'wr-disabled' : '']"></span>
+                <div class="form-check-label">
+                  <div class="tyn-media-group">
+                    <div class="tyn-media tyn-size-xs d-none d-sm-inline-flex tyn-conver-avatar"
+                      :style="{ 'background-image': 'url(' + item.avatar + ')' }">
+                    </div>
+                    <div class="tyn-media-col">
+                      <div class="tyn-media-row">
+                        <h6 class="name">{{ item.nickname }}</h6>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+          <ul class="jgcall-btns">
+            <li class="jgcall-btn jc-tool-active">确定</li>
+          </ul>
         </div>
       </div>
     </div>

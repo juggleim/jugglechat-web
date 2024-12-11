@@ -1591,7 +1591,7 @@
 /* Call */
 .call-modal{
   --bs-modal-width: unset;
-  max-width: 600px;
+  max-width: 750px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -1626,11 +1626,11 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  max-height: 600px;
+  max-height: 750px;
 }
 .jcall-user{
-  height: 200px;
-  width: 200px;
+  height: 250px;
+  width: 250px;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100%;
@@ -1764,5 +1764,51 @@
 }
 .tyn-reply-call-text{
   font-size: 12px;
+}
+.jcall-members-box{
+  position: absolute;
+  width: 160px;
+  top: 0;
+  bottom: 0;
+  left: 20%;
+  background-color: #000000bf;
+  z-index: -1;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+}
+.jcall-mbox-show{
+  left: 100%;
+  opacity: 1;
+  transition: left 0.2s;
+}
+.jgcall-mtools{
+  display: flex;
+  justify-content: end;
+}
+.jgcall-mtool{
+  cursor: pointer;
+  margin-right: 4px;
+}
+.jgcall-members{
+  overflow-y: auto;
+}
+.jgcall-member{
+  padding: 0 10px;
+}
+.jgcall-member .name{
+  color: #FAFAFA;
+}
+.jgcall-btns{
+  padding: 4px 0;
+  display: flex;
+  justify-content: center;
+}
+.jgcall-btn{
+  font-size: 10px;
+  cursor: pointer;
+  background-color: #03a703;
+  border-radius: 2px;
+  padding: 1px 8px;
 }
 /* Call End*/

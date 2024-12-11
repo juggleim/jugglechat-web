@@ -663,13 +663,12 @@ function getMembers() {
 function onShowCall(isShow, mediaType){
   let user = juggle.getCurrentUser();
   let { currentConversation } = state;
-  if(!conversationTools.isGroup(currentConversation)){
-    let members = [
-      { id: currentConversation.conversationId, name: currentConversation.conversationTitle, portrait: currentConversation.conversationPortrait },
-      { id: user.id, name: user.name, portrait: user.portrait }
-    ];
-    emitter.$emit(EVENT_NAME.ON_SHOW_CALL_DIALOG, { isShow, members, isCall: true, mediaType });
+  let members = [{ id: user.id, name: user.name, portrait: user.portrait }];
+  let isMulti = conversationTools.isGroup(currentConversation);
+  if(!isMulti){
+    members.push({ id: currentConversation.conversationId, name: currentConversation.conversationTitle, portrait: currentConversation.conversationPortrait },);
   }
+  emitter.$emit(EVENT_NAME.ON_SHOW_CALL_DIALOG, { isShow, members, isCall: true, mediaType, isMulti });
 }
 
 getMembers();
@@ -750,7 +749,7 @@ watch(() => state.content, (val) => {
       </div>
       <ul class="tyn-list-inline gap gap-3 ms-auto">
         <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-mic jg-op-icon" @click="onShowCall(true, MediaType.AUDIO)"></button></li>
-        <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li>
+        <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li>
         <li><button class="btn btn-icon btn-light wr wr-more-dot" @click="onShowAside"></button></li>
       </ul>
       <!-- <Search :is-show="state.isShowSearch" @onHideSearch="onHideSearch()"/> -->
