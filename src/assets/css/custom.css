@@ -1591,7 +1591,7 @@
 /* Call */
 .call-modal{
   --bs-modal-width: unset;
-  max-width: 750px;
+  max-width: 600px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -1607,7 +1607,7 @@
   display: block;
 }
 .call-dialog{
-  min-width: 200px;
+  min-width: 220px;
 }
 .jcall-header{
   display: flex;
@@ -1622,15 +1622,15 @@
   background-color: #000000bf;
 }
 .jcall-users{
-  min-height: 200px;
+  min-height: 220px;
+  max-height: 660px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  max-height: 750px;
 }
 .jcall-user{
-  height: 250px;
-  width: 250px;
+  height: 200px;
+  width: 200px;
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100%;

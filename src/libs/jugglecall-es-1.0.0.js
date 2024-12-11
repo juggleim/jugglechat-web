@@ -1527,7 +1527,8 @@ function CallSession(_info, {
           reject
         } = event;
         utils.extend(callInfo, {
-          callStatus: machine.getState()
+          callStatus: machine.getState(),
+          members: []
         });
         stopMembersTimer();
         return resolve(callInfo);
@@ -2293,6 +2294,12 @@ function Factory ({
         });
         let result = getExportSession(session);
         sessionEmitter.emit(SIGNAL_NAME.RTC_CALL_FINISHED, result);
+        let index = getSessionIndex({
+          callId
+        });
+        if (index > -1) {
+          callSessions.splice(index, 1);
+        }
       });
     }
   };

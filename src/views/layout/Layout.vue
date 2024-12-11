@@ -11,6 +11,8 @@ import emitter from "../../common/emmit";
 import { reactive, getCurrentInstance, nextTick, watch } from "vue";
 import { EVENT_NAME } from "../../common/enum";
 import conversationTools from "../conversation/conversation";
+import Ringing from "../../common/ringing";
+
 
 let juggle = im.getCurrent();
 let juggleCall = im.getRTCEngine();
@@ -23,12 +25,17 @@ let state = reactive({
   callMembers: [],
   callNotifyList: []
 });
+
+let ringing = Ringing();
 let callCore = CallCore(state);
 
 juggleCall.on(CallEvent.INVITED, ({ target }) => {
   let { callId } = target;
   let session = juggleCall.getSession({ callId })
   state.callNotifyList.push(session);
+  nextTick(() => {
+    ringing.play();
+  })
 });
 
 emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall, isMulti, mediaType }) => {
@@ -59,7 +66,7 @@ function onaccept({ callId }){
   let session = juggleCall.getSession({ callId });
   let members = session.members;
   emitter.$emit(EVENT_NAME.ON_SHOW_CALL_DIALOG, { isShow: true, members, isCall: false })
-  session.accept();
+  session.accept();  
 }
 
 function onhangup({ callId }){ 
@@ -79,6 +86,7 @@ function removeNotify({ callId }){
   if(index > -1){
     state.callNotifyList.splice(index, 1);
   }
+  ringing.pause();
 }
 
 </script>
@@ -93,4 +101,5 @@ function removeNotify({ callId }){
   <JFooter></JFooter>
   <ModalCall :is-show="state.isShowCall" :members="state.callMembers" :callid="state.activeCallId" @onhangup="callCore.onHangup"></ModalCall>
   <CallInviteNotify v-for="(notify, index) in state.callNotifyList" :callid="notify.callId" :index="index" :inviter="notify.inviter" @onhangup="onhangup" @onaccept="onaccept"></CallInviteNotify>
+  <audio src="/2472.mp3" id="ringing" loop="true"></audio>
 </template>
