@@ -8,6 +8,7 @@ import common from "../common/common";
 import Clocker from "../common/clock";
 import emitter from "../common/emmit";
 import Storage from "../common/storage";
+import { nextTick } from "vue";
 
 const props = defineProps(["isShow", "members", "callid"]);
 const emit = defineEmits(["onhangup"]);
@@ -36,13 +37,25 @@ juggleCall.on(CallEvent.MEMBER_JOINED, (event) => {
   let { target: { callId, member } } = event;
   let session = juggleCall.getSession({ callId });
   let userId = member.id;
-  let el = createVideoBox(userId);
-  session.setVideoView([{ userId, videoElement: el }]);
+
+  let index = utils.find(state.list, (item) => {
+    return utils.isEqual(item.id, userId);
+  });
+  if(index > -1){
+    showVideo(userId, 'block');
+  }else{
+    state.list.push({ ...member, isLoading: true });
+  }
+  nextTick(() => {
+    let el = getVideoBox(userId);
+    session.setVideoView([{ userId, videoElement: el }]);
+  });
 });
 juggleCall.on(CallEvent.MEMBER_QUIT, (event) => {
   console.log('CallEvent.MEMBER_QUIT', event);
   let { target: { member, callId } } = event;
   removeUser(member);
+  state.friends.push({ user_id: member.id, nickname: member.name, avatar: member.portrait, isTransferChecked: false });
   let session = juggleCall.getSession({ callId });
   if(!session.isMultiCall){
     emit("onhangup", { callId: state.activeCallId, isOneSelf: false });
@@ -85,9 +98,6 @@ watch(() => props.isShow, () => {
       let { id, name, portrait } = member;
       state.list.push({ id, name, portrait, isLoading: true });
     });
-    getFriends((items) => {
-      utils.extend(state, { friends: items })
-    });
   }
 });
 
@@ -96,28 +106,29 @@ function removeUser(user){
     return utils.isEqual(item.id, user.id);
   });
   if(index > -1){
-    state.list.splice(index, 1);
+    showVideo(user.id, 'none');
   }
 }
 
-function createVideoBox(userId){
+function getVideoBox(userId){
   let { refs } = context;
-  let node = document.createElement('div');
-  node.id = `v_rtc_${userId}`;
-  node.className = 'jcall-video-box';
-  let parent = refs.rtcusers.querySelector(`div[uid="${userId}"]`);
-  if(parent){
-    let videoBox = parent.querySelector('.jcall-user-video');
-    videoBox.appendChild(node);
-  }
-  return node;
+  return refs.rtcusers.querySelector(`#v_rtc_${userId}`);
 }
 
 function getFriends(callback) {
   let user = Storage.get(STORAGE.USER_TOKEN);
   Friend.getList({ startUserId: '', count: 50, userId: user.id }).then((result) => {
     let { data: { items } } = result;
-    callback(items.concat(items));
+    let friends = [];
+    utils.forEach(items, (item) => {
+      let isInclude = utils.isHighInclude(state.list, (member) => {
+        return utils.isEqual(member.id, item.user_id);
+      });
+      if(!isInclude || isHiddenVideo(item.user_id)){
+        friends.push(item);
+      }
+    });
+    callback(friends);
   });
 }
 function onSelected(item) {
@@ -125,6 +136,53 @@ function onSelected(item) {
 }
 function onInvite(isShow){
   state.isShowInvite = isShow;
+  if(isShow){
+    getFriends((items) => {
+      utils.extend(state, { friends: items })
+    });
+  }
+}
+function onInviteUsers(){
+  let { friends } = state;
+  let memberIds = [];
+  utils.forEach(friends, (friend, index) => {
+    if(friend.isTransferChecked){
+
+      let index = utils.find(state.list, (item) => {
+        return utils.isEqual(item.id, friend.user_id);
+      });
+      if(index > -1){
+        showVideo(friend.user_id, 'block');
+      }else{
+        state.list.push({ id: friend.user_id, name: friend.nickname, portrait: friend.avatar, isLoading: true });
+      }
+      memberIds.push(friend.user_id);
+    }
+  });
+  utils.forEach(memberIds, (memberId) => {
+    let index = utils.find(friends, (friend) => { return utils.isEqual(friend.user_id, memberId)});
+    if(index > -1){
+      friends.splice(index, 1);
+    }
+  });
+  if(utils.isEqual(memberIds.length, 0)){
+    return onInvite(false);
+  }
+  let { activeCallId } = state;
+  let session = juggleCall.getSession({ callId: activeCallId });
+  session.inviteUsers({ memberIds });
+  onInvite(false);
+}
+
+function showVideo(userId, type){
+  document.querySelector(`div[uid="${userId}"]`).style=`display: ${type};`
+}
+function isHiddenVideo(userId){
+  let node = document.querySelector(`div[uid="${userId}"]`);
+  if(!node){
+    node = { style: {} };
+  }
+  return node.style.display == 'none';
 }
 </script>
 <template>
@@ -139,7 +197,9 @@ function onInvite(isShow){
                 <div class="loader-content"></div>
               </div>
               <div class="jcall-username">{{ user.name }}</div>
-              <div class="jcall-user-video"></div>
+              <div class="jcall-user-video">
+                <div class="jcall-video-box" :id="'v_rtc_'+user.id"></div>
+              </div>
             </div>
           </div>
           <div class="jcall-tools">
@@ -190,7 +250,7 @@ function onInvite(isShow){
             </li>
           </ul>
           <ul class="jgcall-btns">
-            <li class="jgcall-btn jc-tool-active">确定</li>
+            <li class="jgcall-btn jc-tool-active" @click="onInviteUsers">确定</li>
           </ul>
         </div>
       </div>

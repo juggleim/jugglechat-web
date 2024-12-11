@@ -1776,6 +1776,7 @@
   display: flex;
   flex-direction: column;
   opacity: 0;
+  flex: 1 1 auto;
 }
 .jcall-mbox-show{
   left: 100%;
@@ -1791,6 +1792,7 @@
   margin-right: 4px;
 }
 .jgcall-members{
+  flex: 1;
   overflow-y: auto;
 }
 .jgcall-member{

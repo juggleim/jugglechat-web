@@ -652,6 +652,10 @@ let FUNC_PARAM_CHECKER = {
   START_MULTI_CALL: [{
     name: 'memberIds',
     type: 'Array'
+  }],
+  INVITE_USERS: [{
+    name: 'memberIds',
+    type: 'Array'
   }]
 };
 let ROOM_TYPE = {
@@ -758,7 +762,15 @@ function StateMachine (options) {
     _machine[name] = target => {
       return utils.deferred((resolve, reject) => {
         if (utils.isInclude(from, _state)) {
-          _state = to;
+          let beforeName = `on${name}before`;
+          let isKeep = false;
+          let func = methods[beforeName];
+          if (func) {
+            isKeep = func();
+          }
+          if (!isKeep) {
+            _state = to;
+          }
           let eventName = `on${name}`;
           let event = methods[eventName] || utils.noop;
           event({
@@ -1049,6 +1061,18 @@ function CallSession(_info, {
       from: [CALL_STATUS.OUTGOING, CALL_STATUS.CONNECTED],
       to: CALL_STATUS.CONNECTED
     },
+    // 主动邀请
+    {
+      name: 'invite',
+      from: [CALL_STATUS.IDLE, CALL_STATUS.OUTGOING, CALL_STATUS.CONNECTED, CALL_STATUS.DISCONNECTED],
+      to: CALL_STATUS.OUTGOING
+    },
+    // 被动邀请：收到成员邀请其他人的通知
+    {
+      name: 'memberinvite',
+      from: [CALL_STATUS.IDLE, CALL_STATUS.OUTGOING, CALL_STATUS.CONNECTED, CALL_STATUS.DISCONNECTED],
+      to: CALL_STATUS.CONNECTED
+    },
     // 被叫
     {
       name: 'callee',
@@ -1101,9 +1125,10 @@ function CallSession(_info, {
             status: CALL_STATUS.INCOMING
           };
         });
+        let status = isMultiCall ? CALL_STATUS.CONNECTED : CALL_STATUS.OUTGOING;
         members.push({
           id: currentUser.id,
-          status: CALL_STATUS.OUTGOING
+          status
         });
         callInfo = utils.extend(callInfo, {
           inviter: currentUser,
@@ -1111,7 +1136,11 @@ function CallSession(_info, {
         });
 
         // 启动每个成员的接听计时器，会在 oncalleraccepted 中停止计时
-        startMembersTimer();
+        startMembersTimer({
+          callId: callInfo.callId,
+          inviter: currentUser,
+          members: members
+        });
         client.inviteRTC({
           roomId: callInfo.callId,
           roomType: roomType,
@@ -1139,6 +1168,117 @@ function CallSession(_info, {
           } else {
             reject(joinResult);
           }
+        }, reject);
+      },
+      onmemberinvitebefore: () => {
+        // 邀请时，status 是 connected 不再变更状态
+        let isKeepStatus = utils.isEqual(callInfo.callStatus, CALL_STATUS.CONNECTED);
+        return isKeepStatus;
+      },
+      onmemberinvite: event => {
+        let {
+          target: {
+            members
+          }
+        } = event;
+        utils.extend(callInfo, {
+          callStatus: machine.getState()
+        });
+        let currentUser = client.getCurrentUser();
+        utils.forEach(members, member => {
+          let index = utils.find(callInfo.members, _member => {
+            return _member.id == member.id;
+          });
+          let notifyMember = {
+            id: member.id,
+            status: CALL_STATUS.INCOMING
+          };
+          let tMember = callInfo.members[index];
+          if (tMember) {
+            callInfo.members.splice(index, 1, notifyMember);
+          } else {
+            callInfo.members.push(notifyMember);
+          }
+          sessionEmitter.emit(SIGNAL_NAME.RTC_MEMBER_JOINED, {
+            target: {
+              callId: callInfo.callId,
+              member: {
+                id: member.id
+              }
+            }
+          });
+        });
+
+        // 启动每个成员的接听计时器，会在 oncalleraccepted 中停止计时
+        startMembersTimer({
+          callId: callInfo.callId,
+          inviter: currentUser,
+          members: members
+        });
+      },
+      oninvitebefore: () => {
+        // 邀请时，status 是 connected 不再变更状态
+        let isKeepStatus = utils.isEqual(callInfo.callStatus, CALL_STATUS.CONNECTED);
+        return isKeepStatus;
+      },
+      oninvite: event => {
+        let {
+          resolve,
+          reject,
+          target
+        } = event;
+        let {
+          options: {
+            memberIds,
+            isEnableCamera
+          }
+        } = target;
+        utils.extend(callInfo, {
+          callStatus: machine.getState()
+        });
+        let currentUser = client.getCurrentUser();
+        let inviteMembers = [];
+        utils.forEach(memberIds, memberId => {
+          let member = {
+            id: memberId,
+            status: CALL_STATUS.INCOMING
+          };
+          let index = utils.find(callInfo.members, _member => {
+            return _member.id == memberId;
+          });
+          let tMember = callInfo.members[index];
+          if (tMember) {
+            callInfo.members.splice(index, 1, member);
+          } else {
+            callInfo.members.push(member);
+          }
+          inviteMembers.push(member);
+        });
+
+        // 启动每个成员的接听计时器，会在 oncalleraccepted 中停止计时
+        startMembersTimer({
+          callId: callInfo.callId,
+          inviter: currentUser,
+          members: inviteMembers
+        });
+        client.inviteRTC({
+          roomId: callInfo.callId,
+          roomType: ROOM_TYPE.ONE_MORE,
+          mediaType: isEnableCamera ? MEDIA_TYPE.VIDEO : MEDIA_TYPE.AUDIO,
+          memberIds: memberIds
+        }).then(result => {
+          let _member = getMember(currentUser);
+          if (!utils.isEqual(_member.status, CALL_STATUS.CONNECTED)) {
+            sessionEmitter.emit(SIGNAL_NAME.RTC_MEMBER_JOINED, {
+              target: {
+                callId: callInfo.callId,
+                member: {
+                  id: currentUser.id
+                }
+              }
+            });
+          }
+          resolve();
         }, reject);
       },
       oncalleraccepted: event => {
@@ -1190,14 +1330,33 @@ function CallSession(_info, {
         let {
           target: {
             inviter,
-            members
+            members,
+            existsMembers
           }
         } = event;
-        utils.forEach(members, member => {
+        utils.forEach(existsMembers, member => {
+          let {
+            status
+          } = member;
+          status = utils.isEqual(status, CALL_STATUS.CONNECTING) ? CALL_STATUS.CONNECTED : status;
           callInfo.members.push({
             ...member,
-            status: CALL_STATUS.INCOMING
+            status
           });
+        });
+        utils.forEach(members, member => {
+          let index = utils.find(callInfo.members, _member => {
+            return utils.isEqual(_member.id, member.id);
+          });
+          let tMember = {
+            ...member,
+            status: CALL_STATUS.INCOMING
+          };
+          if (index > -1) {
+            callInfo.members.splice(index, 1, tMember);
+          } else {
+            callInfo.members.push(tMember);
+          }
         });
         let index = utils.find(callInfo.members, member => {
           return utils.isEqual(member.id, inviter.id);
@@ -1221,7 +1380,11 @@ function CallSession(_info, {
             }
           });
         }
-        startMembersTimer();
+        startMembersTimer({
+          callId: callInfo.callId,
+          inviter: inviter,
+          members: callInfo.members
+        });
       },
       onaccept: event => {
         utils.extend(callInfo, {
@@ -1467,8 +1630,32 @@ function CallSession(_info, {
     return machine.hangup({});
   };
 
-  // 当前用户邀请用户
-  let inviteUsers = () => {};
+  /*
+    当前用户邀请用户
+    let options = { memberIds: ['memberId'], isEnableCamera: true };
+  */
+  let inviteUsers = options => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(client, options, FUNC_PARAM_CHECKER.INVITE_USERS);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        memberIds
+      } = options;
+      options = utils.extend(options, {
+        roomType: ROOM_TYPE.ONE_MORE,
+        memberIds: memberIds
+      });
+      let _options = {
+        isEnableCamera: true
+      };
+      _options = utils.extend(_options, options);
+      return machine.invite({
+        options: _options
+      }).then(resolve, reject);
+    });
+  };
   let muteMicrophone = isEnable => {
     return rtcEngine.muteMicrophone(isEnable);
   };
@@ -1527,16 +1714,17 @@ function CallSession(_info, {
       }
     });
   }
-  function startMembersTimer() {
-    let {
-      callId,
-      inviter,
-      members
-    } = callInfo;
-    client.getCurrentUser();
+  function startMembersTimer({
+    callId,
+    inviter,
+    members
+  }) {
     utils.forEach(members, member => {
       // members 里包含发起方，发起方自己不计时；接收方收到的 members 中包好 inviter，invter 已在房间中，不计时
       if (utils.isEqual(inviter.id, member.id)) {
+        return;
+      }
+      if (utils.isEqual(member.status, CALL_STATUS.CONNECTED)) {
         return;
       }
       let alarm = Alarm();
@@ -1856,35 +2044,41 @@ function Factory ({
 
     // 被其他人邀请通话时触发
     if (utils.isEqual(eventType, INVITE_TYPE.INVITE)) {
-      let session = create({
-        callId,
-        isMultiCall: utils.isEqual(ROOM_TYPE.ONE_MORE, roomType)
-      });
-      session._machine.callee({
-        callId,
-        inviter: member,
-        members
-      });
       let user = client.getCurrentUser();
       let index = utils.find(members, member => {
         return utils.isEqual(member.id, user.id);
       });
-      if (index > -1) {
+      let isInviteOneself = index > -1;
+      let session = getSession({
+        callId
+      });
+      if (!utils.isEmpty(session)) {
+        session._machine.memberinvite({
+          members
+        });
+      } else {
+        // 本地没有对应的 CallSession 并且不是邀请自己别的端已经在房间里，本端忽略
+        if (!isInviteOneself) {
+          return;
+        }
+        session = create({
+          callId,
+          isMultiCall: utils.isEqual(ROOM_TYPE.ONE_MORE, roomType)
+        });
+        session._machine.callee({
+          callId,
+          inviter: member,
+          members,
+          existsMembers
+        });
+      }
+      if (isInviteOneself) {
         emitter.emit(EVENT_NAME.INVITED, {
           target: {
             callId
           }
         });
       }
-
-      // let notifyMembers = [...members];
-      // if(session.isNew){
-      //   session.isNew = false;
-      //   notifyMembers.push(member);
-      // }
-      // utils.forEach(notifyMembers, (member) => {
-      //   notifyJoined({ callId, member });
-      // });
     }
 
     // 邀请成员加入通话，成员同意后触发

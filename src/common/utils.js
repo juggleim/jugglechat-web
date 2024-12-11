@@ -231,6 +231,10 @@ const toArray = (obj) => {
 const isInclude = (str, match) => {
   return str.indexOf(match) > -1;
 };
+const isHighInclude = (arrs, callback) => {
+  let index = find(arrs, callback);
+  return index > -1;
+}
 const clone = (source) => {
   return JSON.parse(JSON.stringify(source));
 };
@@ -531,4 +535,5 @@ export default {
   toBase64,
   isMacBrowser,
   formatTimetoHM,
+  isHighInclude,
 }
