@@ -648,7 +648,7 @@ function getMembers() {
       { id: 'all', val: '@', isActive: true, name: '所有人', portrait: '', isAll: true }
     ];
     members = utils.map(members, (member) => {
-      let { user_id: id, nickname: name, avatar: portrait } = member;
+      let { user_id: id, nickname: name, user_portrait: portrait } = member;
       let item = { id, name, portrait };
       if(!portrait){
         item.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
