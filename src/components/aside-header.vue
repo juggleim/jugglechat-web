@@ -184,6 +184,9 @@ let portrait = user.portrait || '';
 let isShowUser = utils.isBase64(portrait.replace('data:image/jpeg;base64,', ''));
 utils.extend(state, { user, isShowUser, isShowUserClose: !isShowUser });
 
+emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
+  utils.extend(state.user, user);
+});
 </script>
 
 <template>

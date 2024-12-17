@@ -1871,3 +1871,14 @@
   100% {box-shadow: 0 0 0 20px #0000}
 }
 /* Call End*/
+
+.jg-user-setting-item{
+  display: flex;
+  color: #000000ba;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.jg-user-settings .active .jg-user-setting-item{
+  color: #0000ffe8;
+}

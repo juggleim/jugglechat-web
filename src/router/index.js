@@ -15,11 +15,11 @@ let routes = [{
       name: 'ConversationList',
       component:  () => import('@/views/conversation/conversation-list.vue'),
     },
-    // {
-    //   path: '/setting',
-    //   name: 'Setting',
-    //   component:  () => import('@/views/setting/setting.vue'),
-    // },
+    {
+      path: '/setting',
+      name: 'Settings',
+      component:  () => import('@/views/setting/setting.vue'),
+    },
     {
       path: '/contacts',
       name: 'Contacts',

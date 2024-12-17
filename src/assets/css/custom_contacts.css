@@ -12,6 +12,7 @@
   margin: 0px; 
   transform: translate3d(0px, 40px, 0px);
 }
+.setting-content,
 .contact-content{
   height: 100%;
   display: flex;
@@ -75,4 +76,32 @@
 .m-friend-add-btn .wr-plus:hover{
   background-color: #2563eb;
   color: #eaeff3;
+}
+
+.jg-setting-body{
+  width: 600px;
+}
+.jg-formuser-avatar{
+  height: 60px;
+  width: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.jg-setting-body .form-avatars{
+  height: 500px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.jg-setting-body .form-avatar{
+  height: 40px;
+  width: 40px;
+}
+.jg-setting-body .form-avatar-selected{
+  height: 60px;
+  width: 60px;
+}
+.jg-setting-body .form-avatar-selected::before{
+  font-size: 60px;
 }

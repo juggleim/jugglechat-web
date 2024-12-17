@@ -40,7 +40,7 @@ let state = reactive({
     { name: '设置', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING, isActive: utils.isEqual(path, '/setting') },
   ],
 });
-console.log(path)
+
 const context = getCurrentInstance();
 
 function onMenuClick(menu){
@@ -50,6 +50,9 @@ function onMenuClick(menu){
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.CONTACT)){
     router.push({ name: 'Contacts' });
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
+    router.push({ name: 'Settings' });
   }
 }
 
