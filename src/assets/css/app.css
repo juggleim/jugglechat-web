@@ -288,23 +288,45 @@ dl {
 .tyn-aside-base {
   height: var(--content-full-height);
 }
-.tyn-aside-head {
+.tyn-aside-head,
+.tyn-aside-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  background: #f0f2f5;
+  padding: 6px 10px;
   -webkit-app-region: drag;
+}
+.tyn-aside-head{
+  border-bottom: 1px solid #f0f2f5;
+}
+.tyn-contact-aside .tyn-aside-head{
+  border-color: #FFF;
 }
 .tyn-aside-desktop{
   justify-content: center;
 }
-.tyn-aside-foot {
-  padding: var(--aside-head-gap-y) var(--aside-gap-x);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+
+.tyn-aside-footer {
+ padding: 3px;
+ width: 320px;
+ background: #f0f2f5;
 }
+.jg-asider-footer-item{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  height: 40px;
+  width: 40px;
+  color: #7f7e82;
+}
+.jg-footer-active{
+  color: #426bdf;
+}
+
 .tyn-aside-search {
   position: sticky;
   top: 0;

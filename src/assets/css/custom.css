@@ -775,6 +775,19 @@
 .jg-asider-tool{
   margin: 0 2px;
 }
+.jg-header-user{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.jg-header-user-avatar{
+  height: 30px;
+  width: 30px;
+}
+.jg-header-user-name{
+  font-size: 10px;
+  font-weight: 600;
+}
 .jg-asider-tool-search{
   margin: 0 10px;
 }
@@ -1012,6 +1025,7 @@
 }
 .tyn-aside-list{
   padding: 2px;
+  margin-bottom: 30px;
 }
 @keyframes leaveleave {
   0% {
@@ -1367,8 +1381,8 @@
   display: flex;
   width: 180px;
   position: absolute;
-  bottom: 0;
-  top: 52px;
+  bottom: 46px;
+  top: 45px;
 }
 .show-group-conver{
   margin-left: 180px;

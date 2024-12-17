@@ -5,7 +5,10 @@ import { useRouter } from "vue-router";
 import Dropmenu from "./dropmenu.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
 import { CONTACT_TAB_TYPE, RESPONSE, EVENT_NAME }  from "../../common/enum";
+
 import AisdeHeader from "../../components/aside-header.vue";
+import AisdeFooter from "../../components/aside-footer.vue";
+
 import im from "../../common/im";
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -179,6 +182,7 @@ getFriends();
           </div>
         </div>
       </div>
+      <AisdeFooter></AisdeFooter>
     </div>
     <ContactDetail :current="state.current"></ContactDetail>
   </div>

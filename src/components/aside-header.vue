@@ -35,15 +35,6 @@ let state = reactive({
   isShowAddFriend: false,
   isDesktop: juggle.isDesktop(),
   isShowAddMenu: false,
-  isShowSettingMenu: false,
-  settingMenus: [
-    { name: '最近会话', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE },
-    { name: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT },
-    { type: 'line' },
-    { name: '个人资料', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING },
-    { type: 'line' },
-    { name: '退出', icon: 'logout', event: ASIDE_MENU_TYPE.LOGOUT },
-  ],
   addMenus: [
     { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
     { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
@@ -52,7 +43,7 @@ let state = reactive({
   isCreateGroupLoading: false,
   user: {},
   isShowUserClose: true,
-  isShowUser: false
+  isShowUser: false,
 });
 const context = getCurrentInstance();
 
@@ -68,15 +59,10 @@ function onShowFriendAdd(isShow){
 }
 function onShowAddMenu(isShow){
   state.isShowAddMenu = isShow;
-  state.isShowSettingMenu = false;
 }
-function onShowSettingMenu(isShow){
-  state.isShowSettingMenu = isShow;
-  state.isShowAddMenu = false;
-}
+
 function onFriendAddCancel(){
   onShowFriendAdd(false);
-  onShowSettingMenu(false)
 }
 function onFriendAddConfirm(friend){
   let user = Storage.get(STORAGE.USER_TOKEN);
@@ -107,25 +93,12 @@ function onFriendAddConfirm(friend){
 
 function onHideMenu(){
   onShowAddMenu(false);
-  onShowSettingMenu(false);
 }
 function onNavChat(args){
   emit('onnav', args)
 }
 function onMenuClick(menu){
   let { event } = menu;
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.MESSAGE)){
-    router.push({ name: 'ConversationList' });
-  }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.CONTACT)){
-    router.push({ name: 'Contacts' });
-  }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.LOGOUT)){
-    Storage.remove(STORAGE.USER_TOKEN);
-    let juggle = im.getCurrent();
-    juggle.disconnect();
-    router.push({ name: 'Login' });
-  }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_FRIREND)){
     onShowFriendAdd(true);
   }
@@ -218,8 +191,10 @@ utils.extend(state, { user, isShowUser, isShowUserClose: !isShowUser });
     <div class="tyn-aside-head-tools">
       <ul class="tyn-list-inline jg-asider-tools">
         <li class="jg-asider-tool">
-          <button class="btn btn-icon btn-light btn-md wr wr-more-list" @click="onShowSettingMenu(true)"></button>
-          <HeaderDropMenu @onemit="onMenuClick" :is-show="state.isShowSettingMenu" :menus="state.settingMenus"  @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
+          <div class="jg-header-user">
+            <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
+            <!-- <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div> -->
+          </div>
         </li>
         <li v-if="state.isDesktop" class="jg-asider-tool jg-asider-tool-search">
           <AisdeSearch @onnav="onNavChat"></AisdeSearch>
