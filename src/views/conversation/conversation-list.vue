@@ -153,8 +153,8 @@ im.connect(user, {
   }
 });
 
-juggle.once(Event.CONVERSATION_CHANGED, onConversationChanged);
-juggle.once(Event.CONVERSATION_ADDED, onConversationChanged);
+juggle.on(Event.CONVERSATION_CHANGED, onConversationChanged);
+juggle.on(Event.CONVERSATION_ADDED, onConversationChanged);
 juggle.once(Event.CONVERSATION_TOP, onConversationTop);
 juggle.once(Event.CONVERSATION_REMOVED, onConversationRemove);
 
@@ -183,6 +183,7 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
   }
   juggle.getConversations(params).then(result => {
     let { conversations: _list } = result;
+    _list = common.filterIgnoreConversations(_list);
     console.log("conversatoins", _list);
     utils.forEach(_list, conversation => {
       let {

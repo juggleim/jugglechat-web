@@ -10,6 +10,7 @@ import emitter from "../../common/emmit";
 let { ConversationType } = im.getCurrent();
 const router = useRouter();
 const props = defineProps(["current"]);
+const emit = defineEmits(["onadded"]);
 const context = getCurrentInstance();
 
 function onConversation(){
@@ -41,6 +42,7 @@ function onAddFriend(isAgree){
       avatar: user.avatar
     }
     emitter.$emit(EVENT_NAME.ON_ADDED_FRIEND, _friend);
+    emit('onadded', { item: props.current })
   });
 }
 </script>
@@ -80,7 +82,6 @@ function onAddFriend(isAgree){
             </div>
             <div class="tyn-media-col" v-else-if="!props.current.isOneSelf && utils.isEqual(props.current.status, FRIEND_APPLY_STATUS.APPLYING)">
               <div class="wr wr-message btn btn-light tyn-size-md w-100 contact-send-msg" @click="onAddFriend(true)">添加好友</div>
-              <div class="wr wr-message btn btn-light tyn-size-md w-100 contact-send-msg warn-bg" @click="onAddFriend(false)">拒绝添加</div>
             </div>
           </div>
         </div>

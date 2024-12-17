@@ -6,7 +6,7 @@ import ModalFriendAdd from "./modal-friend-add.vue";
 import AisdeSearch from './aside-search.vue';
 import utils from "../common/utils";
 import common from "../common/common";
-import { STORAGE, RESPONSE, EVENT_NAME } from "../common/enum";
+import { STORAGE, RESPONSE, EVENT_NAME, SYS_CONVERSATION_FRIEND, IGNORE_CONVERSATIONS } from "../common/enum";
 import Storage from "../common/storage";
 import { Friend } from "../services";
 import emitter from "../common/emmit";
@@ -20,7 +20,7 @@ const emit = defineEmits([]);
 const router = useRouter();
 
 let juggle = im.getCurrent();
-let { ConversationType } = juggle;
+let { ConversationType, Event, ConnectionState } = juggle;
 
 let ASIDE_MENU_TYPE = {
   ADD_FRIREND: 1,
@@ -35,10 +35,40 @@ let { _value: { path } } = router.currentRoute;
 
 let state = reactive({
   settingMenus: [
-    { name: '消息', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(path, '/conversation') },
-    { name: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
-    { name: '设置', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING, isActive: utils.isEqual(path, '/setting') },
+    { id: `${Date.now()}`, name: '消息', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(path, '/conversation') },
+    { id: `${SYS_CONVERSATION_FRIEND}`, name: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
+    { id: `${Date.now()}`, name: '设置', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING, isActive: utils.isEqual(path, '/setting') },
   ],
+});
+
+function onConversationChanged({ conversations }){
+  utils.forEach(conversations, (conversation) => {
+    let { conversationId } = conversation;
+    if(!utils.isInclude(IGNORE_CONVERSATIONS, conversationId)){
+      return;
+    }
+    utils.forEach(state.settingMenus, (menu) => {
+      if(utils.isInclude(menu.id, conversationId)){
+        menu.unreadCount = conversation.unreadCount; 
+      }
+    });
+  });
+}
+juggle.on(Event.CONVERSATION_CHANGED, onConversationChanged);
+juggle.on(Event.CONVERSATION_ADDED, onConversationChanged);
+
+let user = Storage.get(STORAGE.USER_TOKEN);
+im.connect(user, {
+  success: (_user) => {
+    juggle.getConversation({ conversationId: SYS_CONVERSATION_FRIEND, conversationType: ConversationType.SYSTEM }).then(({ conversation }) => {
+      let index = utils.find(state.settingMenus, (menu) => { 
+        return utils.isEqual(menu.event, ASIDE_MENU_TYPE.CONTACT)
+      });
+      let menu = state.settingMenus[index];
+      menu.unreadCount = conversation.unreadCount;
+    });
+  },
+  error: () => {}
 });
 
 const context = getCurrentInstance();

@@ -1,7 +1,7 @@
 import utils from "../../common/utils";
 import im from "../../common/im";
 import messageUtils from "../../components/message-utils";
-import { TRANSFER_TYPE, CONVERATION_TAG_ID } from "../../common/enum";
+import { TRANSFER_TYPE, CONVERATION_TAG_ID, IGNORE_CONVERSATIONS } from "../../common/enum";
 import common from "../../common/common";
 import conversationTools from "./conversation";
 
@@ -12,6 +12,10 @@ export default function(conversations, state){
   utils.forEach(conversations, conversation => {
     console.log("conversation", conversation);
 
+    if(utils.isInclude(IGNORE_CONVERSATIONS, conversation.conversationId)){
+      return;
+    }
+    
     if (!conversation.latestMessage) {
       return;
     }

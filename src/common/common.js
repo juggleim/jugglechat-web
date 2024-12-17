@@ -2,6 +2,7 @@ import utils from "./utils";
 import { User, Group, Friend } from "../services/index";
 import html2canvas from 'html2canvas';
 import im from './im';
+import { IGNORE_CONVERSATIONS } from "../common/enum"
 
 function isElementTop(message){
   var chatNode = document.querySelector('.tyn-chat-body');
@@ -295,6 +296,11 @@ function formatSeconds(times) {
   let seconds =  mm + ':' + ss;
   return seconds;
 }
+function filterIgnoreConversations(conversations){
+  return utils.filter(conversations, (item) => {
+    return !utils.isInclude(IGNORE_CONVERSATIONS, item.conversationId);
+  });
+}
 export default {
  isElementTop,
  getAvatar,
@@ -309,4 +315,5 @@ export default {
  getConversationTime,
  formatMention,
  formatSeconds,
+ filterIgnoreConversations,
 }

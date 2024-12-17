@@ -4,7 +4,7 @@ import ContactDetail from "./detail.vue";
 import { useRouter } from "vue-router";
 import Dropmenu from "./dropmenu.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
-import { CONTACT_TAB_TYPE, RESPONSE, EVENT_NAME, CONTACT_TYPE, FRIEND_APPLY_STATUS }  from "../../common/enum";
+import { CONTACT_TAB_TYPE, RESPONSE, EVENT_NAME, CONTACT_TYPE, FRIEND_APPLY_STATUS, IGNORE_CONVERSATIONS, SYS_CONVERSATION_FRIEND }  from "../../common/enum";
 
 import AisdeHeader from "../../components/aside-header.vue";
 import AisdeFooter from "../../components/aside-footer.vue";
@@ -16,10 +16,13 @@ import { Friend, Group } from "../../services/index";
 import common from "../../common/common";
 import emitter from "../../common/emmit";
 
+let juggle = im.getCurrent();
+let { ConversationType, Event, ConnectionState } = juggle;
+
 let tabs = [
-    { name: '联系人', type: CONTACT_TYPE.FRIEND, icon: 'contact', isActive: true },
-    { name: '新朋友', type: CONTACT_TYPE.NEW_FRIEND, unreadCount: 0, icon: 'adduser', isActive: false },
-    { name: '群组', type: CONTACT_TYPE.GROUP, icon: 'group', isActive: false },
+    { id: Date.now(), name: '联系人', type: CONTACT_TYPE.FRIEND, icon: 'contact', isActive: true },
+    { id: SYS_CONVERSATION_FRIEND, name: '新朋友', type: CONTACT_TYPE.NEW_FRIEND, unreadCount: 0, icon: 'adduser', isActive: false },
+    { id: Date.now(), name: '群组', type: CONTACT_TYPE.GROUP, icon: 'group', isActive: false },
   ];
 let contacts = [];
 let groups = [];
@@ -34,6 +37,39 @@ let state = reactive({
   current: {},
   isShowAddFriend: false,
 });
+
+function onConversationChanged({ conversations }){
+  utils.forEach(conversations, (conversation) => {
+    let { conversationId } = conversation;
+    if(!utils.isInclude(IGNORE_CONVERSATIONS, conversationId)){
+      return;
+    }
+    utils.forEach(state.tabs, (menu) => {
+      if(utils.isEqual(menu.id, conversationId)){
+        let { latestUnreadIndex, unreadCount } = conversation;
+        utils.extend(menu, { latestUnreadIndex, unreadCount  });
+      }
+    });
+  });
+}
+juggle.on(Event.CONVERSATION_CHANGED, onConversationChanged);
+juggle.on(Event.CONVERSATION_ADDED, onConversationChanged);
+
+let user = Storage.get(STORAGE.USER_TOKEN);
+im.connect(user, {
+  success: (_user) => {
+    juggle.getConversation({ conversationId: SYS_CONVERSATION_FRIEND, conversationType: ConversationType.SYSTEM }).then(({ conversation }) => {
+      let index = utils.find(state.tabs, (menu) => { 
+        return utils.isEqual(menu.type, CONTACT_TYPE.NEW_FRIEND)
+      });
+      let menu = state.tabs[index];
+      let { latestUnreadIndex, unreadCount } = conversation;
+      utils.extend(menu, { latestUnreadIndex, unreadCount  });
+    });
+  },
+  error: () => {}
+});
+
 
 emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   state.contacts.push(friend);
@@ -57,6 +93,7 @@ function onTab(tab){
   }
   if(utils.isEqual(tab.type, CONTACT_TYPE.NEW_FRIEND)){
     getNewFriends();
+    juggle.clearUnreadcount({ conversationType: ConversationType.SYSTEM, conversationId: SYS_CONVERSATION_FRIEND, unreadIndex: tab.latestUnreadIndex });
   }
   state.current = {};
   utils.map(state.tabs, (_tab) => {
@@ -109,12 +146,16 @@ function getNewFriends(start = 0){
     state.currentList = newContacts;
   });
 }
+let statusMap = {};
+statusMap[FRIEND_APPLY_STATUS.APPLYING] = '待处理';
+statusMap[FRIEND_APPLY_STATUS.ACCEPTED] = '已添加';
+statusMap[FRIEND_APPLY_STATUS.DECLINED] = '已拒绝';
+statusMap[FRIEND_APPLY_STATUS.EXPIRED] = '已过期';
+function onAddFriend({ item }){
+  item.status = FRIEND_APPLY_STATUS.ACCEPTED;
+  item.statusName = statusMap[item.status];
+}
 function getFriendApplyName(status){
-  let statusMap = {};
-  statusMap[FRIEND_APPLY_STATUS.APPLYING] = '待处理';
-  statusMap[FRIEND_APPLY_STATUS.ACCEPTED] = '已添加';
-  statusMap[FRIEND_APPLY_STATUS.DECLINED] = '已拒绝';
-  statusMap[FRIEND_APPLY_STATUS.EXPIRED] = '已过期';
   return statusMap[status] || '';
 }
 function getFriends(startUserId = ''){
@@ -169,19 +210,6 @@ function getGroups(startId = ''){
   });
 }
 
-let user = Storage.get(STORAGE.USER_TOKEN);
-if (utils.isEmpty(user)) {
-  router.replace({ name: 'Login' });
-}
-im.connect(user, {
-  success: (_user) => {
-    console.log('contacts connect success', _user)
-  },
-  error: () => {
-    router.replace({ name: 'Login' });
-  }
-});
-
 const router = useRouter();
 let useRouterCurrent = reactive(router);
 watch(useRouterCurrent, (val) => {
@@ -224,6 +252,6 @@ getFriends();
       </div>
       <AisdeFooter></AisdeFooter>
     </div>
-    <ContactDetail :current="state.current"></ContactDetail>
+    <ContactDetail :current="state.current" @onadded="onAddFriend"></ContactDetail>
   </div>
 </template>

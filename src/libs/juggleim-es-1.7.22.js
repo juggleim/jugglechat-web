@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.7.20
+* JuggleIM.js v1.7.22
 * (c) 2022-2024 JuggleIM
 * Released under the MIT License.
 */
@@ -1257,7 +1257,8 @@ let MENTION_ORDER = {
 let UPLOAD_TYPE = {
   NONE: 0,
   QINIU: 1,
-  ALI: 4
+  ALI: 4,
+  S3: 2
 };
 let UNDISTURB_TYPE = {
   DISTURB: 1,
@@ -6378,12 +6379,47 @@ function Uploder (uploader, {
       }
     });
   };
+  let s3Exec = (content, option, callbacks) => {
+    let {
+      url
+    } = option;
+    let {
+      file,
+      name
+    } = content;
+    utils.requestNormal(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': ''
+      },
+      body: file
+    }, {
+      success: () => {
+        url = url.split('?')[0];
+        callbacks.oncompleted({
+          url
+        });
+      },
+      progress: event => {
+        let percent = event.loaded / event.total * 100;
+        callbacks.onprogress({
+          percent
+        });
+      },
+      fail: error => {
+        callbacks.onerror(error);
+      }
+    });
+  };
   let exec = (content, option, callbacks) => {
     if (utils.isEqual(type, UPLOAD_TYPE.QINIU)) {
       return qiniuExec(content, option, callbacks);
     }
     if (utils.isEqual(type, UPLOAD_TYPE.ALI)) {
       return aliExec(content, option, callbacks);
+    }
+    if (utils.isEqual(type, UPLOAD_TYPE.S3)) {
+      return s3Exec(content, option, callbacks);
     }
     // ... other upload plugin
   };
@@ -7004,6 +7040,9 @@ function checkUploadType(upload) {
   }
   if (upload.urllib) {
     type = UPLOAD_TYPE.ALI;
+  }
+  if (upload && upload.name == 'S3Client') {
+    type = UPLOAD_TYPE.S3;
   }
   return type;
 }
@@ -9034,7 +9073,9 @@ function getQueryAckBody(stream, {
     });
   }
   if (utils.isEqual(topic, COMMAND_TOPICS.GET_CONVERSATION)) {
-    result = getConversationHandler(index, data);
+    result = getConversationHandler(index, data, {
+      currentUser
+    });
   }
   if (utils.isEqual(topic, COMMAND_TOPICS.GET_UNREAD_TOTLAL_CONVERSATION)) {
     result = getTotalUnread(index, data);
@@ -9162,6 +9203,12 @@ function getFileToken(index, data) {
     } = result;
     utils.extend(cred, preSignResp);
   }
+  if (utils.isEqual(ossType, UPLOAD_TYPE.S3)) {
+    let {
+      preSignResp
+    } = result;
+    utils.extend(cred, preSignResp);
+  }
   return {
     index,
     cred
@@ -9243,15 +9290,10 @@ function getConversationHandler(index, data, {
 }) {
   let payload = $root.lookup('codec.Conversation');
   let item = payload.decode(data);
-  let conversation = {};
-  if (!item.msg) {
-    conversation = {};
-  } else {
-    let conversations = tools$1.formatConversations([item], {
-      currentUser
-    });
-    conversation = conversations[0] || conversation;
-  }
+  let conversations = tools$1.formatConversations([item], {
+    currentUser
+  });
+  let conversation = conversations[0] || {};
   return {
     conversation,
     index
@@ -10344,7 +10386,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.20';
+let VERSION = '1.7.22';
 
 function NetworkWatcher (callbacks) {
   let onlineEvent = () => {

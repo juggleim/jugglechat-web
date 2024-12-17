@@ -1,4 +1,4 @@
-import JuggleChat from "../libs/juggleim-es-1.7.20";
+import JuggleChat from "../libs/juggleim-es-1.7.22";
 import JuggleCall from "../libs/jugglecall-es-1.0.0";
 
 // import JuggleChat from "jugglechat-websdk";
@@ -14,6 +14,7 @@ let juggle = JuggleChat.init(option);
 juggle.registerMessage([
   { name: MSG_NAME.GROUP_NTF,  isCount: true, isStorage: true },
   { name: MSG_NAME.FRIEND_NTF,  isCount: true, isStorage: true },
+  { name: MSG_NAME.FRIEND_APPLY,  isCount: true, isStorage: true },
 ])
 
 let zg = new ZegoExpressEngine(CONFIG.rtcAppId);

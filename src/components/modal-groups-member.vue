@@ -5,6 +5,7 @@ import utils from "../common/utils";
 import Storage from "../common/storage";
 import { STORAGE } from "../common/enum";
 import Conversation from "./conversation.vue";
+import common from "../common/common";
 const props = defineProps(["isShow", "tag"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 let context = getCurrentInstance();
@@ -47,7 +48,8 @@ function getConversations(isFirst = false, callback = utils.noop) {
   let { conversations } = state;
   juggle.getConversations(params).then(result => {
     let { conversations: list } = result;
-    state.conversations = conversations.concat(list);
+    let _list = common.filterIgnoreConversations(list);
+    state.conversations = conversations.concat();
     callback();
   });
 }
@@ -118,7 +120,8 @@ function getSelectConversations(isFirst = false, callback = utils.noop) {
   let { selectList, conversations } = state;
   juggle.getConversations(params).then(result => {
     let { conversations: list } = result;
-    list = utils.map(list, (item) => {
+    let _list = common.filterIgnoreConversations(list);
+    list = utils.map(_list, (item) => {
       item.isRemote = true;
       return item;
     })

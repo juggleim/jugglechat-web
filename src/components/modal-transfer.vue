@@ -1,5 +1,6 @@
 <script setup>
   import im from "../common/im";
+  import common from "../common/common";
   import { reactive } from "vue";
   import utils from "../common/utils";
 
@@ -12,6 +13,7 @@
 
   if(im.isConnected()){
     juggle.getConversations({}).then(({ conversations }) => {
+      conversations = common.filterIgnoreConversations(conversations);
       utils.extend(state, { conversations })
     });
   }

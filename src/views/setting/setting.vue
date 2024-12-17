@@ -36,19 +36,6 @@ function onShowProfile(item){
   state.currentType = item.uid;
 }
 
-let user = Storage.get(STORAGE.USER_TOKEN);
-if (utils.isEmpty(user)) {
-  router.replace({ name: 'Login' });
-}
-
-im.connect(user, {
-  success: (_user) => {
-    console.log('contacts connect success', _user)
-  },
-  error: () => {
-    router.replace({ name: 'Login' });
-  }
-});
 </script>
 <template>
   <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
