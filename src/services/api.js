@@ -8,9 +8,11 @@ let SERVER_PATH = {
   USER_FILE_TOKEN: 'file_cred',
   USER_GET: 'users/info',
 
-  FRIEND_ADD: 'friends/add',
+  FRIEND_ADD: 'friends/apply',
   FRIEND_REMOVE: 'friends/remove',
   FRIEND_LIST: 'friends/list',
+  FRIEND_NEW_LIST: 'friends/applications',
+  FRIEND_CONFIRM: 'friends/confirm',
   
   GROUP_CREATE: 'groups/add',
   GROUP_UPDATE: 'groups/update',

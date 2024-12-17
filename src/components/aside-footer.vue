@@ -36,7 +36,7 @@ let { _value: { path } } = router.currentRoute;
 let state = reactive({
   settingMenus: [
     { name: '消息', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(path, '/conversation') },
-    { name: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(path, '/contacts') },
+    { name: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
     { name: '设置', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING, isActive: utils.isEqual(path, '/setting') },
   ],
 });
@@ -64,6 +64,7 @@ function onMenuClick(menu){
       <ul class="tyn-list-inline jg-asider-tools">
         <li class="jg-asider-tool" v-for="menu in state.settingMenus">
           <div class="jg-asider-footer-item" @click="onMenuClick(menu)" :class="[menu.isActive ? 'jg-footer-active' : '']">
+            <div class="nav-unreadcount" v-if="menu.unreadCount > 0">{{ menu.unreadCount }}</div>
             <div class="icon wr" :class="{ ['wr-' + menu.icon]: true }"></div>
             <div class="name">{{ menu.name }}</div>
           </div>

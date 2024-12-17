@@ -1882,3 +1882,40 @@
 .jg-user-settings .active .jg-user-setting-item{
   color: #0000ffe8;
 }
+.nav-item{
+  position: relative;
+}
+.jg-contact-navs{
+  display: flex;
+  justify-content: space-between;
+}
+.nav-unreadcount{
+  position: absolute;
+  background: #ef2323;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  color: #FFF;
+  right: 2px;
+  top: 4px;
+  padding: 2px 6px;
+}
+.jg-button{
+  margin: 6px;
+}
+.jg-logout{
+  background-color: #ef2323;
+  color: #FFF;
+}
+.jg-friend-applystatus{
+  font-size: 12px;
+  color: #a7a8ab;
+  width: 40px;
+}
+.warn-bg{
+  background-color: #ef2323;
+}

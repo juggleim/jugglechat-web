@@ -66,7 +66,6 @@ function onFriendAddCancel(){
 }
 function onFriendAddConfirm(friend){
   let user = Storage.get(STORAGE.USER_TOKEN);
-  utils.extend(friend, { userId: user.id });
   Friend.add(friend).then((result) => {
     let { code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
@@ -76,18 +75,18 @@ function onFriendAddConfirm(friend){
       });
     }
     context.proxy.$toast({
-      text: `添加好友成功`,
+      text: `已发送好友添加请求`,
       icon: 'success'
     });
     onShowFriendAdd(false);
-    let { ConversationType } = juggle;
-    let _friend = {
-      id: friend.user.user_id,
-      type: ConversationType.PRIVATE, 
-      name: friend.user.nickname, 
-      avatar: friend.user.avatar
-    }
-    emitter.$emit(EVENT_NAME.ON_ADDED_FRIEND, _friend);
+    // let { ConversationType } = juggle;
+    // let _friend = {
+    //   id: friend.user.user_id,
+    //   type: ConversationType.PRIVATE, 
+    //   name: friend.user.nickname, 
+    //   avatar: friend.user.avatar
+    // }
+    // emitter.$emit(EVENT_NAME.ON_ADDED_FRIEND, _friend);
   });
 }
 

@@ -3,34 +3,40 @@ import SERVER_PATH from './api';
 import utils from '../common/utils';
 
 function add(friend){
-  let { friendId, userId } = friend;
+  let { friendId } = friend;
   return request(SERVER_PATH.FRIEND_ADD, {
     method: 'POST',
     body: utils.toJSON({
-      user_id: userId,
       friend_id: friendId
     })
   });
 }
 
 function remove(friend){
-  let { friendId, userId } = friend;
+  let { friendId } = friend;
   return request(SERVER_PATH.FRIEND_REMOVE, {
     method: 'POST',
     body: utils.toJSON({
-      user_id: userId,
       friend_id: friendId
     })
   });
 }
 let friends = [];
-function getList({ startUserId, count, userId }){
-  let url = `${SERVER_PATH.FRIEND_LIST}?user_id=${userId}&count=${count}&start_id=${startUserId}`;
+function getList({ startUserId, count, order }){
+  let url = `${SERVER_PATH.FRIEND_LIST}?count=${count}&offset=${startUserId}`;
   return request(url, {
     method: 'GET'
   }).then((result) => {
     let { data: { items = [] } } = result;
     friends = friends.concat(items);
+    return result;
+  });
+}
+function getNewList({ start, count, order }){
+  let url = `${SERVER_PATH.FRIEND_NEW_LIST}?start=${start}&count=${count}&order=${order}`;
+  return request(url, {
+    method: 'GET'
+  }).then((result) => {
     return result;
   });
 }
@@ -47,9 +53,19 @@ function get({ id }, callback){
     callback(data);
   });
 }
+function confirm({ sponsor_id, is_agree }){
+  return request(SERVER_PATH.FRIEND_CONFIRM, {
+    method: 'POST',
+    body: utils.toJSON({
+      sponsor_id, is_agree
+    })
+  });
+}
 export default {
   add,
   remove,
   getList,
+  getNewList,
+  confirm,
   get,
 }

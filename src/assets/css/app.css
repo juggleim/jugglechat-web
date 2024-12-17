@@ -308,7 +308,7 @@ dl {
 
 .tyn-aside-footer {
  padding: 3px;
- width: 320px;
+ min-width: 320px;
  background: #f0f2f5;
 }
 .jg-asider-footer-item{
@@ -322,6 +322,14 @@ dl {
   height: 40px;
   width: 40px;
   color: #7f7e82;
+  position: relative;
+}
+.jg-asider-footer-item .nav-unreadcount{
+  right: -2px;
+  top: 4px;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
 }
 .jg-footer-active{
   color: #0000ffe8;

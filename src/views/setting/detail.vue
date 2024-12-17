@@ -39,6 +39,12 @@ let state = reactive({
   isNameError: false,
 });
 
+function onLogout(){
+  Storage.remove(STORAGE.USER_TOKEN);
+  let juggle = im.getCurrent();
+  juggle.disconnect();
+  router.push({ name: "Login" });
+}
 let isSaveingUser = false;
 function onSaveUser(){
   let { currentAvatar, username: name } = state;
@@ -98,7 +104,8 @@ watch(() => props.type, () => {
         </div>
         <div class="form-group">
           <div class="form-control-wrap">
-            <a class="btn btn-primary-soft w-100" @click="onSaveUser()">保存</a>
+            <a class="btn btn-primary-soft w-100 jg-button" @click="onSaveUser()">保存</a>
+            <a class="btn btn-primary-soft w-100 jg-button jg-logout" @click="onLogout()">退出登录</a>
           </div>
         </div>
       </div>
