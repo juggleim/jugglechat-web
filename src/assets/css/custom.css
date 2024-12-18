@@ -923,7 +923,7 @@
 .tyn-reply-meida-img{
   position: relative;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   flex-wrap: wrap;
 }
 /* .tyn-reply-meida-img div{

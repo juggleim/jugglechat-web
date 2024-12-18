@@ -265,15 +265,14 @@ function scrollBottom() {
 function onPreviewImage(image) {
   let messages = state.messages;
   let images = [];
-  let index = 0;
   utils.forEach(messages, (message, i) => {
     if (utils.isEqual(message.name, MessageType.IMAGE)) {
       let { content: { url } } = message;
       images.push(url);
-      if (utils.isEqual(image, url)) {
-        index = i;
-      }
     }
+  });
+  let index = utils.find(images, (url) => {
+    return utils.isEqual(url, image.url);
   });
   preview({ images, index });
 }
