@@ -49,9 +49,9 @@ let state = reactive({
     {
       uid: SETTING_KEY_TYPE.LANGUAGE,
       title: '推送语言',
-      currentValue: 'zh_CN',
+      currentValue: 'zh-Hans-CN',
       items: [
-        { name: '中文', value: 'zh_CN' },
+        { name: '中文', value: 'zh-Hans-CN' },
         { name: '英文', value: 'en_US' },
       ]
     },
@@ -164,7 +164,8 @@ function onSettingChanged(result){
   let data = {};
   utils.forEach(state.settings, (setting) => {
     let { uid, currentValue } = setting;
-    data[uid] = currentValue;
+    let _setting = formatTimes({ uid, value: currentValue })
+    utils.extend(data, _setting)
   });
   utils.extend(data, _result);
   console.log(data)
