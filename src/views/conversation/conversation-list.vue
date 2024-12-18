@@ -251,6 +251,10 @@ function onClearMessages(index) {
   return conversationTools.clearMessages(conversation);
 }
 
+function onQuitGroup(conversation){
+  state.currentConversation = {};
+}
+
 function onDraft(conversation) {
   return conversationTools.updateDraft({ conversation, conversations: state.conversations });
 }
@@ -432,7 +436,7 @@ function onTagConversationChanged({ removes, adds, tag }){
       <AisdeFooter></AisdeFooter>
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
-    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" @onclearmsg="onClearMessages"></Conversation>
+    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" @onclearmsg="onClearMessages" @onquitgroup="onQuitGroup"></Conversation>
     
   </div>
 </template>

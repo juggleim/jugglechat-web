@@ -15,7 +15,7 @@ import { STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME, RESPONSE } from "../.
 import emitter from "../../common/emmit";
 
 const props = defineProps(["isShow", "conversation", "members", "group"]);
-const emit = defineEmits(["onclearmsg"]);
+const emit = defineEmits(["onclearmsg", "onquitgroup"]);
 
 const context = getCurrentInstance();
 let juggle = im.getCurrent();
@@ -234,6 +234,23 @@ function onSaveGroupDisplayName(){
     });
   });
 }
+function onQuitGroup(){
+  let { conversationId } = props.conversation;
+  Group.quit({ group_id: conversationId }).then((result) => {
+    let { code } = result;
+    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+      return context.proxy.$toast({
+        text: `退群失败：${code}`,
+        icon: 'error'
+      });
+    }
+    context.proxy.$toast({
+      text: `退群成功`,
+      icon: 'success'
+    });
+    emit('onquitgroup', props.conversation)
+  });
+}
 function onClearMessages(){
   emit('onclearmsg', {});
 }
@@ -296,7 +313,7 @@ watch(() => props.isShow, () => {
         <a class="btn w-100 jg-warn-letter" @click="onClearMessages">清空历史消息</a>
       </div>
       <div class="nav-tabs jg-nav-tabs nav-tabs-line" v-if="utils.isEqual(props.conversation.conversationType, ConversationType.GROUP)">
-        <a class="btn w-100 jg-warn-letter" @click="">退出群聊</a>
+        <a class="btn w-100 jg-warn-letter" @click="onQuitGroup()">退出群聊</a>
       </div>
     </div>
     <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"

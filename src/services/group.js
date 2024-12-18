@@ -24,10 +24,10 @@ function update(group){
   });
 }
 
-function dissolve(group){
-  return request(SERVER_PATH.GROUP_DISSOLVE, {
+function quit(group){
+  return request(SERVER_PATH.GROUP_QUIT, {
     method: 'POST',
-    body: utils.toJSON({})
+    body: utils.toJSON(group)
   });
 }
 
@@ -94,7 +94,7 @@ function setDisplayName(params){
 
 export default {
   create,
-  dissolve,
+  quit,
   getList,
   addMember,
   removeMember,
