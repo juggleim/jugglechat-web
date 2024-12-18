@@ -269,73 +269,37 @@ watch(() => props.isShow, () => {
         </div>
       </div>
     </div>
-    <div class="tyn-aside-row py-0 tyn-aside-group-info" v-if="utils.isEqual(props.conversation.conversationType, ConversationType.GROUP)">
-      <div class="nav-tabs nav-tabs-line">
-        <h6 class="tyn-title-overline">群聊名称</h6>
-        <ul class="tyn-media-list gap gap-3">
-          <li>
-            <div class="tyn-media-group">
-              <div class="tyn-media-col tyn-aside-group-col">
-                <div class="tyn-media-row wr wr-modify">
-                  <input type="text" v-model="state.groupName" placeholder="输入群聊名称" @keydown.enter="onSaveGroup()" class="tyn-title-overline text-none"/>
-                </div>
-              </div>
+    <div class="tyn-aside-row py-0 tyn-rgaside-body" v-if="utils.isEqual(props.conversation.conversationType, ConversationType.GROUP)">
+      <div class="nav-tabs jg-nav-tabs nav-tabs-line">
+        <ul class="jg-aside-ul">
+          <li class="jg-aside-li">
+            <div class="tyn-aside-title">群聊名称</div>
+            <div class="tyn-media-row wr wr-modify">
+              <input type="text" class="tyn-title-overline text-none" v-model="state.groupName" placeholder="输入群聊名称" @keydown.enter="onSaveGroup()"/>
+            </div>
+          </li>
+          <li class="jg-aside-li">
+            <div class="tyn-aside-title">群公告</div>
+            <div class="tyn-media-row wr wr-unmute">
+              <input type="text" class="tyn-title-overline text-none" v-model="state.xxx" placeholder="群公告" @keydown.enter="onSaveGroup()"/>
+            </div>
+          </li>
+          <li class="jg-aside-li">
+            <div class="tyn-aside-title">我在本群的昵称</div>
+            <div class="tyn-media-row wr wr-user-st">
+              <input type="text" class="tyn-title-overline text-none" v-model="state.groupNickname" placeholder="仅在本群可见" @keydown.enter="onSaveGroup()"/>
             </div>
           </li>
         </ul>
       </div>
     </div>
-    <div class="tab-content">
-      <div class="tab-pane" :class="{ 'show active': isShowParentTab('message') }">
-        <div class="tyn-aside-row py-0">
-          <ul class="nav nav-tabs nav-tabs-line">
-            <li class="nav-item" v-for="menu in state.msgMenus">
-              <button class="nav-link" :class="{ 'active': menu.isActive }" @click="onMsgMenuTab(menu)">{{ menu.name
-                }}</button>
-            </li>
-          </ul>
-        </div>
-        <div class="tyn-aside-row">
-          <div class="tab-content">
-            <AsideImage v-if="isShowMsgTab('image')" :messages="state.image.msgs" />
-            <AsideFile v-if="isShowMsgTab('file')" :messages="state.file.msgs" />
-            <AsideVideo v-if="isShowMsgTab('video')" :messages="state.video.msgs" />
-            <!-- <AsideLink v-if="isShowMsgTab('link')"/> -->
-          </div>
-        </div>
+    <div class="tyn-aside-row tyn-rgaside-footer">
+      <div class="nav-tabs jg-nav-tabs nav-tabs-line">
+        <a class="btn w-100 jg-warn-letter" @click="">清空历史消息</a>
       </div>
-      <!-- .tab-pane -->
-
-      <div class="tab-pane" :class="{ 'show active': isShowParentTab('operate') }">
-        <div class="tyn-aside-row py-0">
-          <ul class="nav nav-tabs nav-tabs-line">
-            <li class="nav-item">
-              <button class="nav-link active" type="button">管理</button>
-            </li>
-          </ul>
-        </div>
-        <div class="tyn-aside-row">
-          <div class="tab-content">
-            <div class="tab-pane  show active">
-              <ul class="tyn-media-list gap gap-3">
-                <li>
-                  <a href="#" class="tyn-file">
-                    <div class="tyn-media-group">
-                      <div class="tyn-media text-bg-light wr wr-block"> </div>
-                      <div class="tyn-media-col">
-                        <h6 class="name">Block</h6>
-                        <div class="meta">Frank will no longer be in your contact.</div>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <!-- .tab-pane -->
-          </div>
-        </div>
+      <div class="nav-tabs jg-nav-tabs nav-tabs-line" v-if="utils.isEqual(props.conversation.conversationType, ConversationType.GROUP)">
+        <a class="btn w-100 jg-warn-letter" @click="">退出群聊</a>
       </div>
-      <!-- .tab-pane -->
     </div>
     <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
       :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"

@@ -521,13 +521,9 @@ dl {
 .tyn-title-overline {
   --overline-color: var(--bs-gray-400);
   font-size: 0.688rem;
-  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--overline-color);
-}
-[data-bs-theme=dark] .tyn-title-overline {
-  --overline-color: var(--bs-gray-200);
+  color: #5e646b;
 }
 
 .tyn-title {
@@ -667,7 +663,6 @@ dl {
 }
 .tyn-media-col .name {
   margin-bottom: 0;
-  color: var(--media-text);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;

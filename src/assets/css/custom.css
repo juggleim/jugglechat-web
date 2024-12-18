@@ -710,10 +710,35 @@
   border: 0 !important;
   text-transform: none;
 }
-.tyn-aside-group-info{
-  margin-bottom: 16px;
+.tyn-aside-row .tyn-aside-group-info{
+  margin-bottom: 20px;
+}
+.tyn-aside-title{
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #24282ce6;
+}
+.tyn-rgaside-body{
+  flex: 1 1 auto;
+}
+.tyn-rgaside-footer{
 }
 
+.jg-nav-tabs {
+  border-top: var(--bs-nav-tabs-border-width) solid var(--bs-nav-tabs-border-color);
+  border-bottom: unset;
+}
+
+.jg-nav-tabs .btn{
+  font-size: 12px;
+}
+.jg-aside-ul{
+  margin: 20px 0;
+}
+.jg-aside-li{
+  margin-bottom: 26px;
+}
 .tyn-aside-group-col{
   padding-bottom: 2px;
 }
@@ -1910,6 +1935,9 @@
 .jg-warn-bg{
   background-color: #ef2323;
   color: #FFF;
+}
+.jg-warn-letter{
+  color: #ef2323;
 }
 .jg-friend-applystatus{
   font-size: 12px;
