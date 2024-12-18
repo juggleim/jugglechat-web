@@ -95,6 +95,20 @@ function setDisplayName(params){
   });
 }
 
+
+function setNotice(params){
+  return request(SERVER_PATH.GROUP_SET_NOTICE, {
+    method: 'POST',
+    body: utils.toJSON(params)
+  });
+}
+
+function getNotice({ group_id }){
+  let url = `${SERVER_PATH.GROUP_GET_NOTICE}?group_id=${group_id}`;
+  return request(url, {
+    method: 'GET'
+  });
+}
 export default {
   create,
   quit,
@@ -105,4 +119,6 @@ export default {
   getMemory,
   update,
   setDisplayName,
+  setNotice,
+  getNotice
 }

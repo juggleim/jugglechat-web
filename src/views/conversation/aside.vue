@@ -44,6 +44,8 @@ let state = reactive({
   group: {},
   groupName: props.conversation.conversationTitle,
   groupDisplayName: '',
+  groupNoticeContent: '',
+  isUpdateingNotice: false,
 });
 
 function onMenuTab(menu) {
@@ -209,6 +211,31 @@ function onSaveGroupDisplayName(){
     });
   });
 }
+function onUpdateNotice(){
+  let { conversationId } = props.conversation;
+  let { groupNoticeContent  } = state;
+  let params = {
+    group_id: conversationId,
+    content: groupNoticeContent
+  };
+  Group.setNotice(params).then((result) => {
+    let { code } = result;
+    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+      return context.proxy.$toast({
+        text: `发布公告失败：${code}`,
+        icon: 'error'
+      });
+    }
+    context.proxy.$toast({
+      text: `发布公告成功`,
+      icon: 'success'
+    });
+  });
+  onEditGroupNotice(false)
+}
+function onEditGroupNotice(isUpdateing){
+  state.isUpdateingNotice = isUpdateing;
+}
 function onQuitGroup(){
   let { conversationId } = props.conversation;
   Group.quit({ group_id: conversationId }).then((result) => {
@@ -236,6 +263,17 @@ watch(() => props.conversation, (conversation) => {
 
 watch(() => props.isShow, () => {
   utils.extend(state, { members: props.members, group: props.group, groupDisplayName: props.group.grp_display_name || '' });
+  let { conversationType, conversationId } = props.conversation;
+  let isGroup = utils.isEqual(conversationType, ConversationType.GROUP);
+  if(props.isShow && isGroup){
+    Group.getNotice({ group_id: conversationId }).then(result => {
+      let { code, data } = result;
+      if(utils.isEqual(code, RESPONSE.SUCCESS)){
+        let { content } = data;
+        state.groupNoticeContent = content;
+      }
+    });
+  }
 });
 </script>
 
@@ -270,8 +308,9 @@ watch(() => props.isShow, () => {
           </li>
           <li class="jg-aside-li">
             <div class="tyn-aside-title">群公告</div>
-            <div class="tyn-media-row wr wr-unmute">
-              <input type="text" class="tyn-title-overline text-none" v-model="state.xxx" placeholder="群公告" @keydown.enter="onSaveGroup()"/>
+            <div class="tyn-media-row jg-group-notice-row">
+              <textarea type="text" class="tyn-title-overline text-none jg-group-notice" v-model="state.groupNoticeContent" placeholder="说点什么~" @focus="onEditGroupNotice(true)"></textarea>
+              <div class="jg-notice-button" v-if="state.isUpdateingNotice" @click="onUpdateNotice()">保存</div>      
             </div>
           </li>
           <li class="jg-aside-li">
