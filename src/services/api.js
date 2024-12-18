@@ -22,6 +22,7 @@ let SERVER_PATH = {
   GROUP_MEMBER_REMOVE: 'groups/members/del',
   GROUP_DISSOLVE: 'groups/',
   GROUP_GET: 'groups/info',
+  GROUP_SET_DISPLAY_NAME: 'groups/setdisplayname',
 };
 utils.forEach(SERVER_PATH, (url, name) => {
   SERVER_PATH[name] = `${CONFIG.API}${url}`;

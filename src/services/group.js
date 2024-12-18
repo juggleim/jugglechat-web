@@ -85,7 +85,12 @@ function getMemory({ id }){
     return utils.isEqual(group.user_id, id);
   })[0] || { user_id: id };
 }
-
+function setDisplayName(params){
+  return request(SERVER_PATH.GROUP_SET_DISPLAY_NAME, {
+    method: 'POST',
+    body: utils.toJSON(params)
+  });
+}
 
 export default {
   create,
@@ -96,4 +101,5 @@ export default {
   get,
   getMemory,
   update,
+  setDisplayName,
 }

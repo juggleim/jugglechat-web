@@ -11,10 +11,10 @@ import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
 import Storage from "../../common/storage";
 import common from "../../common/common";
-import { STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME } from "../../common/enum";
+import { STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME, RESPONSE } from "../../common/enum";
 import emitter from "../../common/emmit";
 
-const props = defineProps(["isShow", "conversation", "members"]);
+const props = defineProps(["isShow", "conversation", "members", "group"]);
 const context = getCurrentInstance();
 let juggle = im.getCurrent();
 let { MessageType, ConversationType } = juggle;
@@ -39,39 +39,15 @@ let state = reactive({
   isCreateGroupLoading: false,
   isGroupRemoveMemberLoading: false,
   currentGroupId: '',
+  group: {},
   groupName: props.conversation.conversationTitle,
+  groupDisplayName: '',
 });
 
 function onMenuTab(menu) {
   state.menus.map((_menu) => {
     _menu.isActive = utils.isEqual(_menu.type, menu.type);
     return _menu;
-  });
-}
-function onMsgMenuTab(menu) {
-  state.msgMenus.map((_menu) => {
-    _menu.isActive = utils.isEqual(_menu.type, menu.type);
-    return _menu;
-  });
-  let { type } = menu;
-  let params = {
-    image: { name: MessageType.IMAGE, type },
-    video: { name: MessageType.VIDEO, type },
-    file: { name: MessageType.FILE, type },
-  };
-  let param = params[type];
-  let { isFinished } = state[type];
-  if (isFinished) {
-    return;
-  }
-  if (!juggle.isConnected()) {
-    return;
-  }
-  getMessages(param, (tabType, result) => {
-    let { isFinished, messages } = result;
-    let msgs = state[tabType].msgs;
-    msgs = msgs.concat(messages);
-    utils.extend(state[tabType], { msgs, isFinished });
   });
 }
 
@@ -235,17 +211,34 @@ function onSaveGroup(){
   Group.update(group);
 }
 
+function onSaveGroupDisplayName(){
+  let { conversationId } = props.conversation;
+  let { groupDisplayName  } = state;
+  let params = {
+    group_id: conversationId,
+    display_name: groupDisplayName
+  };
+  Group.setDisplayName(params).then((result) => {
+    let { code } = result;
+    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+      return context.proxy.$toast({
+        text: `修改失败：${code}`,
+        icon: 'error'
+      });
+    }
+    context.proxy.$toast({
+      text: `保存成功`,
+      icon: 'success'
+    });
+  });
+}
 watch(() => props.conversation, (conversation) => {
   utils.extend(state, utils.clone(defaultMsgs))
   state.groupName = conversation.conversationTitle;
-  onMsgMenuTab(state.msgMenus[0]);
-  // getMembers(conversation);
 });
+
 watch(() => props.isShow, () => {
-  utils.extend(state, { members: props.members });
-  if(props.isShow){
-    onMsgMenuTab(state.msgMenus[0]);
-  }
+  utils.extend(state, { members: props.members, group: props.group, groupDisplayName: props.group.grp_display_name || '' });
 });
 </script>
 
@@ -287,7 +280,7 @@ watch(() => props.isShow, () => {
           <li class="jg-aside-li">
             <div class="tyn-aside-title">我在本群的昵称</div>
             <div class="tyn-media-row wr wr-user-st">
-              <input type="text" class="tyn-title-overline text-none" v-model="state.groupNickname" placeholder="仅在本群可见" @keydown.enter="onSaveGroup()"/>
+              <input type="text" class="tyn-title-overline text-none" v-model="state.groupDisplayName" placeholder="仅在本群可见" @keydown.enter="onSaveGroupDisplayName()"/>
             </div>
           </li>
         </ul>

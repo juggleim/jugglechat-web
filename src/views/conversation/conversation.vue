@@ -75,6 +75,8 @@ let state = reactive({
   transferMsgs: [],
   currentMergeMessage: {},
   imgSender: {},
+
+  group: {}
 });
 
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
@@ -642,12 +644,15 @@ function getMembers() {
     return;
   }
   Group.get({ id: conversationId }, (result) => {
+    
+    state.group = result;
+
     let { members } = result;
     let mentionMembers = [
       { id: 'all', val: '@', isActive: true, name: '所有人', portrait: '', isAll: true }
     ];
     members = utils.map(members, (member) => {
-      let { user_id: id, nickname: name, user_portrait: portrait } = member;
+      let { user_id: id, nickname: name, avatar: portrait } = member;
       let item = { id, name, portrait };
       if(!portrait){
         item.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
@@ -807,7 +812,7 @@ watch(() => state.content, (val) => {
       </div>
       <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
     </div>
-    <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members"></Aside>
+    <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group"></Aside>
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
     <ModalMergeMsgs :is-show="!utils.isEmpty(state.currentMergeMessage)" :message="state.currentMergeMessage" @oncancel="onCancelMergeDetail"></ModalMergeMsgs>
     <ModalImgSender :is-show="!utils.isEmpty(state.imgSender)" :img="state.imgSender" :conversation="state.currentConversation" @oncancel="onShowImgSender({})" @onconfirm="onConfirmImgSender"></ModalImgSender>
