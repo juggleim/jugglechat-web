@@ -113,17 +113,13 @@ function getNewFriends(start = 0){
     let user = Storage.get(STORAGE.USER_TOKEN);
 
     let list = utils.map(items, (item) => {
-      let { id, sponsor, recipient, status = FRIEND_APPLY_STATUS.APPLYING } = item;
+      let { id, target_user, is_sponsor = false, status = FRIEND_APPLY_STATUS.APPLYING } = item;
       
-      let content = `${sponsor.nickname || sponsor.user_id} 添加你为好友`;
-      let _user = sponsor;
-      let avatar = sponsor.avatar || common.getTextAvatar(sponsor.nickname || sponsor.user_id);
-      let isOneSelf = false;
-      if(utils.isEqual(sponsor.user_id, user.id)){
-        content = `你添加 ${recipient.nickname || recipient.user_id} 为好友`;
-        avatar = recipient.avatar || common.getTextAvatar(recipient.nickname || recipient.user_id);
-        _user = recipient;
-        isOneSelf = true;
+      let _user = target_user;
+      let avatar = target_user.avatar || common.getTextAvatar(target_user.nickname || target_user.user_id);
+      let content = `${target_user.nickname || target_user.user_id} 添加你为好友`;
+      if(is_sponsor){
+        content = `你添加 ${target_user.nickname || target_user.user_id} 为好友`;
       }
       return {
         id: utils.getUUID(),
@@ -132,7 +128,7 @@ function getNewFriends(start = 0){
         avatar: avatar,
         status: status,
         user: _user,
-        isOneSelf: isOneSelf,
+        isOneSelf: is_sponsor,
         statusName: getFriendApplyName(status),
         isSelected: false
       };
