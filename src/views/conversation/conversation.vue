@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps(['conversation']);
-const emit = defineEmits(["ondraft"]);
+const emit = defineEmits(["ondraft", "onclearmsg"]);
 
 import Search from "./search.vue";
 import Emoji from "../../components/emoji.vue"
@@ -714,6 +714,9 @@ function onResendMessage({ message }){
     context.proxy.$toast({ text: `消息发送失败: ${error.code}`, icon: 'error' });
   });
 }
+function onClearMessages(){
+  emit('onclearmsg', props.conversation);
+}
 watch(() => state.content, (val) => {
   let str = val.split('')[val.length - 1]
   if (conversationTools.isGroup(state.currentConversation) && utils.isEqual(str, '@')) {
@@ -812,7 +815,7 @@ watch(() => state.content, (val) => {
       </div>
       <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
     </div>
-    <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group"></Aside>
+    <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group" @onclearmsg="onClearMessages"></Aside>
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
     <ModalMergeMsgs :is-show="!utils.isEmpty(state.currentMergeMessage)" :message="state.currentMergeMessage" @oncancel="onCancelMergeDetail"></ModalMergeMsgs>
     <ModalImgSender :is-show="!utils.isEmpty(state.imgSender)" :img="state.imgSender" :conversation="state.currentConversation" @oncancel="onShowImgSender({})" @onconfirm="onConfirmImgSender"></ModalImgSender>

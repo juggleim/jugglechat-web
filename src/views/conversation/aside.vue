@@ -15,6 +15,8 @@ import { STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME, RESPONSE } from "../.
 import emitter from "../../common/emmit";
 
 const props = defineProps(["isShow", "conversation", "members", "group"]);
+const emit = defineEmits(["onclearmsg"]);
+
 const context = getCurrentInstance();
 let juggle = im.getCurrent();
 let { MessageType, ConversationType } = juggle;
@@ -232,6 +234,9 @@ function onSaveGroupDisplayName(){
     });
   });
 }
+function onClearMessages(){
+  emit('onclearmsg', {});
+}
 watch(() => props.conversation, (conversation) => {
   utils.extend(state, utils.clone(defaultMsgs))
   state.groupName = conversation.conversationTitle;
@@ -288,7 +293,7 @@ watch(() => props.isShow, () => {
     </div>
     <div class="tyn-aside-row tyn-rgaside-footer">
       <div class="nav-tabs jg-nav-tabs nav-tabs-line">
-        <a class="btn w-100 jg-warn-letter" @click="">清空历史消息</a>
+        <a class="btn w-100 jg-warn-letter" @click="onClearMessages">清空历史消息</a>
       </div>
       <div class="nav-tabs jg-nav-tabs nav-tabs-line" v-if="utils.isEqual(props.conversation.conversationType, ConversationType.GROUP)">
         <a class="btn w-100 jg-warn-letter" @click="">退出群聊</a>

@@ -243,7 +243,10 @@ function onRemoveConversation(index) {
   return conversationTools.removeConversation(index, state);
 }
 function onClearMessages(index) {
-  let conversation = state.conversationMap[state.currentTag.id][index];
+  let conversation = index;
+  if(!isNaN(Number(index))){
+    conversation = state.conversationMap[state.currentTag.id][index];
+  }
   state.currentConversation = {};
   return conversationTools.clearMessages(conversation);
 }
@@ -429,7 +432,7 @@ function onTagConversationChanged({ removes, adds, tag }){
       <AisdeFooter></AisdeFooter>
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
-    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" ></Conversation>
+    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" @onclearmsg="onClearMessages"></Conversation>
     
   </div>
 </template>
