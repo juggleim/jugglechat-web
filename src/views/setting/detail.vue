@@ -211,9 +211,9 @@ watch(() => props.type, () => {
           </div>
         </div>
       </div>
-      <div class="jg-setting-body" v-if="utils.isEqual(state.type, SETTING_TYPE.SETTING)">
+      <div class="jg-setting-body jg-setting-box" v-if="utils.isEqual(state.type, SETTING_TYPE.SETTING)">
         <h5 class="pb-2">用户设置</h5>
-        <ul class="jg-ul">
+        <ul class="jg-ul jg-setting-ul">
           <li class="jg-li" v-for="setting in state.settings">
             <div class="jg-li-title">{{ setting.title }}</div>
             <JSelect :current="setting.currentValue" :uid="setting.uid" :list="setting.items" @onchanged="onSettingChanged"></JSelect>
