@@ -6,7 +6,7 @@ import ModalFriendAdd from "../components/modal-friend-add.vue";
 import AisdeSearch from './aside-search.vue';
 import utils from "../common/utils";
 import common from "../common/common";
-import { STORAGE, RESPONSE, EVENT_NAME } from "../common/enum";
+import { STORAGE, RESPONSE, EVENT_NAME, GROUP_AVATAR } from "../common/enum";
 import Storage from "../common/storage";
 import { Friend } from "../services";
 import emitter from "../common/emmit";
@@ -131,20 +131,19 @@ function onConfirmGroupCreate({ friends }){
   let members = utils.filter(friends, (friend) => {
     return !friend.disabled;
   });
-  common.createGroupAvatar(friends, (avatar) => {
-    Group.create({ name, avatar, members }).then((result) => {
-      let { data: group } = result;
-      let conversation = {
-        conversationType: ConversationType.GROUP,
-        conversationId: group.group_id,
-        conversationTitle: name,
-        conversationPortrait: avatar,
-        latestMessage: {}
-      };
-      emitter.$emit(EVENT_NAME.ON_GROUP_CREATED, { conversation })
-      onCancelGroupCreate();
-      state.isCreateGroupLoading = false;
-    });
+  let avatar = GROUP_AVATAR;
+  Group.create({ name, avatar, members }).then((result) => {
+    let { data: group } = result;
+    let conversation = {
+      conversationType: ConversationType.GROUP,
+      conversationId: group.group_id,
+      conversationTitle: name,
+      conversationPortrait: avatar,
+      latestMessage: {}
+    };
+    emitter.$emit(EVENT_NAME.ON_GROUP_CREATED, { conversation })
+    onCancelGroupCreate();
+    state.isCreateGroupLoading = false;
   });
 }
 

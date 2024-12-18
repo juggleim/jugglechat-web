@@ -49,8 +49,11 @@ function get({ id }, callback){
   let url = `${SERVER_PATH.GROUP_GET}?group_id=${id}`;
   return request(url, { method: 'GET' }).then((result) => {
     let { data = {} } = result;
-    let info = { nickname: data.group_name, avatar: data.group_portrait, members: data.members || [], id };
-    groups.push(data);
+
+    let { group_name, group_portrait, members = [], group_management, grp_display_name, member_count, my_role } = data;
+
+    let info = { nickname: group_name, avatar: group_portrait, members, id, group_management, grp_display_name, member_count, my_role };
+    groups.push(info);
     callback(info);
   });
 }

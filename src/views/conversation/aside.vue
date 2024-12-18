@@ -11,7 +11,7 @@ import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
 import Storage from "../../common/storage";
 import common from "../../common/common";
-import { STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME, RESPONSE } from "../../common/enum";
+import { STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME, RESPONSE, GROUP_AVATAR } from "../../common/enum";
 import emitter from "../../common/emmit";
 
 const props = defineProps(["isShow", "conversation", "members", "group"]);
@@ -116,28 +116,9 @@ function onConfirmRemoveGroupMember({ members }) {
         }
       })
     });
-
-    let _members = utils.clone(state.members);
-    let name = utils.map(_members, (member) => {
-      return member.name;
-    }).join(', ');
-    
-    if(name.length > 20){
-      name = `${name.substr(0, 20)}...`;
-    }
-
-    // 如果修改过自定义名字不再拼接名称，通过逗号判断比较简单粗暴，准确做法需要服务端支持
-    if(!utils.isInclude(conversationTitle, ',')){
-      name = conversationTitle;
-    }
-    common.createGroupAvatar(state.members, (avatar) => {
-      let group = { group_id: conversationId, group_name: name, group_portrait: avatar };
-      Group.update(group).then(() => {
-        let conversation = { conversationId, conversationPortrait: avatar, conversationTitle: name };
-        emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, { conversation, members })
-        onCancelRemoveGroupMember();
-      });
-    });
+    let conversation = { conversationId, conversationPortrait: GROUP_AVATAR, conversationTitle };
+    emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, { conversation, members })
+    onCancelRemoveGroupMember();
     state.isGroupRemoveMemberLoading = false;
   });
 }
@@ -167,35 +148,29 @@ function onConfirmGroupCreate({ friends }) {
     onCancelGroupCreate();
     state.isCreateGroupLoading = false;
   };
-  common.createGroupAvatar(friends, (avatar) => {
-    let { conversationId, conversationTitle, conversationType } = props.conversation;
-    let isGroup = utils.isEqual(conversationType, ConversationType.GROUP);
-    if (isGroup) {
-      // 如果修改过自定义名字不再拼接名称，通过逗号判断比较简单粗暴，准确做法需要服务端支持
-      if(!utils.isInclude(conversationTitle, ',')){
-        name = conversationTitle;
-      }
-      return Group.addMember({ id: conversationId, members }).then(() => {
-        let group = { group_id: conversationId, group_name: name, group_portrait: avatar };
-        Group.update(group).then(() => {
-          let conversation = { conversationId, conversationPortrait: avatar, conversationTitle: name };
-          emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_ADDED, { conversation, members })
-          next(group);
-        });
-      });
-    }
-    Group.create({ name, avatar, members }).then((result) => {
-      let { data: group } = result;
-      let conversation = {
-        conversationType: ConversationType.GROUP,
-        conversationId: group.group_id,
-        conversationTitle: name,
-        conversationPortrait: avatar,
-        latestMessage: {}
-      };
-      emitter.$emit(EVENT_NAME.ON_GROUP_CREATED, { conversation })
-      next(group);
+  let { conversationId, conversationTitle, conversationType } = props.conversation;
+  let isGroup = utils.isEqual(conversationType, ConversationType.GROUP);
+  if (isGroup) {
+    // 如果修改过自定义名字不再拼接名称，通过逗号判断比较简单粗暴，准确做法需要服务端支持
+    let isUpdateName = utils.isInclude(conversationTitle, ',') && state.members.length < 9
+    return Group.addMember({ id: conversationId, members }).then(() => {
+      let conversation = { conversationId, conversationPortrait: GROUP_AVATAR, conversationTitle };
+      emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_ADDED, { conversation, members })
+      next();
     });
+  }
+
+  Group.create({ name, avatar: GROUP_AVATAR, members }).then((result) => {
+    let { data: group } = result;
+    let conversation = {
+      conversationType: ConversationType.GROUP,
+      conversationId: group.group_id,
+      conversationTitle: name,
+      conversationPortrait: GROUP_AVATAR,
+      latestMessage: {}
+    };
+    emitter.$emit(EVENT_NAME.ON_GROUP_CREATED, { conversation })
+    next(group);
   });
 }
 
@@ -218,7 +193,7 @@ function onSaveGroupDisplayName(){
   let { groupDisplayName  } = state;
   let params = {
     group_id: conversationId,
-    display_name: groupDisplayName
+    grp_display_name: groupDisplayName
   };
   Group.setDisplayName(params).then((result) => {
     let { code } = result;

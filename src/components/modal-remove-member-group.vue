@@ -23,7 +23,7 @@ watch(() => props.isShow, () => {
     item.isTransferChecked = disabled;
     list.push(item);
   });
-  state.members = list;
+  state.members = utils.clone(list);
 });
 function onCancel() {
   emit('oncancel', {});
