@@ -12,7 +12,6 @@ import { Friend } from "../services";
 import emitter from "../common/emmit";
 import im from "../common/im";
 import HeaderDropMenu from './header-menu.vue';
-import ModalAddMemberGroup from "./modal-add-member-group.vue";
 import { Group, User } from "../services/index";
 import ModalUser from "./modal-user.vue";
 
