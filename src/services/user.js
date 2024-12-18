@@ -36,9 +36,10 @@ function search(user){
     body: utils.toJSON(user)
   });
 }
-function getFileToken(){
+function getFileToken(params){
   return request(SERVER_PATH.USER_FILE_TOKEN, {
-    method: 'GET'
+    method: 'POST',
+    body: utils.toJSON(params)
   });
 }
 function get({ id }, callback){

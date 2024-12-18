@@ -2,7 +2,7 @@ import utils from "./utils";
 import { User, Group, Friend } from "../services/index";
 import html2canvas from 'html2canvas';
 import im from './im';
-import { IGNORE_CONVERSATIONS } from "../common/enum"
+import { IGNORE_CONVERSATIONS, FILE_TYPE } from "../common/enum"
 
 function isElementTop(message){
   var chatNode = document.querySelector('.tyn-chat-body');
@@ -143,30 +143,25 @@ function getTextAvatar(name, option = {}){
   return url;
 }
 function uploadBase64(str, callback){
-  User.getFileToken().then(({ code, data }) => {
+  User.getFileToken({ file_type: FILE_TYPE.IMAGE, ext: 'png' }).then(({ code, data }) => {
     fetch(str).then((res) => {
       return res.blob()
-    }).then(({ size }) => {
-      let { token, domain } = data;
-      str = str.replace('data:image/png;base64,', '');
-      let name = `${utils.getUUID()}.png`;
-      name = utils.toBase64(name);
-      let url = `https://up-z1.qiniup.com/putb64/${size}/key/${name}`;
+    }).then((blob) => {
+      let { OssOf: { PreSignResp: { url } }} = data;
       let xhr = new XMLHttpRequest();
       xhr.onreadystatechange=function(){
         if (utils.isEqual(xhr.readyState, 4)){
-          let obj = utils.parse(xhr.responseText)
-          callback(`${domain}/${obj.key}`);
+          url = url.split('?')[0]
+          callback(url);
         }
       }
-      xhr.open('POST', url, true);
-      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-      xhr.setRequestHeader('Authorization', `UpToken ${token}`);
-      xhr.send(str);
+      xhr.open('PUT', url, true);
+      xhr.setRequestHeader('Content-Type', '');
+      let file = new File([blob], 'avatar.png', { type: 'image/png' });
+      xhr.send(file);
     });
   });
 }
-
 /* 
 let groupAvatars = [
   { avatar: 'https://file.lwoowl.cn/36dc-db4c.png?attname=36dc-db4c.png' },  
