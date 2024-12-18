@@ -1919,3 +1919,21 @@
 .warn-bg{
   background-color: #ef2323;
 }
+
+.jg-li{
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  background-color: #FAFAFA;
+  padding: 10px;
+  border-radius: 4px;
+  color: #3b4450;
+}
+.jg-select{
+  min-width: 140px;
+  outline: none;
+  border: none;
+  background: transparent;
+}

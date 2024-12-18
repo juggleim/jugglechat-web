@@ -19,13 +19,13 @@ let router = useRouter();
 
 let { ConversationType } = im.getCurrent();
 let menus = [
-  { uid: SETTING_TYPE.USER, name: '用户设置', icon: 'wr-operate', isSelected: true },
-  // { uid: SETTING_TYPE.PUSH, name: '推送设置', icon: 'wr-message-square', isSelected: false },
+  { uid: SETTING_TYPE.SETTING, name: '用户设置', icon: 'wr-config', isSelected: true },
+  { uid: SETTING_TYPE.USER, name: '个人中心', icon: 'wr-operate', isSelected: false },
 ];
 const context = getCurrentInstance();
 let state = reactive({
   menus: menus,
-  currentType: SETTING_TYPE.USER,
+  currentType: SETTING_TYPE.SETTING,
 });
 
 function onShowProfile(item){

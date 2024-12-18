@@ -4,6 +4,7 @@ let SERVER_PATH = {
   USER_SENDCODE: 'sms/send',
   USER_VERIFYCODE: 'sms_login',
   USER_MODIFY: 'users/update',
+  USER_UPDATE_SETTING: 'users/updsettings',
   USER_SEARCH: 'users/search',
   USER_FILE_TOKEN: 'file_cred',
   USER_GET: 'users/info',

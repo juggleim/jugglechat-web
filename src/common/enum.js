@@ -102,7 +102,7 @@ let CONVERSATION_TAG_TYPE = {
 };
 let SETTING_TYPE = {
   USER: 1,
-  PUSH: 2,
+  SETTING: 2,
 };
 let CONTACT_TYPE = {
   FRIEND: 1,
