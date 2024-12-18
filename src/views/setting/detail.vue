@@ -222,7 +222,7 @@ watch(() => props.type, () => {
         </ul>
         <div class="form-group">
           <div class="form-control-wrap">
-            <a class="btn btn-primary-soft w-100 jg-logout" @click="onLogout()">退出登录</a>
+            <a class="btn btn-primary-soft w-100 jg-warn-bg" @click="onLogout()">退出登录</a>
           </div>
         </div>
       </div>

@@ -10,7 +10,7 @@ let SERVER_PATH = {
   USER_GET: 'users/info',
 
   FRIEND_ADD: 'friends/apply',
-  FRIEND_REMOVE: 'friends/remove',
+  FRIEND_REMOVE: 'friends/del',
   FRIEND_LIST: 'friends/list',
   FRIEND_NEW_LIST: 'friends/applications',
   FRIEND_CONFIRM: 'friends/confirm',

@@ -1907,7 +1907,7 @@
 .jg-button{
   margin: 6px;
 }
-.jg-logout{
+.jg-warn-bg{
   background-color: #ef2323;
   color: #FFF;
 }

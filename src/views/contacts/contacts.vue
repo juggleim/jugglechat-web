@@ -155,6 +155,15 @@ function onAddFriend({ item }){
   item.status = FRIEND_APPLY_STATUS.ACCEPTED;
   item.statusName = statusMap[item.status];
 }
+function onRemoveFriend({ item }){
+  let index = utils.find(state.currentList, (contact) => {
+    return utils.isEqual(contact.id, item.id);
+  });
+  if(index > -1){
+    state.currentList.splice(index, 1);
+  }
+  state.current = {};
+}
 function getFriendApplyName(status){
   return statusMap[status] || '';
 }
@@ -252,6 +261,6 @@ getFriends();
       </div>
       <AisdeFooter></AisdeFooter>
     </div>
-    <ContactDetail :current="state.current" @onadded="onAddFriend"></ContactDetail>
+    <ContactDetail :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
   </div>
 </template>

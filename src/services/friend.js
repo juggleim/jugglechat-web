@@ -17,7 +17,7 @@ function remove(friend){
   return request(SERVER_PATH.FRIEND_REMOVE, {
     method: 'POST',
     body: utils.toJSON({
-      friend_id: friendId
+      friend_ids: [friendId]
     })
   });
 }
