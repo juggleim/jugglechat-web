@@ -6,7 +6,6 @@ import { reactive, getCurrentInstance, watch } from "vue";
 import { RESPONSE, EVENT_NAME, SETTING_TYPE }  from "../../common/enum";
 
 import AisdeHeader from "../../components/aside-header.vue";
-import AisdeFooter from "../../components/aside-footer.vue";
 
 import im from "../../common/im";
 import { STORAGE } from "../../common/enum";
@@ -58,7 +57,6 @@ function onShowProfile(item){
           </div>
         </div>
       </div>
-      <AisdeFooter></AisdeFooter>
     </div>
     <SettingDetail :type="state.currentType"></SettingDetail>
   </div>

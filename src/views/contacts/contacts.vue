@@ -7,7 +7,6 @@ import { reactive, getCurrentInstance, watch } from "vue";
 import { CONTACT_TAB_TYPE, RESPONSE, EVENT_NAME, CONTACT_TYPE, FRIEND_APPLY_STATUS, IGNORE_CONVERSATIONS, SYS_CONVERSATION_FRIEND }  from "../../common/enum";
 
 import AisdeHeader from "../../components/aside-header.vue";
-import AisdeFooter from "../../components/aside-footer.vue";
 
 import im from "../../common/im";
 import { STORAGE } from "../../common/enum";
@@ -255,7 +254,6 @@ getFriends();
           </div>
         </div>
       </div>
-      <AisdeFooter></AisdeFooter>
     </div>
     <ContactDetail :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
   </div>

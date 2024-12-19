@@ -35,6 +35,7 @@ dl {
   background-repeat: repeat;
   mix-blend-mode: overlay;
   opacity: 0.48;
+  z-index: -1;
 }
 .tyn-root::before{
   /* background-image: url(../images/cover/chat-bg-br.png); */
@@ -48,6 +49,7 @@ dl {
   background-repeat: no-repeat;
   background-size: cover;
   background-color: #f1ede7;
+  z-index: -1;
 }
 
 .tyn-content {
@@ -307,9 +309,11 @@ dl {
 }
 
 .tyn-aside-footer {
- padding: 3px;
- min-width: 320px;
- background: #f0f2f5;
+  padding: 3px;
+  background: #fdfdfd;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #FAFAFA;
 }
 .jg-asider-footer-item{
   display: flex;

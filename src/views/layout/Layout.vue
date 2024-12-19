@@ -6,6 +6,8 @@ import im from "../../common/im";
 import utils from '../../common/utils';
 import ModalCall from "../../components/modal-call.vue";
 import CallInviteNotify from '../../components/modal-call-invite.vue';
+import AisdeFooter from "../../components/aside-footer.vue";
+
 import CallCore from "../conversation/call";
 import emitter from "../../common/emmit";
 import { reactive, getCurrentInstance, nextTick, watch } from "vue";
@@ -98,6 +100,7 @@ function removeNotify({ callId }){
 <template>
   <WinHeader></WinHeader>
   <div class="tyn-root" :class="{ 'tyn-desktop-root': juggle.isDesktop(), 'tyn-web-root': !juggle.isDesktop() }">
+    <AisdeFooter></AisdeFooter>
     <RouterView v-slot="{ Component, route }">
       <component :is="Component" :key="route.fullPath" />
     </RouterView>

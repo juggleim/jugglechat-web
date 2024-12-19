@@ -191,12 +191,7 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <div class="tyn-aside-head" :class="{ 'tyn-aside-desktop': state.isDesktop }">
     <div class="tyn-aside-head-tools">
       <ul class="tyn-list-inline jg-asider-tools">
-        <li class="jg-asider-tool">
-          <div class="jg-header-user">
-            <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
-            <!-- <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div> -->
-          </div>
-        </li>
+        
         <li v-if="state.isDesktop" class="jg-asider-tool jg-asider-tool-search">
           <AisdeSearch @onnav="onNavChat"></AisdeSearch>
         </li>

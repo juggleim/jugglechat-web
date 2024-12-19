@@ -6,7 +6,6 @@ import Conversation from "./conversation.vue";
 import None from "./none.vue";
 
 import AisdeHeader from "../../components/aside-header.vue";
-import AisdeFooter from "../../components/aside-footer.vue";
 
 import { STORAGE, EVENT_NAME, CONVERATION_TAG_ID, CONVERSATION_TAG_TYPE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -433,7 +432,7 @@ function onTagConversationChanged({ removes, adds, tag }){
           </ConversationBody>
         </div>
       </div>
-      <AisdeFooter></AisdeFooter>
+      <!-- <AisdeFooter></AisdeFooter> -->
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
     <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" @onclearmsg="onClearMessages" @onquitgroup="onQuitGroup"></Conversation>
