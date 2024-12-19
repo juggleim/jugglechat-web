@@ -2051,3 +2051,7 @@
 .jg-group-notice-modal .modal-body{
   height: auto;
 }
+.jg-mentions-warp{
+  max-height: 260px;
+  overflow-y: auto;
+}

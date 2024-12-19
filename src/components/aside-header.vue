@@ -171,8 +171,10 @@ function onUserSave(user){
     utils.extend(state.user, user);
     utils.extend(state, { isShowUser: false, isShowUserClose: true });
 
-    Storage.set(STORAGE.USER_TOKEN, state.user);
-    emitter.$emit(EVENT_NAME.ON_USER_INFO_UPDATE, { user: state.user })
+    let _user = Storage.get(STORAGE.USER_TOKEN);
+    _user = utils.extend(_user, user);
+    Storage.set(STORAGE.USER_TOKEN, _user);
+    emitter.$emit(EVENT_NAME.ON_USER_INFO_UPDATE, { user: _user });
   });
 }
 

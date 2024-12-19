@@ -32,7 +32,7 @@ function onSelected(index){
   <div class="tyn-chat-search tyn-mentions" :class="{'active': props.isShow}">
     <div class="flex-grow-1">
       <div class="form-group">
-        <div class="form-control-wrap form-control-plaintext-wrap">
+        <div class="form-control-wrap form-control-plaintext-wrap jg-mentions-warp">
           <ul>
             <li class="tyn-media-row mention-row" v-for="(member, index) in state.members" :class="{'mention-active': member.isActive}" @click="onSelected(index)">
               <div class="tyn-media tyn-size-sm">
