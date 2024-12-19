@@ -48,6 +48,16 @@ function get({ id }, callback){
     callback(result);
   });
 }
+
+function getQRCode(data){
+  return request(SERVER_PATH.USER_LOGIN_QRCODE, { method: 'GET'});
+}
+function startPolling({ id }){
+  return request(SERVER_PATH.USER_LOGIN_POLLING, { 
+    method: 'POST',
+    body: utils.toJSON({ id })
+  });
+}
 export default {
   sendCode,
   verifyCode,
@@ -56,4 +66,6 @@ export default {
   search,
   getFileToken,
   get,
+  startPolling,
+  getQRCode,
 }

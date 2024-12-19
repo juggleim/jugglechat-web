@@ -8,6 +8,8 @@ let SERVER_PATH = {
   USER_SEARCH: 'users/search',
   USER_FILE_TOKEN: 'file_cred',
   USER_GET: 'users/info',
+  USER_LOGIN_QRCODE: 'login/qrcode',
+  USER_LOGIN_POLLING: 'login/qrcode/check',
 
   FRIEND_ADD: 'friends/apply',
   FRIEND_REMOVE: 'friends/del',

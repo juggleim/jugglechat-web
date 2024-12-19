@@ -32,16 +32,6 @@ let routes = [{
   name: 'Login',
   component: () => import('@/views/login/login.vue'),
 },
-// {
-//   path: '/register',
-//   name: 'Register',
-//   component: () => import('@/views/register/register.vue'),
-// },
-// {
-//   path: '/forgot',
-//   name: 'Forgot',
-//   component: () => import('@/views/forget/forget.vue'),
-// },
 {
   path: '/404',
   name: '404',

@@ -1,7 +1,7 @@
 <script setup>
 import JFooter from '../../components/footer.vue';
 import utils from "../../common/utils";
-import { reactive, getCurrentInstance } from "vue";
+import { reactive, getCurrentInstance, watch } from "vue";
 import { useRouter } from "vue-router";
 import { STORAGE, RESPONSE } from "../../common/enum";
 import common from "../../common/common";
@@ -17,6 +17,12 @@ const router = useRouter();
 let defalutBtnLabel = '发送';
 let state = reactive({
   isQRLogin: false,
+  isLoadingQR: false,
+  isShowRefreshQrcode: false,
+  qrcode: {
+    img: '',
+    uid: ''
+  },
   user: {
     phone: '',
     code: ''
@@ -27,6 +33,19 @@ let state = reactive({
     code: ''
   }
 });
+
+function onVerifySuccess(result){
+  let { data } = result;
+  let { user_id, authorization, nickname, avatar, im_token } = data;
+  if(!avatar){
+    avatar = common.getTextAvatar(nickname);
+  }
+  if(!im_token){
+    return state.errorMsg.code = '登录失败，IM Token 为空'
+  }
+  Storage.set(STORAGE.USER_TOKEN, { id: user_id, token: im_token, authorization: authorization, name: nickname, portrait: avatar });
+  router.replace({ name: 'ConversationList' });
+}
 
 function onLogin() {
   let { user } = state;
@@ -48,16 +67,7 @@ function onLogin() {
         icon: 'error'
       });
     }
-    let { data } = result;
-    let { user_id, authorization, nickname, avatar, im_token } = data;
-    if(!avatar){
-      avatar = common.getTextAvatar(nickname);
-    }
-    if(!im_token){
-      return state.errorMsg.code = '登录失败，IM Token 为空'
-    }
-    Storage.set(STORAGE.USER_TOKEN, { id: user_id, token: im_token, authorization: authorization, name: nickname, portrait: avatar });
-    router.replace({ name: 'ConversationList' });
+    onVerifySuccess(result);
   });
 
 }
@@ -101,13 +111,73 @@ function onInput() {
 function setQrLogin(isQR){
   state.isQRLogin = isQR;
 }
+
+function getLoginQR(){
+  state.isLoadingQR = true;
+  User.getQRCode().then((result) => {
+    state.isLoadingQR = false;
+    let { code, data } = result;
+    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+      return;
+    }
+    let { qr_code: img, id } = data;
+    utils.extend(state, { qrcode: { img, uid: id }, isShowRefreshQrcode: false });
+
+    if(state.isQRLogin){
+      startPolling()
+    }
+  });
+}
+getLoginQR();
+
+let pollingTimer = 0;
+function startPolling(){
+  let { qrcode: { uid } } = state;
+  if(!uid){
+    return;
+  }
+  User.startPolling({ id: uid }).then((result) => {
+    let { code, data } = result;
+
+    if(utils.isEqual(code, RESPONSE.LOGIN_QR_WATTING)){
+      pollingTimer = setTimeout(() => {
+        startPolling();
+      }, 2 * 1000);
+    }
+    
+    if(utils.isEqual(code, RESPONSE.LOGIN_QR_EXPIRE)){
+      state.isShowRefreshQrcode = true;
+    }
+    
+    if(utils.isEqual(code, RESPONSE.SUCCESS)){
+      onVerifySuccess(result);
+    }
+    
+  });
+}
+function stopPolling(){
+  clearTimeout(pollingTimer);
+}
+watch(() => state.isQRLogin, (isQR) => {
+  if(isQR){
+    startPolling();
+  }else{
+    stopPolling();
+  }
+})
 </script>
 <template>
   <WinHeader></WinHeader>
   <div class="tyn-root jg-login-container" :class="{ 'tyn-desktop-root': juggle.isDesktop(), 'tyn-web-root': !juggle.isDesktop() }">
     <div class="jg-nlogin-main" v-if="state.isQRLogin">
-      <div class="jg-nlogin-qrbox">
+      <div class="jg-nlogin-qrbox" :style="{ 'background-image': 'url(data:image/png;base64,' + state.qrcode.img + ')' }">
         <div class="jg-nlogin-icon"></div>
+        <div class="jg-nlogin-loading-box" v-if="state.isShowRefreshQrcode">
+          <div class="jg-nlogin-loading" v-if="state.isLoadingQR"></div>
+          <div class="jg-nlogin-refresh" v-else>
+            <button class="btn btn-sm btn-success" @click="getLoginQR()">刷新二维码</button>
+          </div>
+        </div>
       </div>
       <div class="jg-nlogin-intro-box">
         <h2 class="jg-nlogin-intro-title">Log in to JuggleChat by QR Code</h2>
@@ -123,7 +193,7 @@ function setQrLogin(isQR){
       <div class="jg-nlogin-normalbox">
         <div class="jg-nlogin-nlicon"></div>
         <h2 class="jg-nlogin-nltitle">JuggleChat</h2>
-        <span class="fs10">v1.7.5</span>
+        <span class="fs10">v1.7.23</span>
       </div>
       <div class="jg-nlogin-intro-box jg-nlogin-btnbox">
         <div class="form-group">
@@ -151,7 +221,7 @@ function setQrLogin(isQR){
           </div>
         </div>
 
-        <div class="jg-nlogin-button jg-nlogin-num-btn"  @click="setQrLogin(true)"> LOG IN BY QE CODE </div>
+        <!-- <div class="jg-nlogin-button jg-nlogin-num-btn"  @click="setQrLogin(true)"> LOG IN BY QE CODE </div> -->
       </div>
     </div>
   </div>

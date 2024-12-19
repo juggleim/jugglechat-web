@@ -129,7 +129,7 @@ function onNameInput(){
 function getUser(){
   User.get({ id: user.id }, ({ data, code }) => {
     if(utils.isEqual(code, RESPONSE.SUCCESS)){
-      let { friend_verify_type = 0,  undisturb = '',  language = 'zh_CN'  } = data.settings;
+      let { friend_verify_type = 0,  undisturb = '',  language = 'zh-Hans-CN'  } = data.settings;
       let result = { friend_verify_type, undisturb, language };
       utils.forEach(state.settings, (setting) => {
         let { uid } = setting;
