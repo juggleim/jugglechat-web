@@ -107,7 +107,8 @@ let SETTING_TYPE = {
 let CONTACT_TYPE = {
   FRIEND: 1,
   GROUP: 2,
-  NEW_FRIEND: 10
+  NEW_FRIEND: 10,
+  BOT: 11
 }
 
 // 0：申请中；1：已同意；2：已拒绝；3：申请已过期

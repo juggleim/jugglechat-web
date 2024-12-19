@@ -19,6 +19,11 @@ function onConversation(){
     id = user.user_id;
     type = CONTACT_TYPE.FRIEND;
   }
+  
+  if(utils.isEqual(type, CONTACT_TYPE.BOT)){
+    type = CONTACT_TYPE.FRIEND;
+  }
+
   router.replace({ name: 'ConversationList', query: {  type, id } });
 }
 function onAddFriend(isAgree){

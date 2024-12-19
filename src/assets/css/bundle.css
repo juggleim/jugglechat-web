@@ -4337,7 +4337,7 @@ button {
   --tabs-active-border-bottom: 0;
 }
 .nav-tabs .nav-item:not(:last-child) {
-  padding: 0 calc(var(--tabs-link-gap-x) * 2) 0 0;
+  /* padding: 0 calc(var(--tabs-link-gap-x) * 2) 0 0; */
 }
 .nav-tabs .nav-link {
   position: relative;

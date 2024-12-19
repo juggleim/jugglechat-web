@@ -14,6 +14,7 @@ let SERVER_PATH = {
   FRIEND_LIST: 'friends/list',
   FRIEND_NEW_LIST: 'friends/applications',
   FRIEND_CONFIRM: 'friends/confirm',
+  FRIEND_BOTS: 'bots/list',
   
   GROUP_CREATE: 'groups/add',
   GROUP_UPDATE: 'groups/update',

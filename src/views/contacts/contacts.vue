@@ -22,6 +22,7 @@ let tabs = [
     { id: Date.now(), name: '联系人', type: CONTACT_TYPE.FRIEND, icon: 'contact', isActive: true },
     { id: SYS_CONVERSATION_FRIEND, name: '新朋友', type: CONTACT_TYPE.NEW_FRIEND, unreadCount: 0, icon: 'adduser', isActive: false },
     { id: Date.now(), name: '群组', type: CONTACT_TYPE.GROUP, icon: 'group', isActive: false },
+    { id: Date.now(), name: '智能体', type: CONTACT_TYPE.BOT, icon: 'bot', isActive: false },
   ];
 let contacts = [];
 let groups = [];
@@ -94,11 +95,33 @@ function onTab(tab){
     getNewFriends();
     juggle.clearUnreadcount({ conversationType: ConversationType.SYSTEM, conversationId: SYS_CONVERSATION_FRIEND, unreadIndex: tab.latestUnreadIndex });
   }
+  if(utils.isEqual(tab.type, CONTACT_TYPE.BOT)){
+    getBots();
+  }
   state.current = {};
   utils.map(state.tabs, (_tab) => {
     let isActive = utils.isEqual(_tab.type, tab.type);
     _tab.isActive = isActive;
     return _tab;
+  });
+}
+function getBots(){
+  Friend.getBots({ count: 50 }).then((result) => {
+    let { data: { items }, code } = result;
+    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+      return context.proxy.$toast({ text: `获取失败: ${error.code}`, icon: 'error' });
+    }
+    let list = utils.map(items, (item) => {
+      let { bot_id, nickname, avatar } = item;
+      return {
+        id: bot_id,
+        type: CONTACT_TYPE.BOT, 
+        name: nickname, 
+        avatar: avatar || common.getTextAvatar(nickname), 
+        isSelected: false
+      };
+    });
+    state.currentList = list;
   });
 }
 

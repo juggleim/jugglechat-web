@@ -199,11 +199,31 @@ function createGroupAvatar(members, callback){
 }
 
 function getConversationInfo(params, callback){
-  let { type } = params;
+  let { type, id } = params;
   let juggle = im.getCurrent();
   let { ConversationType } = juggle;
   let isGroup = utils.isEqual(Number(type), ConversationType.GROUP);
-  return isGroup ? Group.get(params, callback) : Friend.get(params, callback);
+
+  let isBot = utils.isInclude(id, 'botid');
+
+  if(isBot){
+    return Friend.getBots({ count: 50 }).then(result => {
+      let { data = {}  }  = result;
+      let { items } = data;
+      items = items || [];
+      let index = utils.find(items, (item) => {
+        return utils.isEqual(item.bot_id, id);
+      });
+      let info = items[index] || { nickname: '', avatar: getAvatar(id) };
+      callback(info);
+    });
+  }
+  if(isGroup){
+    return Group.get(params, callback);
+  }
+  if(!isGroup){
+    Friend.get(params, callback);
+  }
 }
 
 function htmlToContent(content){

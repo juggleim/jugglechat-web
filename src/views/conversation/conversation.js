@@ -363,7 +363,10 @@ function insertTempConversation(query, state) {
     common.getConversationInfo(query, info => {
       let { id: conversationId, type: conversationType } = query;
       conversationType = Number(conversationType);
-      let index = utils.find(state.conversations, item => {
+
+      let conversations = state.conversationMap[state.currentTag.id];
+
+      let index = utils.find(conversations, item => {
         return (
           utils.isEqual(item.conversationType, conversationType) &&
           utils.isEqual(item.conversationId, conversationId)
@@ -377,7 +380,7 @@ function insertTempConversation(query, state) {
         messageIndex: -1
       };
       if (!utils.isEqual(index, -1)) {
-        var item = state.conversations.splice(index, 1)[0] || {};
+        var item = conversations.splice(index, 1)[0] || {};
         utils.extend(message, item);
       }
       let { nickname, avatar } = info;
@@ -390,12 +393,12 @@ function insertTempConversation(query, state) {
         latestMessage: message,
         isActive: true
       };
-      state.conversations.map(item => {
+      conversations.map(item => {
         item.isActive = false;
         return item;
       });
       console.log("insert new converation", conversation);
-      state.conversations.unshift(conversation);
+      conversations.unshift(conversation);
       utils.extend(state, { currentConversation: conversation });
     });
   }

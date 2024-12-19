@@ -40,6 +40,19 @@ function getNewList({ start, count, order }){
     return result;
   });
 }
+let botResult = {};
+function getBots({ count }){
+  if(!utils.isEmpty(botResult)){
+    return Promise.resolve(botResult);
+  }
+  let url = `${SERVER_PATH.FRIEND_BOTS}?count=${count}`;
+  return request(url, {
+    method: 'GET'
+  }).then((result) => {
+    botResult = result;
+    return result;
+  });
+}
 function get({ id }, callback){
   let friend = utils.filter(friends, (friend) => {
     return utils.isEqual(friend.user_id, id);
@@ -66,6 +79,7 @@ export default {
   remove,
   getList,
   getNewList,
+  getBots,
   confirm,
   get,
 }
