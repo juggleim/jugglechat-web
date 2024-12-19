@@ -302,8 +302,9 @@ watch(() => props.isShow, () => {
         <ul class="jg-aside-ul">
           <li class="jg-aside-li">
             <div class="tyn-aside-title">群聊名称</div>
-            <div class="tyn-media-row wr wr-modify">
+            <div class="tyn-media-row jg-df-row">
               <input type="text" class="tyn-title-overline text-none" v-model="state.groupName" placeholder="输入群聊名称" @keydown.enter="onSaveGroup()"/>
+              <div class="wr jg-df-modify-icon"></div>
             </div>
           </li>
           <li class="jg-aside-li">
@@ -315,8 +316,9 @@ watch(() => props.isShow, () => {
           </li>
           <li class="jg-aside-li">
             <div class="tyn-aside-title">我在本群的昵称</div>
-            <div class="tyn-media-row wr wr-user-st">
+            <div class="tyn-media-row jg-df-row">
               <input type="text" class="tyn-title-overline text-none" v-model="state.groupDisplayName" placeholder="仅在本群可见" @keydown.enter="onSaveGroupDisplayName()"/>
+              <div class="wr jg-df-modify-icon"></div>
             </div>
           </li>
         </ul>

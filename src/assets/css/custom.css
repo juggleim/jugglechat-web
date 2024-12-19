@@ -2013,3 +2013,24 @@
 .jg-footer-top-box .jg-footer-tool:first-child{
   margin-top: 4px;
 }
+.jg-df-row{
+  border: 2px solid transparent;
+  border-radius: 2px;
+  padding: 2px 0;
+  height: 24px;
+  padding-right: 6px;
+}
+.jg-df-modify-icon{
+  display: none;
+}
+.jg-df-modify-icon::after{
+  content: '\e62a';
+}
+
+.jg-df-row:hover .jg-df-modify-icon{
+  display: block;
+}
+.jg-df-row:hover{
+  border-color: rgb(186, 182, 233);  
+  transition: border-color 0.3s ease; 
+}

@@ -527,7 +527,8 @@ dl {
   font-size: 0.688rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #5e646b;
+  color: #919191;
+  width: 100%;
 }
 
 .tyn-title {

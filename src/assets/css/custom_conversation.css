@@ -26,7 +26,7 @@
   padding: 10px;
   display: flex;
   flex-wrap: wrap;
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
 }
 .tyn-aside-member{
