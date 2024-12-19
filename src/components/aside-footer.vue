@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps(['title']);
-import { reactive, getCurrentInstance } from "vue";
+import { reactive, getCurrentInstance, watch } from "vue";
 import { useRouter } from "vue-router";
 import ModalFriendAdd from "./modal-friend-add.vue";
 import AisdeSearch from './aside-search.vue';
@@ -35,11 +35,11 @@ let { _value: { path } } = router.currentRoute;
 
 let state = reactive({
   settingMenus: [
-    { id: `${Date.now()}`, name: '消息', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(path, '/conversation') },
-    { id: `${SYS_CONVERSATION_FRIEND}`, name: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
+    { id: `${Date.now()}`, title: '消息', type: 'top', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, name: 'ConversationList', isActive: utils.isEqual(path, '/conversation') },
+    { id: `${SYS_CONVERSATION_FRIEND}`, type: 'top', title: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, name: 'Contacts', isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
   ],
   bottomMenus: [
-  { id: `${Date.now()}`, name: '设置', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING, isActive: utils.isEqual(path, '/setting') },
+  { id: `${Date.now()}`, title: '设置', type: 'bottom', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING, name: 'Settings', isActive: utils.isEqual(path, '/setting') },
   ]
 });
 
@@ -74,8 +74,9 @@ juggle.on(Event.STATE_CHANGED, ({ state: status }) => {
   }
 });
 
-function selectMenu(menu, type){
+function selectMenu(menu){
   let { settingMenus, bottomMenus } = state;
+  let { type } = menu;
   let menus = utils.isEqual(type, 'bottom') ? bottomMenus : settingMenus;
   let otherMenus = utils.isEqual(type, 'bottom') ? settingMenus : bottomMenus;
   utils.forEach(otherMenus, (item) => {
@@ -85,25 +86,25 @@ function selectMenu(menu, type){
     item.isActive = utils.isEqual(item.id, menu.id);
   });
 }
-function onTMenuClick(menu){
+function onMenuClick(menu){
   let { event } = menu;
-  selectMenu(menu, 'top');
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.MESSAGE)){
-    router.push({ name: 'ConversationList' });
-  }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.CONTACT)){
-    router.push({ name: 'Contacts' });
-  }
+  selectMenu(menu);
+  router.push({ name: menu.name });
 }
-function onBMenuClick(menu){
-  let { event } = menu;
-  selectMenu(menu, 'bottom');
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
-    router.push({ name: 'Settings' });
-  }
-}
+
 emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   utils.extend(state.user, user);
+});
+
+let useRouterCurrent = reactive(router);
+watch(useRouterCurrent, (value) => {
+  let { currentRoute: { name } } = value;
+  let list = state.bottomMenus.concat(state.settingMenus);
+  let index = utils.find(list, (item) => {
+    return utils.isEqual(item.name, name);
+  });
+  let menu = list[index];
+  selectMenu(menu)
 });
 </script>
 
@@ -117,18 +118,18 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
         </div>
       </li>
       <li class="jg-footer-tool" v-for="menu in state.settingMenus">
-        <div class="jg-asider-footer-item" @click="onTMenuClick(menu)" :class="[menu.isActive ? 'jg-footer-active' : '']">
+        <div class="jg-asider-footer-item" @click="onMenuClick(menu)" :class="[menu.isActive ? 'jg-footer-active' : '']">
           <div class="nav-unreadcount" v-if="menu.unreadCount > 0">{{ menu.unreadCount }}</div>
           <div class="icon wr" :class="{ ['wr-' + menu.icon]: true }"></div>
-          <div class="name">{{ menu.name }}</div>
+          <div class="name">{{ menu.title }}</div>
         </div>
       </li>
     </ul>
     <ul class="jg-footer-tools jg-footer-bottom-box">
       <li class="jg-footer-tool" v-for="menu in state.bottomMenus">
-        <div class="jg-asider-footer-item" @click="onBMenuClick(menu)" :class="[menu.isActive ? 'jg-footer-active' : '']">
+        <div class="jg-asider-footer-item" @click="onMenuClick(menu)" :class="[menu.isActive ? 'jg-footer-active' : '']">
           <div class="icon wr" :class="{ ['wr-' + menu.icon]: true }"></div>
-          <div class="name">{{ menu.name }}</div>
+          <div class="name">{{ menu.title }}</div>
         </div>
       </li>
     </ul>

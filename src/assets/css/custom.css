@@ -1432,8 +1432,8 @@
   display: flex;
   width: 180px;
   position: absolute;
-  bottom: 46px;
-  top: 45px;
+  bottom: 0;
+  top: 53px;
 }
 .show-group-conver{
   margin-left: 180px;

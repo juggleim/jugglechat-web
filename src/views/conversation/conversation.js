@@ -364,7 +364,7 @@ function insertTempConversation(query, state) {
       let { id: conversationId, type: conversationType } = query;
       conversationType = Number(conversationType);
 
-      let conversations = state.conversationMap[state.currentTag.id];
+      let conversations = state.conversationMap[state.currentTag.id] || [];
 
       let index = utils.find(conversations, item => {
         return (
