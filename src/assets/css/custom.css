@@ -1077,6 +1077,7 @@
 }
 .tyn-aside-list{
   padding: 2px;
+  margin-bottom: 26px;
 }
 @keyframes leaveleave {
   0% {
@@ -2008,10 +2009,13 @@
   height: 60px;
 }
 .jg-footer-top-box .jg-footer-tool{
-  margin: 10px 0;
+  margin: 16px 0;
+}
+.jg-footer-top-box .jg-footer-tool .icon{
+  font-size: 20px !important;
 }
 .jg-footer-top-box .jg-footer-tool:first-child{
-  margin-top: 4px;
+  margin-top: 12px;
 }
 .jg-df-row{
   border: 2px solid transparent;

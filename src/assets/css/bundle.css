@@ -46,7 +46,7 @@ p {
   --bs-gray-200: #e2e8f0;
   --bs-gray-300: #cbd5e1;
   --bs-gray-400: #94a3b8;
-  --bs-gray-500: #64748b;
+  --bs-gray-500: #485464;
   --bs-gray-600: #475569;
   --bs-gray-700: #334155;
   --bs-gray-800: #1e293b;
@@ -95,7 +95,7 @@ p {
   --bs-dark-border-subtle: #adb5bd;
   --bs-white-rgb: 255, 255, 255;
   --bs-black-rgb: 0, 0, 0;
-  --bs-font-sans-serif: Hiragino Sans GB, Microsoft YaHei, WenQuanYi Micro Hei, sans-serif;
+  --bs-font-sans-serif: system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Apple Color Emoji", "Helvetica Neue", sans-serif;
   --bs-font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --bs-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
   --bs-body-font-family: var(--bs-font-sans-serif);
@@ -178,21 +178,6 @@ p {
     --bs-body-gap-x: 1.5rem;
   }
 }
-
-[data-bs-theme=dark] {
-  --bs-gray-50: #f8fafc;
-  --bs-gray-100: #f1f5f9;
-  --bs-gray-200: #e2e8f0;
-  --bs-gray-300: #cbd5e1;
-  --bs-gray-400: #94a3b8;
-  --bs-gray-500: #64748b;
-  --bs-gray-600: #475569;
-  --bs-gray-700: #203047;
-  --bs-gray-800: #132036;
-  --bs-gray-900: #0f172a;
-  --bs-heading-color: #ffffff;
-}
-
 *,
 *::before,
 *::after {
