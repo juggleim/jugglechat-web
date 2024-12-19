@@ -7,6 +7,7 @@ import AsideVideo from "./aside-video.vue";
 import im from "../../common/im";
 import ModalAddMemberGroup from "../../components/modal-add-member-group.vue";
 import ModalRemoveMemberGroup from "../../components/modal-remove-member-group.vue";
+import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
 import Storage from "../../common/storage";
@@ -38,6 +39,7 @@ let state = reactive({
   members: [],
   ...utils.clone(defaultMsgs),
   isShowFriend: false,
+  isShowGroupNotice: false,
   isCreateGroupLoading: false,
   isGroupRemoveMemberLoading: false,
   currentGroupId: '',
@@ -45,7 +47,6 @@ let state = reactive({
   groupName: props.conversation.conversationTitle,
   groupDisplayName: '',
   groupNoticeContent: '',
-  isUpdateingNotice: false,
 });
 
 function onMenuTab(menu) {
@@ -82,6 +83,9 @@ function isShowMsgTab(type) {
 }
 function onShowFriendAdd(isShow) {
   state.isShowFriend = isShow;
+}
+function onShowGroupNotice(isShow){
+  state.isShowGroupNotice = isShow;
 }
 function onShowMemberRemove(groupId) {
   state.currentGroupId = groupId;
@@ -211,12 +215,12 @@ function onSaveGroupDisplayName(){
     });
   });
 }
-function onUpdateNotice(){
+function onUpdateNotice({ content }){
   let { conversationId } = props.conversation;
-  let { groupNoticeContent  } = state;
+  state.groupNoticeContent = content;
   let params = {
     group_id: conversationId,
-    content: groupNoticeContent
+    content: content
   };
   Group.setNotice(params).then((result) => {
     let { code } = result;
@@ -231,11 +235,9 @@ function onUpdateNotice(){
       icon: 'success'
     });
   });
-  onEditGroupNotice(false)
+  onShowGroupNotice(false);
 }
-function onEditGroupNotice(isUpdateing){
-  state.isUpdateingNotice = isUpdateing;
-}
+
 function onQuitGroup(){
   let { conversationId } = props.conversation;
   Group.quit({ group_id: conversationId }).then((result) => {
@@ -270,7 +272,7 @@ watch(() => props.isShow, () => {
       let { code, data } = result;
       if(utils.isEqual(code, RESPONSE.SUCCESS)){
         let { content } = data;
-        state.groupNoticeContent = content;
+        state.groupNoticeContent = content || '未设置群公告';
       }
     });
   }
@@ -309,9 +311,8 @@ watch(() => props.isShow, () => {
           </li>
           <li class="jg-aside-li">
             <div class="tyn-aside-title">群公告</div>
-            <div class="tyn-media-row jg-group-notice-row">
-              <textarea type="text" class="tyn-title-overline text-none jg-group-notice" v-model="state.groupNoticeContent" placeholder="说点什么~" @focus="onEditGroupNotice(true)"></textarea>
-              <div class="jg-notice-button" v-if="state.isUpdateingNotice" @click="onUpdateNotice()">保存</div>      
+            <div class="tyn-media-row" @click="onShowGroupNotice(true)">
+              <div class="tyn-title-overline text-none jg-group-notice-line">{{ state.groupNoticeContent }}</div>
             </div>
           </li>
           <li class="jg-aside-li">
@@ -335,8 +336,11 @@ watch(() => props.isShow, () => {
     <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
       :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"
       @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
-    <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
+    
+      <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
       :is-loading="state.isGroupRemoveMemberLoading" :members="state.members" @oncancel="onCancelRemoveGroupMember"
       @onconfirm="onConfirmRemoveGroupMember"></ModalRemoveMemberGroup>
+
+    <ModalGroupNotice :is-show="state.isShowGroupNotice" :content="state.groupNoticeContent" @onconfirm="onUpdateNotice" @oncancel="onShowGroupNotice(false)"></ModalGroupNotice>
   </div>
 </template>

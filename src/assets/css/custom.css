@@ -733,7 +733,7 @@
   border-radius: 2px;
 }
 .jg-group-notice{
-  height: 60px;
+  height: 200px;
   width: 100%;
   resize: none;
   border: 1px solid #f4f5fc !important;
@@ -2031,6 +2031,23 @@
   display: block;
 }
 .jg-df-row:hover{
-  border-color: rgb(186, 182, 233);  
+  border-color: #bab6e9;  
   transition: border-color 0.3s ease; 
+}
+.jg-df-row .tyn-title-overline{
+  cursor: pointer;
+}
+.jg-group-notice-line{
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px;
+}
+.jg-group-notice-line:hover{
+  background-color: #f7f7f9;
+  border-radius: 2px;
+}
+.jg-group-notice-modal .modal-body{
+  height: auto;
 }
