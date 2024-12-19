@@ -314,6 +314,7 @@ dl {
   display: flex;
   flex-direction: column;
   border-right: 1px solid #FAFAFA;
+  min-width: 76px;
 }
 .jg-asider-footer-item{
   display: flex;

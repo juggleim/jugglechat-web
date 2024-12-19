@@ -272,7 +272,7 @@ watch(() => props.isShow, () => {
       let { code, data } = result;
       if(utils.isEqual(code, RESPONSE.SUCCESS)){
         let { content } = data;
-        state.groupNoticeContent = content || '未设置群公告';
+        state.groupNoticeContent = content;
       }
     });
   }
@@ -312,7 +312,7 @@ watch(() => props.isShow, () => {
           <li class="jg-aside-li">
             <div class="tyn-aside-title">群公告</div>
             <div class="tyn-media-row" @click="onShowGroupNotice(true)">
-              <div class="tyn-title-overline text-none jg-group-notice-line">{{ state.groupNoticeContent }}</div>
+              <div class="tyn-title-overline text-none jg-group-notice-line">{{ state.groupNoticeContent || '未设置群公告' }}</div>
             </div>
           </li>
           <li class="jg-aside-li">
