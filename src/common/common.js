@@ -231,7 +231,7 @@ function htmlToContent(content){
 }
 function calcSize(params, patch = 20){
   let { width, height } = params;
-  let maxWidth = 280;
+  let maxWidth = 270;
   let maxHeight = 240;
 
   width = width || maxWidth;
