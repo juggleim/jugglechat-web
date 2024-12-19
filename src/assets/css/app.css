@@ -628,8 +628,8 @@ dl {
   display: flex;
   align-items: center;
   gap: 8px;
-  --media-text: #111b21;
-  --media-text-light: #111b21;
+  --media-text: #838383;
+  --media-text-light: #838383;
   --media-text-lighter: var(--bs-gray-300);
 }
 [data-bs-theme=dark] .tyn-media-group {
@@ -697,7 +697,7 @@ dl {
   color: var(--bs-primary);
 }
 .tyn-media-col .content {
-  font-size: 0.75rem;
+  font-size: 11px;
   color: var(--media-text);
   margin-bottom: 0;
   max-width: 100%;
@@ -706,7 +706,7 @@ dl {
   white-space: nowrap;
 }
 .tyn-media-col .meta {
-  font-size: 0.625rem;
+  font-size: 10px;
   color: var(--media-text-light);
 }
 .tyn-contact .tyn-media-col .meta {
@@ -1247,7 +1247,8 @@ dl {
   display: flex;
   align-items: center;
   padding: 6px 20px;
-  background: #f0f2f5;
+  background: #FFFF;
+  border-bottom: 1px solid #f0f2f5;
   z-index: 500;
   -webkit-app-region: drag;
 }
@@ -1299,6 +1300,8 @@ dl {
   display: flex;
   align-items: center;
   background-color: #FFF;
+  padding-left: 10px;
+  padding-right: 20px;
 }
 .tyn-chat-form-input {
   flex-grow: 1;
@@ -1783,7 +1786,7 @@ dl {
 }
 
 .tyn-size-lg {
-  --tyn-size: var(--bs-size-lg);
+  --tyn-size: 50px;
   --tyn-icon-size: var(--bs-icon-size-lg);
 }
 

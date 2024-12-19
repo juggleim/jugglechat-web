@@ -65,6 +65,7 @@
   display: flex;
   justify-content: center;
   font-size: 20px;
+  color: #888892;
 }
 .jg-sender-name{
   font-size: 10px;
@@ -1077,7 +1078,7 @@
 }
 .tyn-aside-list{
   padding: 2px;
-  margin-bottom: 26px;
+  margin-bottom: 30px;
 }
 @keyframes leaveleave {
   0% {
@@ -2027,6 +2028,14 @@
   flex-direction: column;
   height: 100%;
 }
+.jg-footer-tool{
+  background-color: #f6f6f6a1;
+  padding: 4px;
+  border-radius: 6px;
+}
+.jg-footer-top-box .jg-footer-tool:first-child{
+  background: transparent;
+}
 .jg-footer-bottom-box{
   flex: 1 1 auto;
   height: 60px;
@@ -2038,7 +2047,7 @@
   font-size: 20px !important;
 }
 .jg-footer-top-box .jg-footer-tool:first-child{
-  margin-top: 12px;
+  margin-top: 4px;
 }
 .jg-df-row{
   border: 2px solid transparent;
