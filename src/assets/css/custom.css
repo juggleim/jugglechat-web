@@ -1102,7 +1102,7 @@
   left: 0;
   right: 0;
   display: none;
-  z-index: 99;
+  z-index: 1200;
   opacity: 0;
 }
 .show-menu-back{
@@ -1406,13 +1406,17 @@
 .jg-conver-mute{
   color: #0000003b;
 }
+.jg-conver-mute::before{
+  position: absolute;
+  top: 2px;
+}
 
 .fade-bg-conversationlist{
   z-index: 99;
 }
 /* Conversation-list Header */
 .jg-conversations-header{
-  padding: 4px 8px;
+  padding: 14px 0;
 }
 .jg-conversations-tools{
   display: flex;
@@ -1458,7 +1462,7 @@
   width: 180px;
   position: absolute;
   bottom: 0;
-  top: 53px;
+  top: 0;
 }
 .show-group-conver{
   margin-left: 180px;
@@ -1958,12 +1962,16 @@
 .jg-user-settings .active .jg-user-setting-item{
   color: #0000ffe8;
 }
+.jg-user-settings{
+  margin-top: 6px;
+}
 .nav-item{
   position: relative;
 }
 .jg-contact-navs{
   display: flex;
   justify-content: space-between;
+  height: 50px;
 }
 .nav-unreadcount{
   position: absolute;
@@ -2090,4 +2098,9 @@
 .jg-mentions-warp{
   max-height: 260px;
   overflow-y: auto;
+}
+.tyn-header-create-list .jg-footer-dropdownmenu{
+  left: 50px;
+  top: -44px;
+  z-index: 1210;
 }

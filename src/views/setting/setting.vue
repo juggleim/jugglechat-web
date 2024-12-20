@@ -5,8 +5,6 @@ import { useRouter } from "vue-router";
 import { reactive, getCurrentInstance, watch } from "vue";
 import { RESPONSE, EVENT_NAME, SETTING_TYPE }  from "../../common/enum";
 
-import AisdeHeader from "../../components/aside-header.vue";
-
 import im from "../../common/im";
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -39,7 +37,7 @@ function onShowProfile(item){
 <template>
   <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside tyn-contact-aside">
-      <AisdeHeader :title="'设置'"></AisdeHeader>
+      <!-- <AisdeHeader :title="'设置'"></AisdeHeader> -->
       <div class="tyn-aside-body" data-simplebar>
         <div class="tab-content">
           <div class="tab-pane show active">

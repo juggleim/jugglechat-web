@@ -5,8 +5,6 @@ import { useRouter } from "vue-router";
 import Conversation from "./conversation.vue";
 import None from "./none.vue";
 
-import AisdeHeader from "../../components/aside-header.vue";
-
 import { STORAGE, EVENT_NAME, CONVERATION_TAG_ID, CONVERSATION_TAG_TYPE } from "../../common/enum";
 import Storage from "../../common/storage";
 import im from "../../common/im";
@@ -376,7 +374,7 @@ function onTagConversationChanged({ removes, adds, tag }){
 <template>
   <div class="tyn-content">
     <div class="tyn-aside">
-      <AisdeHeader @onnav="onNavChat"></AisdeHeader>
+      <!-- <AisdeHeader @onnav="onNavChat"></AisdeHeader> -->
       <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)" @onconfirm="onTagConversationChanged" :tag="state.currentTag"></ModalGroupMember>
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup" @onchange="onGroupChange"></ConversationGroup>

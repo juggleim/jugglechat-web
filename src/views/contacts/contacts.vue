@@ -6,8 +6,6 @@ import Dropmenu from "./dropmenu.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
 import { CONTACT_TAB_TYPE, RESPONSE, EVENT_NAME, CONTACT_TYPE, FRIEND_APPLY_STATUS, IGNORE_CONVERSATIONS, SYS_CONVERSATION_FRIEND }  from "../../common/enum";
 
-import AisdeHeader from "../../components/aside-header.vue";
-
 import im from "../../common/im";
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -247,8 +245,8 @@ getFriends();
 <template>
   <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside tyn-contact-aside">
-      <AisdeHeader :title="'通讯录'"></AisdeHeader>
-      <div class="tyn-aside-row pt-1">
+      <!-- <AisdeHeader :title="'通讯录'"></AisdeHeader> -->
+      <div class="tyn-aside-row pt-1 tyn-aside-contact-row">
         <ul class="nav nav-tabs nav-tabs-line jg-contact-navs">
           <li class="nav-item" v-for="tab in state.tabs">
             <div class="nav-unreadcount" v-if="tab.unreadCount > 0">{{ tab.unreadCount }}</div>

@@ -348,10 +348,11 @@ dl {
   background: var(--aside-bg);
 }
 .tyn-aside-item {
-  padding: var(--aside-item-gap-y) var(--aside-gap-x);
+  padding: var(--aside-item-gap-y);
   cursor: pointer !important;
   position: relative;
   user-select: none;
+  margin-bottom: 1px;
 }
 .tyn-aside-item:hover {
   background: var(--aside-item-active-bg);
@@ -380,6 +381,10 @@ dl {
 }
 .tyn-aside-row {
   padding: var(--aside-gap-y) var(--aside-gap-x);
+}
+.tyn-aside-contact-row{
+  padding-top: 0;
+  padding-bottom: 0;
 }
 .tyn-aside-row .nav-tabs-line {
   margin: 0 calc(var(--aside-gap-x) * -1);
@@ -738,7 +743,8 @@ dl {
   max-width: 100%;
 }
 .jg-conversation-title{
-  min-height: 22px;
+  min-height: 20px;
+  align-items: start;
 }
 .tyn-media-row.between {
   justify-content: space-between;
@@ -1786,7 +1792,7 @@ dl {
 }
 
 .tyn-size-lg {
-  --tyn-size: 50px;
+  --tyn-size: 48px;
   --tyn-icon-size: var(--bs-icon-size-lg);
 }
 
@@ -1833,6 +1839,9 @@ dl {
 }
 .fadeoutx {
   animation: fadeoutx 0.3s;
+}
+.fadeoutxr {
+  animation: fadeoutxr 0.3s;
 }
 .rotater{
   animation: rotater 0.3s;
@@ -1886,6 +1895,14 @@ dl {
   }
   to {
    transform: translateX(-20%);
+  }
+}
+@keyframes fadeoutxr {
+  from {
+   transform: translateX(-15%);
+  }
+  to {
+   transform: translateX(0);
   }
 }
 .jg-modal-header{
