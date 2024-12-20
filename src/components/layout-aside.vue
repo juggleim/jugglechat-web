@@ -15,6 +15,7 @@ import { Group, User } from "../services/index";
 import ModalUser from "./modal-user.vue";
 import ModalAddMemberGroup from "./modal-add-member-group.vue";
 import ModalFriendAdd from "./modal-friend-add.vue";
+import ModalUserSetting from "./modal-user-setting.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -30,6 +31,7 @@ let ASIDE_MENU_TYPE = {
   CONTACT: 4,
   LOGOUT: 5,
   USER_SETTING: 6,
+  USER_UPDATE: 7,
 };
 
 let { _value: { path } } = router.currentRoute;
@@ -39,24 +41,31 @@ let state = reactive({
     { id: `${Date.now()}`, title: '消息', type: 'top', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, name: 'ConversationList', isActive: utils.isEqual(path, '/conversation') },
     { id: `${SYS_CONVERSATION_FRIEND}`, type: 'top', title: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, name: 'Contacts', isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
   ],
-  bottomMenus: [
-  { id: `${Date.now()}`, title: '设置', type: 'bottom', icon: 'setting', event: ASIDE_MENU_TYPE.USER_SETTING, name: 'Settings', isActive: utils.isEqual(path, '/setting') },
-  ],
-  
   addMenus: [
     { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
     { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
   ],
+  bottomMenus: [
+    { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
+    { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
+  ],
+
   isShowAddMenu: false,
+  isShowSettingMenu: false,
   isShowAddFriend: false,
   isShowCreateGroup: false,
   isCreateGroupLoading: false,
   isShowUserClose: true,
   isShowUser: false,
+  isShowUserSetting: false,
 });
 
 function onShowAddMenu(isShow){
   state.isShowAddMenu = isShow;
+}
+
+function onShowSettingMenu(isShow){
+  state.isShowSettingMenu = isShow;
 }
 
 function onConversationChanged({ conversations }){
@@ -121,6 +130,7 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
 
 function onHideMenu(){
   onShowAddMenu(false);
+  onShowSettingMenu(false);
 }
 function onDropMenuClick(menu){
   let { event } = menu;
@@ -130,8 +140,11 @@ function onDropMenuClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_GROUP)){
     onShowGroupCreate(true);
   }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_UPDATE)){
     onShowUserModal(true);
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
+    onShowUserSettingModal(true);
   }
   onHideMenu();
 }
@@ -179,6 +192,13 @@ function onShowUserModal(isShow){
 }
 function onUserCanncel(){
   onShowUserModal(false);
+}
+
+function onShowUserSettingModal(isShow){
+  utils.extend(state, { isShowUserSetting: isShow });
+};
+function onUserSettingCancel(){
+  onShowUserSettingModal(false);
 }
 let isSaveingUser = false;
 function onUserSave(user){
@@ -280,11 +300,12 @@ watch(useRouterCurrent, (value) => {
       </li>
     </ul>
     <ul class="jg-footer-tools jg-footer-bottom-box">
-      <li class="jg-footer-tool" v-for="menu in state.bottomMenus">
-        <div class="jg-asider-footer-item" @click="onMenuClick(menu)" :class="[menu.isActive ? 'jg-footer-active' : '']">
-          <div class="icon wr" :class="{ ['wr-' + menu.icon]: true }"></div>
-          <div class="name">{{ menu.title }}</div>
+      <li class="jg-footer-tool">
+        <div class="jg-asider-footer-item" @click="onShowSettingMenu(true)">
+          <div class="icon wr wr-setting"></div>
+          <div class="name">设置</div>
         </div>
+        <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.bottomMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
       </li>
     </ul>
   </div>
@@ -300,4 +321,5 @@ watch(useRouterCurrent, (value) => {
     @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
 
   <ModalUser :is-show="state.isShowUser" :is-show-close="state.isShowUserClose" :user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser>
+  <ModalUserSetting :is-show="state.isShowUserSetting" @oncancel="onUserSettingCancel" ></ModalUserSetting>
 </template>

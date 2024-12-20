@@ -1094,7 +1094,9 @@
 .tyn-header-create-list .dropdown-menu{
   right: 0;
 }
-
+.jg-layout-settingdrop .jg-footer-dropdownmenu{
+  top: -86px !important;
+}
 .dropmenu-backdrop{
   position: fixed;
   top: 0;
