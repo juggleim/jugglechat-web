@@ -135,6 +135,7 @@ function onHideMenu(){
 }
 function onDropMenuClick(menu){
   let { event } = menu;
+  onHideMenu();
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_FRIREND)){
     onShowFriendAdd(true);
   }
@@ -150,7 +151,6 @@ function onDropMenuClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
   }
-  onHideMenu();
 }
 
 function onShowGroupCreate(isShow){
@@ -280,7 +280,7 @@ watch(useRouterCurrent, (value) => {
 <template>
   <div class="tyn-aside-footer" :class="{ 'tyn-aside-desktop': state.isDesktop }">
     <ul class="jg-footer-tools jg-footer-top-box">
-      <li class="jg-footer-tool"  @click="onShowSettingMenu(true)">
+      <li class="jg-footer-tool"  @click.prevent="onShowSettingMenu(true)">
         <div class="jg-header-user">
           <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
           <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
