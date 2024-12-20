@@ -16,7 +16,7 @@ let context = getCurrentInstance();
 const router = useRouter();
 let defalutBtnLabel = '发送';
 let state = reactive({
-  isQRLogin: false,
+  isQRLogin: true,
   isLoadingQR: false,
   isShowRefreshQrcode: false,
   qrcode: {
@@ -102,7 +102,7 @@ function onSend(){
         return clearInterval(inteval);
       }
       utils.extend(state, { btnLabel: seconds });
-    }, 1000);
+    }, 500);
   });
 }
 function onInput() {
