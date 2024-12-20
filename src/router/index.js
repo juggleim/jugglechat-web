@@ -16,11 +16,6 @@ let routes = [{
       component:  () => import('@/views/conversation/conversation-list.vue'),
     },
     {
-      path: '/setting',
-      name: 'Settings',
-      component:  () => import('@/views/setting/setting.vue'),
-    },
-    {
       path: '/contacts',
       name: 'Contacts',
       component: () => import('@/views/contacts/contacts.vue'),
