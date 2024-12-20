@@ -221,7 +221,7 @@ watch(() => state.isQRLogin, (isQR) => {
           </div>
         </div>
 
-        <!-- <div class="jg-nlogin-button jg-nlogin-num-btn"  @click="setQrLogin(true)"> LOG IN BY QE CODE </div> -->
+        <div class="jg-nlogin-button jg-nlogin-num-btn"  @click="setQrLogin(true)"> LOG IN BY QE CODE </div>
       </div>
     </div>
   </div>
