@@ -826,6 +826,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  cursor: pointer;
 }
 .jg-header-user-avatar{
   height: 30px;
@@ -1073,8 +1074,9 @@
 }
 
 /* Common */
+.jg-force-warn-letter,
 .warn{
-  color: #c80606;
+  color: #ec2323 !important;
 }
 .tyn-aside-list{
   padding: 2px;
@@ -1095,7 +1097,7 @@
   right: 0;
 }
 .jg-layout-settingdrop .jg-footer-dropdownmenu{
-  top: -86px !important;
+  top: -50px !important;
 }
 .dropmenu-backdrop{
   position: fixed;

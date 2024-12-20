@@ -29,9 +29,9 @@ let ASIDE_MENU_TYPE = {
   ADD_GROUP: 2,
   MESSAGE: 3,
   CONTACT: 4,
-  LOGOUT: 5,
   USER_SETTING: 6,
   USER_UPDATE: 7,
+  USER_LOGOUT: 8
 };
 
 let { _value: { path } } = router.currentRoute;
@@ -45,9 +45,10 @@ let state = reactive({
     { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
     { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
   ],
-  bottomMenus: [
+  userMenus: [
     { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
     { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
+    { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
   ],
 
   isShowAddMenu: false,
@@ -145,6 +146,9 @@ function onDropMenuClick(menu){
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
     onShowUserSettingModal(true);
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
+    emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
   }
   onHideMenu();
 }
@@ -276,11 +280,12 @@ watch(useRouterCurrent, (value) => {
 <template>
   <div class="tyn-aside-footer" :class="{ 'tyn-aside-desktop': state.isDesktop }">
     <ul class="jg-footer-tools jg-footer-top-box">
-      <li class="jg-footer-tool">
+      <li class="jg-footer-tool"  @click="onShowSettingMenu(true)">
         <div class="jg-header-user">
           <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
           <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
         </div>
+        <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.userMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
       </li>
       
       <li class="jg-footer-tool">
@@ -299,7 +304,7 @@ watch(useRouterCurrent, (value) => {
         </div>
       </li>
     </ul>
-    <ul class="jg-footer-tools jg-footer-bottom-box">
+    <!-- <ul class="jg-footer-tools jg-footer-bottom-box">
       <li class="jg-footer-tool">
         <div class="jg-asider-footer-item" @click="onShowSettingMenu(true)">
           <div class="icon wr wr-setting"></div>
@@ -307,7 +312,7 @@ watch(useRouterCurrent, (value) => {
         </div>
         <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.bottomMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
       </li>
-    </ul>
+    </ul> -->
   </div>
 
   <ModalFriendAdd :is-show="state.isShowAddFriend" @oncancel="onFriendAddCancel" @onconfirm="onFriendAddConfirm"></ModalFriendAdd>
