@@ -50,7 +50,7 @@ let state = reactive({
     { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
     { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
   ],
-
+  bottomMenus: [],
   isShowAddMenu: false,
   isShowSettingMenu: false,
   isShowAddFriend: false,
