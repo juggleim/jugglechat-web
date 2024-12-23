@@ -7,7 +7,9 @@ let EVENT_NAME = {
   ON_GROUP_CREATED: 'on_group_created',
   ON_GROUP_MEMBER_ADDED: 'on_group_member_added',
   ON_GROUP_MEMBER_REMOVED: 'on_group_member_removed',
-
+  
+  ON_CONVERSATION_RESET: 'on_conversation_reset',
+  
   ON_CONVERSATION_TAG_CHANGED: 'on_conversation_tag_changed',
 
   ON_SHOW_CALL_DIALOG: 'on_show_call_dialog',

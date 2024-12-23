@@ -21,15 +21,10 @@ function remove(friend){
     })
   });
 }
-let friends = [];
 function getList({ startUserId, count, order }){
   let url = `${SERVER_PATH.FRIEND_LIST}?count=${count}&offset=${startUserId}`;
   return request(url, {
     method: 'GET'
-  }).then((result) => {
-    let { data: { items = [] } } = result;
-    friends = friends.concat(items);
-    return result;
   });
 }
 function getNewList({ start, count, order }){
@@ -54,12 +49,6 @@ function getBots({ count }){
   });
 }
 function get({ id }, callback){
-  let friend = utils.filter(friends, (friend) => {
-    return utils.isEqual(friend.user_id, id);
-  })[0] || { };
-  if(!utils.isEmpty(friend)){
-    return callback(friend);
-  }
   let url = `${SERVER_PATH.USER_GET}?user_id=${id}`;
   return request(url, { method: 'GET' }).then((result) => {
     let { data } = result;

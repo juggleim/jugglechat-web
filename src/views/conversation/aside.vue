@@ -286,7 +286,6 @@ watch(() => props.conversation, (conversation) => {
 });
 
 watch(() => props.isShow, () => {
-  console.log('props.group', props.group)
   let { conversationType, conversationId } = props.conversation;
   let isGroup = utils.isEqual(conversationType, ConversationType.GROUP);
 

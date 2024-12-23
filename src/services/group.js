@@ -38,22 +38,12 @@ function getList({ startId, count }){
   });
 }
 
-let groups = [];
 function get({ id }, callback){
-  let group = utils.filter(groups, (group) => {
-    return utils.isEqual(group.id, id);
-  })[0] || { };
-  if(!utils.isEmpty(group)){
-    return callback(group);
-  }
   let url = `${SERVER_PATH.GROUP_GET}?group_id=${id}`;
   return request(url, { method: 'GET' }).then((result) => {
     let { data = {} } = result;
-
     let { group_name, group_portrait, members = [], group_management, grp_display_name, member_count, my_role } = data;
-
     let info = { nickname: group_name, avatar: group_portrait, members, id, group_management, grp_display_name, member_count, my_role };
-    groups.push(info);
     callback(info);
   });
 }

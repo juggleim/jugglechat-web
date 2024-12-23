@@ -102,6 +102,9 @@ function onConversation(conversation){
     state.currentConversation = conversation;
   }
 }
+emitter.$on(EVENT_NAME.ON_CONVERSATION_RESET, () => {
+  state.currentConversation = {};
+});
 emitter.$on(EVENT_NAME.ON_GROUP_CREATED, ({ conversation }) => {
   state.currentConversation = conversation;
 });
