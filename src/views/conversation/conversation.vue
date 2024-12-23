@@ -1,7 +1,4 @@
 <script setup>
-const props = defineProps(['conversation']);
-const emit = defineEmits(["ondraft", "onclearmsg", "onquitgroup"]);
-
 import Search from "./search.vue";
 import Emoji from "../../components/emoji.vue"
 import ModalTransfer from "../../components/modal-transfer.vue";
@@ -38,6 +35,9 @@ import { TRANSFER_TYPE, MSG_NAME, EVENT_NAME, MESSAGE_OP_TYPE, STORAGE } from ".
 import common from "../../common/common";
 import emitter from "../../common/emmit";
 import { Group } from "../../services/index";
+
+const props = defineProps(['conversation']);
+const emit = defineEmits(["ondraft", "onclearmsg", "onquitgroup", "ontop", "ondisturb"]);
 
 let TimelineMessage = shallowRef(Timeline);
 let WithoutMessage = shallowRef(Without);
@@ -717,6 +717,12 @@ function onResendMessage({ message }){
 function onClearMessages(){
   emit('onclearmsg', props.conversation);
 }
+function onSetConversationTop(isTop){
+  emit('ontop', props.conversation, isTop);
+}
+function onConversationDisturb(){
+  emit('ondisturb', props.conversation);
+}
 function onQuitGroup(){
   emit('onquitgroup', props.conversation);
 }
@@ -818,7 +824,12 @@ watch(() => state.content, (val) => {
       </div>
       <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
     </div>
-    <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group" @onclearmsg="onClearMessages" @onquitgroup="onQuitGroup"></Aside>
+    <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group" 
+      @ontop="onSetConversationTop" 
+      @ondisturb="onConversationDisturb"
+      @onclearmsg="onClearMessages" 
+      @onquitgroup="onQuitGroup"
+      ></Aside>
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
     <ModalMergeMsgs :is-show="!utils.isEmpty(state.currentMergeMessage)" :message="state.currentMergeMessage" @oncancel="onCancelMergeDetail"></ModalMergeMsgs>
     <ModalImgSender :is-show="!utils.isEmpty(state.imgSender)" :img="state.imgSender" :conversation="state.currentConversation" @oncancel="onShowImgSender({})" @onconfirm="onConfirmImgSender"></ModalImgSender>

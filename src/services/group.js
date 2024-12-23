@@ -44,7 +44,7 @@ function get({ id }, callback){
     return utils.isEqual(group.id, id);
   })[0] || { };
   if(!utils.isEmpty(group)){
-    return callback({ nickname: group.group_name, avatar: group.group_portrait,  members: group.members });
+    return callback(group);
   }
   let url = `${SERVER_PATH.GROUP_GET}?group_id=${id}`;
   return request(url, { method: 'GET' }).then((result) => {
@@ -109,6 +109,13 @@ function getNotice({ group_id }){
     method: 'GET'
   });
 }
+
+function setGroupHisVerify({ group_id, num }){
+  return request(SERVER_PATH.GROUP_SET_HIS_VERIFY_TYPE, {
+    method: 'POST',
+    body: utils.toJSON({ group_id, group_his_msg_visible: num })
+  });
+}
 export default {
   create,
   quit,
@@ -120,5 +127,6 @@ export default {
   update,
   setDisplayName,
   setNotice,
-  getNotice
+  getNotice,
+  setGroupHisVerify
 }

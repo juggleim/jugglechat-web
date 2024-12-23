@@ -8,34 +8,27 @@ import im from "../../common/im";
 import ModalAddMemberGroup from "../../components/modal-add-member-group.vue";
 import ModalRemoveMemberGroup from "../../components/modal-remove-member-group.vue";
 import ModalGroupNotice from "../../components/modal-group-notice.vue";
+import JSwitch from "../../components/switch.vue";
+
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
 import Storage from "../../common/storage";
 import common from "../../common/common";
-import { STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME, RESPONSE, GROUP_AVATAR } from "../../common/enum";
+import { GROUP_ROLE, ASIDER_SETTING_SWITCH, STORAGE, GROUP_CHANGE_TYPE, MSG_NAME, EVENT_NAME, RESPONSE, GROUP_AVATAR } from "../../common/enum";
 import emitter from "../../common/emmit";
 
 const props = defineProps(["isShow", "conversation", "members", "group"]);
-const emit = defineEmits(["onclearmsg", "onquitgroup"]);
+const emit = defineEmits(["onclearmsg", "onquitgroup", "ontop", "ondisturb"]);
 
 const context = getCurrentInstance();
 let juggle = im.getCurrent();
-let { MessageType, ConversationType } = juggle;
+let { MessageType, ConversationType, UndisturbType } = juggle;
 let defaultMsgs = {
   image: { msgs: [], isFinished: false },
   file: { msgs: [], isFinished: false },
   video: { msgs: [], isFinished: false },
 }
 let state = reactive({
-  menus: [
-    // { name: '操作', icon: 'operate', type: 'operate', isActive: true},
-    // { name: '消息', icon: 'message', type: 'message', isActive: false},
-  ],
-  msgMenus: [
-    { name: '图片', type: 'image', isActive: true },
-    { name: '视频', type: 'video', isActive: false },
-    { name: '文件', type: 'file', isActive: false },
-  ],
   members: [],
   ...utils.clone(defaultMsgs),
   isShowFriend: false,
@@ -47,14 +40,13 @@ let state = reactive({
   groupName: props.conversation.conversationTitle,
   groupDisplayName: '',
   groupNoticeContent: '',
-});
 
-function onMenuTab(menu) {
-  state.menus.map((_menu) => {
-    _menu.isActive = utils.isEqual(_menu.type, menu.type);
-    return _menu;
-  });
-}
+  switches: [
+    { uid: ASIDER_SETTING_SWITCH.TOP, title: '会话置顶', isOpen: false, isShow: true },
+    { uid: ASIDER_SETTING_SWITCH.MUTE, title: '消息免打扰', isOpen: false, isShow: true },
+    { uid: ASIDER_SETTING_SWITCH.HISTORY, title: '新人入群查看历史', isOpen: props.group, isShow: false },
+  ]
+});
 
 function getMessages(params, callback) {
   let { name, type } = params;
@@ -69,17 +61,6 @@ function getMessages(params, callback) {
   }).then((result) => {
     callback(type, result);
   });
-}
-// function isShowParentTab(type){
-//   let menu = state.menus.filter((menu) => { return utils.isEqual(menu.type, type) })[0] || {};
-//   return menu.isActive;
-// }
-function isShowParentTab(type) {
-  return utils.isEqual(type, 'message');
-}
-function isShowMsgTab(type) {
-  let menu = state.msgMenus.filter((menu) => { return utils.isEqual(menu.type, type) })[0];
-  return menu.isActive;
 }
 function onShowFriendAdd(isShow) {
   state.isShowFriend = isShow;
@@ -258,16 +239,67 @@ function onQuitGroup(){
 function onClearMessages(){
   emit('onclearmsg', {});
 }
+function onSwitchChanged({ uid, isOpen }){
+  if(utils.isEqual(uid, ASIDER_SETTING_SWITCH.TOP)){
+    emit('ontop', isOpen);
+  }
+  if(utils.isEqual(uid, ASIDER_SETTING_SWITCH.MUTE)){
+    emit('ondisturb', isOpen);
+  }
+  if(utils.isEqual(uid, ASIDER_SETTING_SWITCH.HISTORY)){
+    let num = Number(isOpen)
+    updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, isOpen, { isShow: true });
+    openGroupHistory({ num })
+  }
+}
+
+function openGroupHistory({ num }){
+  Group.setGroupHisVerify({ group_id: props.group.id, num }).then((result) => {
+    let {code } = result;
+    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+      updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, !num, { isShow: true });
+      return context.proxy.$toast({
+        text: `设置失败：${code}`,
+        icon: 'error'
+      });
+    }
+    context.proxy.$toast({
+      text: `设置成功`,
+      icon: 'success'
+    });
+  });
+}
+function updateSwitchValue(name, value, option){
+  option = option || {};
+  let index = utils.find(state.switches, (item) => {
+    return utils.isEqual(item.uid, name);
+  });
+  if(index > -1){
+    let { isShow } = option;
+    utils.extend(state.switches[index], { isOpen: value, isShow });
+  }
+}
+
 watch(() => props.conversation, (conversation) => {
   utils.extend(state, utils.clone(defaultMsgs))
   state.groupName = conversation.conversationTitle;
 });
 
 watch(() => props.isShow, () => {
-  utils.extend(state, { members: props.members, group: props.group, groupDisplayName: props.group.grp_display_name || '' });
+  console.log('props.group', props.group)
   let { conversationType, conversationId } = props.conversation;
   let isGroup = utils.isEqual(conversationType, ConversationType.GROUP);
+
+  updateSwitchValue(ASIDER_SETTING_SWITCH.MUTE, utils.isEqual(props.conversation.undisturbType, UndisturbType.DISTURB), { isShow: true });
+  updateSwitchValue(ASIDER_SETTING_SWITCH.TOP, props.conversation.isTop, { isShow: true });
+
   if(props.isShow && isGroup){
+    let { group_management: { group_his_msg_visible } } = props.group;
+    utils.extend(state, { members: props.members, group: props.group, groupDisplayName: props.group.grp_display_name || '' });
+    let role = props.group.my_role || 0;
+    let isShow = role > GROUP_ROLE.MEMBER;
+    updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, !!group_his_msg_visible, { isShow });
+
     Group.getNotice({ group_id: conversationId }).then(result => {
       let { code, data } = result;
       if(utils.isEqual(code, RESPONSE.SUCCESS)){
@@ -299,9 +331,9 @@ watch(() => props.isShow, () => {
         </div>
       </div>
     </div>
-    <div class="tyn-aside-row py-0 tyn-rgaside-body" v-if="utils.isEqual(props.conversation.conversationType, ConversationType.GROUP)">
+    <div class="tyn-aside-row py-0 tyn-rgaside-body">
       <div class="nav-tabs jg-nav-tabs nav-tabs-line">
-        <ul class="jg-aside-ul">
+        <ul class="jg-aside-ul" v-if="utils.isEqual(props.conversation.conversationType, ConversationType.GROUP)">
           <li class="jg-aside-li">
             <div class="tyn-aside-title">群聊名称</div>
             <div class="tyn-media-row jg-df-row">
@@ -320,6 +352,14 @@ watch(() => props.isShow, () => {
             <div class="tyn-media-row jg-df-row">
               <input type="text" class="tyn-title-overline text-none" v-model="state.groupDisplayName" placeholder="仅在本群可见" @keydown.enter="onSaveGroupDisplayName()"/>
               <div class="wr jg-df-modify-icon"></div>
+            </div>
+          </li>
+        </ul>
+        <ul class="jg-aside-ul">
+          <li class="jg-aside-li jg-aside-btn-li" v-for="item in state.switches">
+            <div class="tyn-aside-title" v-if="item.isShow">{{ item.title }}</div>
+            <div class="tyn-aside-button" v-if="item.isShow">
+              <JSwitch :uid="item.uid" :is-checked="item.isOpen" @onchanged="onSwitchChanged" ></JSwitch>
             </div>
           </li>
         </ul>

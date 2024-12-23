@@ -433,7 +433,12 @@ function onTagConversationChanged({ removes, adds, tag }){
       <!-- <AisdeFooter></AisdeFooter> -->
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
-    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" @ondraft="onDraft" @onclearmsg="onClearMessages" @onquitgroup="onQuitGroup"></Conversation>
-    
+    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" 
+      @ondraft="onDraft" 
+      @ontop="onSetConversationTop" 
+      @ondisturb="onConversationDisturb"
+      @onclearmsg="onClearMessages" 
+      @onquitgroup="onQuitGroup">
+    </Conversation>
   </div>
 </template>
