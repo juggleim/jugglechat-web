@@ -12,7 +12,6 @@ import common from "../../common/common";
 import emitter from "../../common/emmit";
 import messageUtils from "../../components/message-utils";
 import conversationTools from "./conversation";
-import JHeader from '../header/header.vue';
 import ConversationGroup from './conversation-group.vue';
 import ModalGroupMember from '../../components/modal-groups-member.vue';
 import ConversationRightMenu from "../../components/conversation-menu.vue";
