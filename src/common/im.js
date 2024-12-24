@@ -1,4 +1,4 @@
-import JuggleChat from "../libs/juggleim-es-1.7.22";
+import JuggleChat from "../libs/juggleim-es-1.7.23";
 import JuggleCall from "../libs/jugglecall-es-1.0.0";
 
 // import JuggleChat from "jugglechat-websdk";
@@ -89,6 +89,9 @@ function msgShortFormat(message){
   }
   if(utils.isEqual(name, MessageType.CALL_1V1_FINISHED)){
     shortName = `[音视频通话]`;
+  }
+  if(utils.isEqual(name, MessageType.STREAM_TEXT)){
+    shortName = `[智能体消息]`;
   }
   if(utils.isEqual(name, MessageType.RECALL_INFO)){
     let label = isSender ? '你' : sender.name;

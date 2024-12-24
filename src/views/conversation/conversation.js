@@ -61,7 +61,7 @@ function getMessages(isFirst, callback, state, props) {
         sender.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
       }
 
-      utils.extend(message, { isSelected: false, sender })
+      utils.extend(message, { isSelected: false, sender, streamMsg: { isEnd: false, streams: []} })
 
       let numIndex = utils.find(state.messages, (msg) => {
         return utils.isEqual(msg.messageId, message.messageId);

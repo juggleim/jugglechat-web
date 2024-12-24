@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.7.22
+* JuggleIM.js v1.7.23
 * (c) 2022-2024 JuggleIM
 * Released under the MIT License.
 */
@@ -644,6 +644,8 @@ let SIGNAL_NAME = {
   CMD_CHATROOM_REJOIN: 'cmd_inner_chatroom_rejoin',
   CMD_RTC_INVITE_EVENT: 'cmd_inner_rtc_invite_event',
   CMD_RTC_ROOM_EVENT: 'cmd_inner_rtc_room_event',
+  CMD_STREAM_APPENDED: 'cmd_innter_stream_appended',
+  CMD_STREAM_COMPLETED: 'cmd_innter_stream_completed',
   // 与下行信令进行匹配，在 io.js 中进行派发
   S_CONNECT_ACK: 's_connect_ack',
   S_DISCONNECT: 's_disconnect',
@@ -653,6 +655,7 @@ let SIGNAL_NAME = {
   S_CHATROOM_USER_NTF: 's_c_user_ntf',
   S_RTC_INVITE_NTF: 's_rtc_invite_ntf',
   S_RTC_ROOM_EVENT: 's_rtc_room_event_ntf',
+  S_STREAM_EVENT: 's_stream_event',
   // PC 端自定义通知
   S_SYNC_CONVERSATION_NTF: 's_sync_conversation_ntf',
   S_PONG: 's_pong',
@@ -1055,6 +1058,7 @@ let COMMAND_TOPICS = {
   GET_MENTION_MSGS: 'qry_mention_msgs',
   NTF: 'ntf',
   MSG: 'msg',
+  STREAM_MSG: 'stream_msg',
   CHATROOM_USER_NTF: 'c_user_ntf',
   SEND_GROUP: 'g_msg',
   SEND_PRIVATE: 'p_msg',
@@ -1223,7 +1227,9 @@ let EVENT = {
   CHATROOM_USER_KICKED: 'chatroom_user_kicked',
   RTC_ROOM_EVENT: 'rtc_room_event',
   RTC_INVITE_EVENT: 'rtc_invite_event',
-  RTC_FINISHED_1V1_EVENT: 'rtc_finished_1v1_event'
+  RTC_FINISHED_1V1_EVENT: 'rtc_finished_1v1_event',
+  STREAM_APPENDED: 'stream_appended',
+  STREAM_COMPLETED: 'stream_completed'
 };
 let CONNECT_STATE = {
   CONNECTED: 0,
@@ -1503,6 +1509,7 @@ function getErrorType() {
 let ErrorType = getErrorType();
 let MESSAGE_TYPE = {
   TEXT: 'jg:text',
+  STREAM_TEXT: 'jgs:text',
   IMAGE: 'jg:img',
   VOICE: 'jg:voice',
   VIDEO: 'jg:video',
@@ -1622,6 +1629,11 @@ let RTC_INVITE_TYPE = {
 let RTC_CHANNEL = {
   ZEGO: 0
 };
+let STREAM_EVENT = {
+  NONE: 0,
+  MESSAGE: 1,
+  FINISHED: 2
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1665,7 +1677,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   RTC_STATE: RTC_STATE,
   RTC_ROOM_TYPE: RTC_ROOM_TYPE,
   RTC_INVITE_TYPE: RTC_INVITE_TYPE,
-  RTC_CHANNEL: RTC_CHANNEL
+  RTC_CHANNEL: RTC_CHANNEL,
+  STREAM_EVENT: STREAM_EVENT
 });
 
 function Cache () {
@@ -4934,7 +4947,7 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "string",
             id: 1
           },
-          ChannelType: {
+          channelType: {
             type: "ChannelType",
             id: 2
           },
@@ -6390,7 +6403,8 @@ function Uploder (uploader, {
     utils.requestNormal(url, {
       method: 'PUT',
       headers: {
-        'Content-Type': ''
+        'Content-Type': '',
+        'x-amz-acl': 'public-read'
       },
       body: file
     }, {
@@ -6693,6 +6707,10 @@ let _MSG_FLAG_NAMES = [{
   isCount: true,
   isStorage: true
 }, {
+  name: MESSAGE_TYPE.STREAM_TEXT,
+  isCount: true,
+  isStorage: true
+}, {
   name: MESSAGE_TYPE.FILE,
   isCount: true,
   isStorage: true
@@ -6778,6 +6796,9 @@ let formatter = {
       },
       8: {
         name: 'isMass'
+      },
+      11: {
+        name: 'isStream'
       }
     };
     let result = {};
@@ -8396,6 +8417,7 @@ function msgFormat(msg, {
   currentUser
 }) {
   let {
+    msgItems,
     converTags,
     undisturbType,
     msgExtSet,
@@ -8527,6 +8549,7 @@ function msgFormat(msg, {
     isUpdated: msgFlag.isUpdated,
     isMuted: msgFlag.isMute,
     isMass: msgFlag.isMass,
+    isStreamMsg: msgFlag.isStream,
     referMsg: newRefer,
     sentState: MESSAGE_SENT_STATE.SUCCESS,
     undisturbType: undisturbType || 0,
@@ -8537,6 +8560,12 @@ function msgFormat(msg, {
   };
   if (_message.isSender) {
     utils.extend(_message.sender, user);
+  }
+  if (_message.isStreamMsg) {
+    let streams = formatStreams(msgItems);
+    utils.extend(_message, {
+      streams
+    });
   }
   if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
     let {
@@ -9028,10 +9057,34 @@ function formatRTCRoom(result) {
     members: members
   };
 }
+function formatStreams(list) {
+  let streams = utils.map(list, item => {
+    return formatStream(item);
+  });
+  return streams;
+}
+function formatStream(item) {
+  let {
+    event,
+    subSeq,
+    partialContent
+  } = item;
+  let content = '';
+  if (partialContent && partialContent.length > 0) {
+    content = new TextDecoder().decode(partialContent);
+    content = utils.parse(content);
+  }
+  return {
+    event,
+    seq: subSeq,
+    content
+  };
+}
 var tools$1 = {
   msgFormat,
   formatConversations: formatConversations$1,
-  formatRTCRoom
+  formatRTCRoom,
+  formatStreams
 };
 
 function getQueryAckBody(stream, {
@@ -9564,6 +9617,23 @@ function getPublishMsgBody(stream, {
       reason
     };
     _name = SIGNAL_NAME.S_RTC_ROOM_EVENT;
+  } else if (utils.isEqual(topic, COMMAND_TOPICS.STREAM_MSG)) {
+    let payload = $root.lookup('codec.StreamDownMsg');
+    let result = payload.decode(data);
+    let {
+      channelType: conversationType,
+      targetId: conversationId,
+      msgId: messageId,
+      msgItems
+    } = result;
+    let streams = tools$1.formatStreams(msgItems);
+    _msg = {
+      conversationId,
+      conversationType,
+      messageId,
+      streams
+    };
+    _name = SIGNAL_NAME.S_STREAM_EVENT;
   } else {
     console.log('unkown topic', topic);
   }
@@ -10386,7 +10456,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.22';
+let VERSION = '1.7.23';
 
 function NetworkWatcher (callbacks) {
   let onlineEvent = () => {
@@ -10799,6 +10869,46 @@ function IO(config) {
         time,
         type
       });
+    }
+    if (utils.isEqual(name, SIGNAL_NAME.S_STREAM_EVENT)) {
+      let {
+        conversationType,
+        conversationId,
+        messageId,
+        streams
+      } = result;
+      let msgs = [],
+        comps = [];
+      utils.forEach(streams, stream => {
+        let {
+          event
+        } = stream;
+        if (utils.isEqual(event, STREAM_EVENT.MESSAGE)) {
+          msgs.push(stream);
+        }
+        if (utils.isEqual(event, STREAM_EVENT.FINISHED)) {
+          comps.push(stream);
+        }
+      });
+      if (!utils.isEqual(msgs.length, 0)) {
+        let _result = {
+          conversationType,
+          conversationId,
+          messageId,
+          streams: msgs
+        };
+        emitter.emit(SIGNAL_NAME.CMD_STREAM_APPENDED, _result);
+      }
+      if (!utils.isEqual(comps.length, 0)) {
+        utils.forEach(comps, stream => {
+          let _result = {
+            conversationType,
+            conversationId,
+            messageId
+          };
+          emitter.emit(SIGNAL_NAME.CMD_STREAM_COMPLETED, _result);
+        });
+      }
     }
     if (utils.isEqual(name, SIGNAL_NAME.CMD_RECEIVED)) {
       messageSyncer.exec({
@@ -15879,6 +15989,37 @@ let init = config => {
       });
     }
   };
+
+  // PC 和 Web 复用的事件在此处透传
+  io.on(SIGNAL_NAME.CMD_STREAM_APPENDED, message => {
+    emitter.emit(EVENT.STREAM_APPENDED, {
+      message
+    });
+  });
+  io.on(SIGNAL_NAME.CMD_STREAM_COMPLETED, message => {
+    let {
+      conversationId,
+      conversationType,
+      messageId
+    } = message;
+    provider.message.getMessagesByIds({
+      conversationId,
+      conversationType,
+      messageIds: [messageId]
+    }).then(({
+      messages
+    }) => {
+      let msg = messages[0] || {
+        content: ''
+      };
+      emitter.emit(EVENT.STREAM_COMPLETED, {
+        message: {
+          ...message,
+          content: msg.content
+        }
+      });
+    });
+  });
   let _export = {
     ...provider.socket,
     ...provider.message,

@@ -13,9 +13,9 @@ import { preview } from 'vue3-image-preview';
 import im from "../../common/im";
 
 import Text from '../../components/message-text.vue';
+import StreamText from '../../components/message-stream-text.vue';
 import File from '../../components/message-file.vue';
 import ImageMessage from '../../components/message-image.vue';
-// import RichText from '../../components/message-richtext.vue';
 import Video from '../../components/message-video.vue';
 import Merge from '../../components/message-merge.vue';
 import Known from '../../components/message-unknown.vue';
@@ -77,7 +77,7 @@ let state = reactive({
   currentMergeMessage: {},
   imgSender: {},
 
-  group: {}
+  group: {},
 });
 
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
@@ -86,6 +86,7 @@ juggle.once(Event.MESSAGE_RECEIVED, (message) => {
     let index = utils.find(state.messages, (msg) => {
       return utils.isEqual(msg.messageId, message.messageId)
     });
+    message.streamMsg = { isEnd: false, streams: [] };
     if(index == -1){
       state.messages.unshift(message);
     }else{
@@ -96,6 +97,33 @@ juggle.once(Event.MESSAGE_RECEIVED, (message) => {
     conversationTools.clearUnreadCount(message)
   }
 });
+
+juggle.once(Event.STREAM_APPENDED, ({ message }) => {
+  if (conversationTools.isSameConversation(message, state)) {
+    let msg = findMsgById(message) || {};
+    if(utils.isEmpty(msg)){
+      return;
+    }
+    let { streams } = message;
+    utils.extend(msg.streamMsg, { isEnd: false, streams })
+  }
+});
+juggle.once(Event.STREAM_COMPLETED, ({ message }) => {
+  if (conversationTools.isSameConversation(message, state)) {
+    let msg = findMsgById(message) || {};
+    if(utils.isEmpty(msg)){
+      return;
+    }
+    utils.extend(msg.streamMsg, { isEnd: true, streams: [] })
+  }
+});
+function findMsgById(msg){
+  let { messageId } = msg;
+  let index = utils.find(state.messages, (_msg) => {
+    return utils.isEqual(_msg.messageId, messageId);
+  });
+  return state.messages[index];
+}
 
 juggle.once(Event.MESSAGE_UPDATED, (notify) => {
   console.log(notify);
@@ -360,6 +388,7 @@ function onSend() {
     onbefore: (message) => {
       message.sentTime = Date.now();
       message.sentState = SentState.SENDING;
+      message.streamMsg = { isEnd: false, streams: [] };
       state.messages.unshift(message);
     }
   }).then(({ sentTime, messageId }) => {
@@ -742,7 +771,8 @@ watch(() => state.content, (val) => {
   if (utils.isEmpty(val)) {
     onInputEsc();
   }
-})
+});
+
 </script>
 <template>
   <div class="tyn-main tyn-chat-content aside-collapsed"
@@ -799,6 +829,7 @@ watch(() => state.content, (val) => {
               <Merge v-else-if="utils.isEqual(message.name, MessageType.MERGE)" :message="message"
                 @onrecall="onRecall" @ondetail="onMergeDetail" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Merge>
               <Call1v1FinishedMessage v-else-if="utils.isEqual(message.name, MessageType.CALL_1V1_FINISHED)" :message="message"></Call1v1FinishedMessage>
+              <StreamText v-else-if="utils.isEqual(message.name, MessageType.STREAM_TEXT)" :message="message"></StreamText>
               <Known v-else :message="message"></Known>
             </div>
           </div>

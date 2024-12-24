@@ -157,7 +157,6 @@ juggle.on(Event.CONVERSATION_ADDED, onConversationChanged);
 juggle.once(Event.CONVERSATION_TOP, onConversationTop);
 juggle.once(Event.CONVERSATION_REMOVED, onConversationRemove);
 
-
 function onConversationChanged({ conversations }) {
   return conversationHandler(conversations, state);
 }
