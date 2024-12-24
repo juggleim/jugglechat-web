@@ -54,6 +54,7 @@ let state = reactive({
   isShowEmoji: false,
   isShowTransfer: false,
   isShowTransferMember: false,
+  isShowGroupMute: false,
   transferType: TRANSFER_TYPE.NONE,
   currentConversation: props.conversation,
   messages: [],
@@ -646,7 +647,8 @@ function getMembers() {
   Group.get({ id: conversationId }, (result) => {
     
     state.group = result;
-
+    let { group_mute } = result.group_management;
+    state.isShowGroupMute = !!group_mute;
     let { members } = result;
     let mentionMembers = [
       { id: 'all', val: '@', isActive: true, name: '所有人', portrait: '', isAll: true }
@@ -725,6 +727,10 @@ function onConversationDisturb(){
 }
 function onQuitGroup(){
   emit('onquitgroup', props.conversation);
+}
+function onBanGroup(isMute){
+  state.isShowGroupMute = isMute;
+  state.group.group_management.group_mute = isMute;
 }
 watch(() => state.content, (val) => {
   let str = val.split('')[val.length - 1]
@@ -811,7 +817,7 @@ watch(() => state.content, (val) => {
               @change="onFileChange" />
           </li>
         </ul>
-        <input  class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" @keydown.esc="onInputEsc"
+        <input  class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" :disabled="state.isShowGroupMute" @keydown.esc="onInputEsc"
           @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" @paste="onPaste" placeholder="Write a message" @blur="onInputBlur" ref="messageInput"/>
         <ul class="tyn-list-inline me-n2 my-1">
           <li class="d-none d-sm-block">
@@ -823,12 +829,14 @@ watch(() => state.content, (val) => {
         </ul>
       </div>
       <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
+      <div class="jg-group-ban" v-if="state.isShowGroupMute">群组已禁言</div>
     </div>
     <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group" 
       @ontop="onSetConversationTop" 
       @ondisturb="onConversationDisturb"
       @onclearmsg="onClearMessages" 
       @onquitgroup="onQuitGroup"
+      @onbangroup="onBanGroup"
       ></Aside>
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
     <ModalMergeMsgs :is-show="!utils.isEmpty(state.currentMergeMessage)" :message="state.currentMergeMessage" @oncancel="onCancelMergeDetail"></ModalMergeMsgs>

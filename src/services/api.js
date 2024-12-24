@@ -29,6 +29,7 @@ let SERVER_PATH = {
   GROUP_SET_NOTICE: 'groups/setgrpannouncement',
   GROUP_GET_NOTICE: 'groups/getgrpannouncement',
   GROUP_SET_HIS_VERIFY_TYPE: 'groups/management/sethismsgvisible',
+  GROUP_SET_MUTE: 'groups/management/setmute',
 };
 utils.forEach(SERVER_PATH, (url, name) => {
   SERVER_PATH[name] = `${CONFIG.API}${url}`;

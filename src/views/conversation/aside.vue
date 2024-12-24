@@ -18,7 +18,7 @@ import { GROUP_ROLE, ASIDER_SETTING_SWITCH, STORAGE, GROUP_CHANGE_TYPE, MSG_NAME
 import emitter from "../../common/emmit";
 
 const props = defineProps(["isShow", "conversation", "members", "group"]);
-const emit = defineEmits(["onclearmsg", "onquitgroup", "ontop", "ondisturb"]);
+const emit = defineEmits(["onclearmsg", "onquitgroup", "ontop", "ondisturb", "onbangroup"]);
 
 const context = getCurrentInstance();
 let juggle = im.getCurrent();
@@ -44,6 +44,7 @@ let state = reactive({
   switches: [
     { uid: ASIDER_SETTING_SWITCH.TOP, title: '会话置顶', isOpen: false, isShow: true },
     { uid: ASIDER_SETTING_SWITCH.MUTE, title: '消息免打扰', isOpen: false, isShow: true },
+    { uid: ASIDER_SETTING_SWITCH.BAN, title: '群组全局禁言', isOpen: props.group, isShow: false },
     { uid: ASIDER_SETTING_SWITCH.HISTORY, title: '新人入群查看历史', isOpen: props.group, isShow: false },
   ]
 });
@@ -248,14 +249,36 @@ function onSwitchChanged({ uid, isOpen }){
   }
   if(utils.isEqual(uid, ASIDER_SETTING_SWITCH.HISTORY)){
     let num = Number(isOpen)
-    updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, isOpen, { isShow: true });
+    updateSwitchValue(uid, isOpen, { isShow: true });
     openGroupHistory({ num })
   }
+  if(utils.isEqual(uid, ASIDER_SETTING_SWITCH.BAN)){
+    updateSwitchValue(uid, isOpen, { isShow: true });
+    setGroupBan({ isOpen });
+  }
+}
+
+function setGroupBan({ isOpen }){
+  Group.setMute({ id: props.group.id, isMute: isOpen }).then((result) => {
+    let { code } = result;
+    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+      updateSwitchValue(ASIDER_SETTING_SWITCH.BAN, !isOpen, { isShow: true });
+      return context.proxy.$toast({
+        text: `禁言失败：${code}`,
+        icon: 'error'
+      });
+    }
+    context.proxy.$toast({
+      text: `禁言成功`,
+      icon: 'success'
+    });
+    emit('onbangroup', isOpen);
+  });
 }
 
 function openGroupHistory({ num }){
   Group.setGroupHisVerify({ group_id: props.group.id, num }).then((result) => {
-    let {code } = result;
+    let { code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, !num, { isShow: true });
       return context.proxy.$toast({
@@ -293,11 +316,13 @@ watch(() => props.isShow, () => {
   updateSwitchValue(ASIDER_SETTING_SWITCH.TOP, props.conversation.isTop, { isShow: true });
 
   if(props.isShow && isGroup){
-    let { group_management: { group_his_msg_visible } } = props.group;
+    let { group_management: { group_his_msg_visible, group_mute } } = props.group;
     utils.extend(state, { members: props.members, group: props.group, groupDisplayName: props.group.grp_display_name || '' });
     let role = props.group.my_role || 0;
     let isShow = role > GROUP_ROLE.MEMBER;
+    
     updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, !!group_his_msg_visible, { isShow });
+    updateSwitchValue(ASIDER_SETTING_SWITCH.BAN, !!group_mute, { isShow });
 
     Group.getNotice({ group_id: conversationId }).then(result => {
       let { code, data } = result;

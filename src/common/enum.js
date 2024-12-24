@@ -139,7 +139,9 @@ let GROUP_AVATAR = 'https://jugglechat-file.oss-cn-beijing.aliyuncs.com/images%2
 let ASIDER_SETTING_SWITCH = {
   TOP: 'top',
   MUTE: 'mute',
-  HISTORY: 'history'
+  HISTORY: 'history',
+  // 群组禁言
+  BAN: 'group_ban',
 };
 
 let GROUP_ROLE = {

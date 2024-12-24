@@ -106,6 +106,13 @@ function setGroupHisVerify({ group_id, num }){
     body: utils.toJSON({ group_id, group_his_msg_visible: num })
   });
 }
+
+function setMute({ id, isMute }){
+  return request(SERVER_PATH.GROUP_SET_MUTE, {
+    method: 'POST',
+    body: utils.toJSON({ group_id: id, is_mute: Number(isMute) })
+  });
+}
 export default {
   create,
   quit,
@@ -118,5 +125,6 @@ export default {
   setDisplayName,
   setNotice,
   getNotice,
-  setGroupHisVerify
+  setGroupHisVerify,
+  setMute,
 }
