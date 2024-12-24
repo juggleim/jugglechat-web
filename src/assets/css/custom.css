@@ -346,7 +346,7 @@
   top: 60px;
   right: 0;
   padding: 10px;
-  z-index: 999;
+  z-index: 1201;
 }
 .tyn-emoji-pn.show-aside{
   top: -144px;
