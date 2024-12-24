@@ -3926,6 +3926,7 @@ button {
   border: 0;
   background: rgb(255 255 255 / 76%);
   backdrop-filter: blur(10px);
+  z-index: 1201;
 }
 
 .dropdown-header {
