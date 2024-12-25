@@ -8587,12 +8587,13 @@ function msgFormat(msg, {
   if (_message.isSender) {
     utils.extend(_message.sender, user);
   }
+  let streams = [];
   if (_message.isStreamMsg) {
-    let streams = formatStreams(msgItems);
-    utils.extend(_message, {
-      streams
-    });
+    streams = formatStreams(msgItems);
   }
+  utils.extend(_message, {
+    streams
+  });
   if (utils.isEqual(conversationType, CONVERATION_TYPE.GROUP)) {
     let {
       groupName,
@@ -11260,6 +11261,8 @@ let formatMsg = ({
     conversationId,
     mentionInfo = '{}',
     isRead,
+    isStream,
+    streams,
     isSender,
     isUpdated,
     referMsg = '{}',
@@ -11282,6 +11285,10 @@ let formatMsg = ({
       return utils.isEqual(user.id, conversationId);
     })[0] || {};
   }
+  if (!streams) {
+    streams = '[]';
+  }
+  streams = utils.parse(streams);
   message = utils.extend(message, {
     mergeMsg: utils.parse(mergeMsg),
     referMsg: utils.parse(referMsg),
@@ -11292,6 +11299,8 @@ let formatMsg = ({
     content,
     sender,
     mentionInfo,
+    streams,
+    isStream: Boolean(isStream),
     sentTime: Number(message.sentTime),
     isRead: Boolean(isRead),
     isSender: Boolean(isSender),
@@ -11557,6 +11566,26 @@ function isNestInclude(sources, targets, callback) {
   }
   return isOK;
 }
+function hasUncompletedStream(messages) {
+  let isInclude = false;
+  for (var i = 0; i < messages.length; i++) {
+    let message = messages[i];
+    let {
+      isStream,
+      streams
+    } = message;
+    isStream = !!isStream;
+    if (!streams) {
+      streams = '[]';
+    }
+    streams = utils.parse(streams);
+    if (isStream && utils.isEqual(streams.length, 0)) {
+      isInclude = true;
+      break;
+    }
+  }
+  return isInclude;
+}
 var tools = {
   isGroup,
   formatMsg,
@@ -11564,7 +11593,8 @@ var tools = {
   formatConversations,
   formatConversation,
   createMentions,
-  isNestInclude
+  isNestInclude,
+  hasUncompletedStream
 };
 
 function Conversation$1 (io, emitter) {
@@ -15138,26 +15168,36 @@ function Message ($message, {
         let isCon = utils.isContinuous(list, 'messageIndex');
         let len = messages.length;
         let isFetch = isFinished && params.count > len;
+        let isUncomleted = tools.hasUncompletedStream(list);
         // 如果首次获取历史消息，从远端拉取历史消息
-        if (isFetch || !isCon || utils.isEqual(params.time, 0)) {
+        if (isFetch || !isCon || utils.isEqual(params.time, 0) || isUncomleted) {
           // 按类型获取历史消息，不再从远端获取，方式 index 断续
           if (!utils.isEmpty(params.names)) {
             return next();
           }
           return webAgent.getMessages(conversation).then(result => {
-            let newMsgs = [];
+            let newMsgs = [],
+              streamMsgs = [];
             utils.forEach(result.messages, newMsg => {
               let index = utils.find(messages, msg => {
                 return utils.isEqual(msg.messageId, newMsg.messageId);
               });
-              if (utils.isEqual(index, -1)) {
+              let _msg = messages[index];
+              if (!_msg) {
                 newMsgs.push(newMsg);
-              } else {
-                messages[index];
+              }
+              let {
+                streams
+              } = newMsg;
+              if (_msg) {
+                let _streams = _msg.streams || [];
+                if (streams.length > _streams.length) {
+                  streamMsgs.push(newMsg);
+                }
               }
             });
             $message.insertBatchMsgs({
-              msgs: utils.clone(newMsgs)
+              msgs: utils.clone(newMsgs.concat(streamMsgs))
             });
             let _msgs = tools.formatMsgs({
               messages: messages,
@@ -15165,6 +15205,20 @@ function Message ($message, {
               groups
             });
             let list = newMsgs.concat(_msgs);
+            utils.forEach(streamMsgs, streamMsg => {
+              let {
+                messageId,
+                streams
+              } = streamMsg;
+              let index = utils.find(list, item => {
+                return utils.isEqual(item.messageId, messageId);
+              });
+              if (index > -1) {
+                utils.extend(list[index], {
+                  streams
+                });
+              }
+            });
             list = utils.quickSort(list, (a, b) => {
               return a.sentTime < b.sentTime;
             });
