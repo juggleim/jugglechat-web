@@ -36,8 +36,8 @@ function onSearch(){
 function search({ content }){
   let params = {
     keywords: [content],
-    offset: 1,
-    limit: 300,
+    page: 1,
+    pageSize: 300,
   };
   juggle.searchMessages(params).then(({ isFinished, total, list }) => {
     console.log(isFinished, total, list)
