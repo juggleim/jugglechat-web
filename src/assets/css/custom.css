@@ -881,12 +881,12 @@
   border-radius: 4px;
   font-size: 12px;
   display: flex;
+  flex-direction: row;
   left: 14px;
   right: 14px;
 }
 .jg-search-list{
-  width: 100%;
-
+  flex: 1;
 }
 .jg-search-child .tyn-aside-item{
   padding: 8px;
@@ -916,7 +916,7 @@
 .jg-search-preview-box{
   margin-top: 22px;
   padding: 2px 4px;
-  width: 500px;
+  flex: 1;
   background-color: #FFF;
   border-radius: 2px;
   box-shadow: rgb(0 0 0 / 8%) 0px 0px 6px;
