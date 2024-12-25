@@ -808,6 +808,22 @@
 .jg-asider-seach-box{
   -webkit-app-region: no-drag;
 }
+.jg-asider-seach-box .form-group{
+  border: 1px solid #DCDCDC !important;
+  border-radius: 8px;
+}
+.jg-asider-seach-box .form-control{
+  border: 0 !important;
+  padding-left: 6px;
+}
+.jg-asider-seach-box .jg-search-icon::before{
+  font-size: 18px;
+  color: #95a4b8;
+}
+.jg-asider-seach-box .form-control-wrap{
+  display: flex;
+  align-items: center;
+}
 .jg-asider-tools{
   display: flex;
   align-items: center;
@@ -860,15 +876,16 @@
   position: absolute;
   z-index: 999;
   background-color: #FFF;
-  margin-top: 4px;
+  margin-top: 10px;
   border-radius: 4px;
   font-size: 12px;
   display: flex;
-  padding: 10px;
-  box-shadow: rgb(0 0 0 / 45%) 0px 3px 12px;
+  left: 14px;
+  right: 14px;
 }
 .jg-search-list{
-  width: 236px;
+  width: 100%;
+
 }
 .jg-search-child .tyn-aside-item{
   padding: 8px;
@@ -890,22 +907,30 @@
 }
 .jg-search-preview-box,
 .jg-search-children{
-  overflow-y: auto;
-  max-height: 360px;
+  height: 300px;
 }
-
+.jg-search-children{
+  overflow-y: auto;
+}
 .jg-search-preview-box{
   margin-top: 22px;
-  padding: 14px;
+  padding: 2px 4px;
   width: 500px;
   background-color: #FFF;
   border-radius: 2px;
   box-shadow: rgb(0 0 0 / 8%) 0px 0px 6px;
+  display: flex;
+  flex-direction: column;
 }
 .jg-search-pv-header{
   display: flex;
   justify-content: space-between;
   font-weight: 700;
+  height: 30px;
+}
+.jg-search-pv-body{
+  flex: 1 auto;
+  overflow-y: auto;
 }
 .jg-search-pv-header .nav{
   font-size: 12px;
@@ -2055,6 +2080,7 @@
   background-color: #e7e7e7a1;
   padding: 4px;
   border-radius: 6px;
+  -webkit-app-region: no-drag;
 }
 .jg-footer-top-box .jg-footer-tool:first-child{
   background: transparent;
@@ -2202,4 +2228,11 @@
 .jg-stream-text{
   min-width: 80px;
   max-width: 70%;
+}
+.tyn-search-modal .modal-content{
+  width: 600px;
+}
+.tyn-search-modal .modal-body{
+  width: 600px;
+  height: 400px;
 }

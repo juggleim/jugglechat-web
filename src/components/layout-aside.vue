@@ -2,7 +2,6 @@
 const props = defineProps(['title']);
 import { reactive, getCurrentInstance, watch } from "vue";
 import { useRouter } from "vue-router";
-import AisdeSearch from './aside-search.vue';
 import utils from "../common/utils";
 import common from "../common/common";
 import { STORAGE, RESPONSE, EVENT_NAME, SYS_CONVERSATION_FRIEND, IGNORE_CONVERSATIONS, GROUP_AVATAR } from "../common/enum";
@@ -16,6 +15,7 @@ import ModalUser from "./modal-user.vue";
 import ModalAddMemberGroup from "./modal-add-member-group.vue";
 import ModalFriendAdd from "./modal-friend-add.vue";
 import ModalUserSetting from "./modal-user-setting.vue";
+import ModalSearch from "./modal-search.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -51,6 +51,7 @@ let state = reactive({
     { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
   ],
   bottomMenus: [],
+  isShowSearchModal: false,
   isShowAddMenu: false,
   isShowSettingMenu: false,
   isShowAddFriend: false,
@@ -63,6 +64,10 @@ let state = reactive({
 
 function onShowAddMenu(isShow){
   state.isShowAddMenu = isShow;
+}
+
+function onShowSearchModal(isShow){
+  state.isShowSearchModal = isShow;
 }
 
 function onShowSettingMenu(isShow){
@@ -260,6 +265,13 @@ function onFriendAddConfirm(friend){
   });
 }
 
+function onNavChat(item) {
+  onShowSearchModal(false);
+  juggle.getConversation(item).then(({ conversation }) => {
+    emitter.$emit(EVENT_NAME.ON_CONVERSATION_SEARCH_NAV, { conversation });
+  });
+}
+
 // 强制修改头像
 let portrait = user.portrait || '';
 let isShowUser = utils.isBase64(portrait.replace('data:image/jpeg;base64,', ''));
@@ -278,7 +290,7 @@ watch(useRouterCurrent, (value) => {
 </script>
 
 <template>
-  <div class="tyn-aside-footer" :class="{ 'tyn-aside-desktop': state.isDesktop }">
+  <div class="tyn-aside-footer" :class="{ 'tyn-aside-desktop': juggle.isDesktop() }">
     <ul class="jg-footer-tools jg-footer-top-box">
       <li class="jg-footer-tool"  @click.prevent="onShowSettingMenu(true)">
         <div class="jg-header-user">
@@ -288,6 +300,13 @@ watch(useRouterCurrent, (value) => {
         <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.userMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
       </li>
       
+      <li class="jg-footer-tool" v-if="juggle.isDesktop()">
+        <div class="jg-asider-footer-item" @click="onShowSearchModal(true)">
+          <div class="icon wr wr-search"></div>
+          <div class="name">搜索</div>
+        </div>
+      </li>
+
       <li class="jg-footer-tool">
         <div class="jg-asider-footer-item" @click="onShowAddMenu(true)">
           <div class="icon wr wr-plus"></div>
@@ -327,4 +346,5 @@ watch(useRouterCurrent, (value) => {
 
   <ModalUser :is-show="state.isShowUser" :is-show-close="state.isShowUserClose" :user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser>
   <ModalUserSetting :is-show="state.isShowUserSetting" @oncancel="onUserSettingCancel" ></ModalUserSetting>
+  <ModalSearch :is-show="state.isShowSearchModal" @oncancel="onShowSearchModal(false)" @onnav="onNavChat"></ModalSearch>
 </template>

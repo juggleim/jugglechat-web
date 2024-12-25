@@ -10,6 +10,8 @@ let EVENT_NAME = {
   
   ON_CONVERSATION_RESET: 'on_conversation_reset',
   
+  ON_CONVERSATION_SEARCH_NAV: 'on_conversation_search_nav',
+  
   ON_CONVERSATION_TAG_CHANGED: 'on_conversation_tag_changed',
 
   ON_SHOW_CALL_DIALOG: 'on_show_call_dialog',

@@ -1,5 +1,4 @@
 <script setup>
-import Search from "./search.vue";
 import Emoji from "../../components/emoji.vue"
 import ModalTransfer from "../../components/modal-transfer.vue";
 import ModalImgSender from "../../components/modal-img-sender.vue";
@@ -49,7 +48,6 @@ let { MessageType, Event, ConversationType, MentionType, SentState, MediaType } 
 let context = getCurrentInstance();
 
 let state = reactive({
-  isShowSearch: false,
   isShowAside: false,
   isShowEmoji: false,
   isShowTransfer: false,
@@ -804,7 +802,6 @@ watch(() => state.content, (val) => {
         <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li>
         <li><button class="btn btn-icon btn-light wr wr-more-dot" @click="onShowAside"></button></li>
       </ul>
-      <!-- <Search :is-show="state.isShowSearch" @onHideSearch="onHideSearch()"/> -->
     </div>
     <div class="tyn-chat-body js-scroll-to-end" ref="messages">
       <WithoutMessage v-if="state.isFinished"></WithoutMessage>
