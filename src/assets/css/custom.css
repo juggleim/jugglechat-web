@@ -347,6 +347,7 @@
   transform: none;
   transition: transform 0.3s ease;
   top: 0;
+  background-color: #FFF;
 }
 .tyn-emoji-pn{
   position: absolute;
