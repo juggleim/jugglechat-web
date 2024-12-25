@@ -11,7 +11,7 @@ let context = getCurrentInstance();
 const props = defineProps(["conversations", "tag"]);
 const emit = defineEmits(["onhide", "onmark", "ontop", "ondisturb", "onremove", "onclearmsg", "onconversation", "onloadmore"]);
 let juggle = im.getCurrent();
-let { MessageType, UndisturbType } = juggle;
+let { MessageType, UndisturbType, UserType } = juggle;
 
 let state = reactive({
   dropmenuX: 0,
@@ -134,7 +134,10 @@ async function clearUnreadCount(item, index) {
           </div>
           <div class="tyn-media-col">
             <div class="tyn-media-row jg-conversation-title">
-              <h6 class="name">{{ item.conversationTitle }}</h6>
+              <h6 class="name">
+                {{ item.conversationTitle }}
+                <span class="wr wr-fire" v-if="item.conversationUserType == UserType.BOT">( 智能体 )</span>
+              </h6>
               <span class="wr wr-soundoff jg-conver-mute" v-if="utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></span>
               <span class="typing" v-if="item.isTyping">typing ...</span>
             </div>

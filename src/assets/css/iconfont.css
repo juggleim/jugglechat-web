@@ -1,8 +1,8 @@
 @font-face {
   font-family: 'wr';  /* Project id 4376445 */
-  src: url('//at.alicdn.com/t/c/font_4376445_gn3zw2l8yaf.woff2?t=1735047301783') format('woff2'),
-  url('//at.alicdn.com/t/c/font_4376445_gn3zw2l8yaf.woff?t=1735047301783') format('woff'),
-  url('//at.alicdn.com/t/c/font_4376445_gn3zw2l8yaf.ttf?t=1735047301783') format('truetype');
+  src: url('//at.alicdn.com/t/c/font_4376445_41f594ja9tm.woff2?t=1735102115910') format('woff2'),
+  url('//at.alicdn.com/t/c/font_4376445_41f594ja9tm.woff?t=1735102115910') format('woff'),
+  url('//at.alicdn.com/t/c/font_4376445_41f594ja9tm.ttf?t=1735102115910') format('truetype');
 }
 
 .wr::before,
@@ -333,4 +333,12 @@
 }
 .wr-complete::before{
   content: '\e65e';
+}
+.wr-fire::after{
+  content: '\e661';
+  color: #ff0000;
+}
+.wr-fire2::after{
+  content: '\e661\e661';
+  color: #ff0000;
 }

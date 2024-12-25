@@ -1634,6 +1634,10 @@ let STREAM_EVENT = {
   MESSAGE: 1,
   FINISHED: 2
 };
+let USER_TYPE = {
+  USER: 0,
+  BOT: 1
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1678,7 +1682,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   RTC_ROOM_TYPE: RTC_ROOM_TYPE,
   RTC_INVITE_TYPE: RTC_INVITE_TYPE,
   RTC_CHANNEL: RTC_CHANNEL,
-  STREAM_EVENT: STREAM_EVENT
+  STREAM_EVENT: STREAM_EVENT,
+  USER_TYPE: USER_TYPE
 });
 
 function Cache () {
@@ -5061,7 +5066,27 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           updatedTime: {
             type: "int64",
             id: 5
+          },
+          settings: {
+            rule: "repeated",
+            type: "KvItem",
+            id: 6
+          },
+          statuses: {
+            rule: "repeated",
+            type: "KvItem",
+            id: 7
+          },
+          userType: {
+            type: "UserType",
+            id: 8
           }
+        }
+      },
+      UserType: {
+        values: {
+          User: 0,
+          Bot: 1
         }
       },
       SyncConversationsReq: {
@@ -7184,7 +7209,8 @@ function formatUser(user) {
     name: user.nickname || "",
     portrait: user.userPortrait || "",
     updatedTime: user.updatedTime || 0,
-    exts: exts || {}
+    exts: exts || {},
+    type: user.userType || 0
   };
 }
 function toKVs(obj) {
@@ -8592,7 +8618,8 @@ function msgFormat(msg, {
       conversationTitle: targetUser.name,
       conversationPortrait: targetUser.portrait,
       conversationExts: targetUser.exts,
-      conversationUpdatedTime: targetUser.updatedTime
+      conversationUpdatedTime: targetUser.updatedTime,
+      conversationUserType: targetUser.userType || 0
     });
   }
   if (utils.isInclude([MESSAGE_TYPE.RECALL_INFO, MESSAGE_TYPE.RECALL], msgType)) {
@@ -8965,14 +8992,16 @@ function formatConversations$1(conversations, options = {}) {
         nickname,
         extFields,
         userId,
-        updatedTime
+        updatedTime,
+        userType
       } = targetUserInfo;
       extFields = utils.toObject(extFields);
       utils.extend(latestMessage, {
         conversationTitle: nickname || '',
         conversationPortrait: userPortrait || '',
         conversationExts: extFields,
-        conversationUpdatedTime: updatedTime || 0
+        conversationUpdatedTime: updatedTime || 0,
+        conversationUserType: userType || 0
       });
       UserCacher.set(userId, targetUserInfo);
     }
@@ -8980,7 +9009,8 @@ function formatConversations$1(conversations, options = {}) {
       conversationTitle,
       conversationPortrait,
       conversationExts,
-      conversationUpdatedTime
+      conversationUpdatedTime,
+      conversationUserType
     } = latestMessage;
     if (utils.isEqual(COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS, topic)) {
       _sortTime = topUpdatedTime;
@@ -9007,6 +9037,7 @@ function formatConversations$1(conversations, options = {}) {
       conversationTitle,
       conversationPortrait,
       conversationUpdatedTime,
+      conversationUserType,
       conversationExts,
       mentions,
       syncTime,
@@ -16055,7 +16086,8 @@ let init = config => {
     SentState: MESSAGE_SENT_STATE,
     UnreadTag: UNREAD_TAG,
     ConversationTagType: CONVERATION_TAG_TYPE,
-    MediaType: MEDIA_TYPE
+    MediaType: MEDIA_TYPE,
+    UserType: USER_TYPE
   };
   return _export;
 };
@@ -16075,7 +16107,8 @@ var client = {
   SentState: MESSAGE_SENT_STATE,
   UnreadTag: UNREAD_TAG,
   ConversationTagType: CONVERATION_TAG_TYPE,
-  MediaType: MEDIA_TYPE
+  MediaType: MEDIA_TYPE,
+  UserType: USER_TYPE
 };
 
 var index = {
