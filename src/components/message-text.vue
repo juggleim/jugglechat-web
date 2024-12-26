@@ -2,7 +2,7 @@
 const props = defineProps(['message', 'isRead']);
 const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction', 'onresend']);
 
-import { reactive, watch } from "vue";
+import { reactive, watch, getCurrentInstance } from "vue";
 import GroupReads from "./group-reads.vue";
 import Dropdownmenu from "./message-menu.vue";
 import Reaction from "./message-reaction.vue";
@@ -12,6 +12,7 @@ import im from "../common/im";
 import messageUtils from "./message-utils";
 import { REG_EXP, MESSAGE_OP_TYPE } from "../common/enum";
 import ReactionEmoji from "../components/emoji-reaction.vue"
+import Clipboard from 'clipboard.js';
 
 let state = reactive({
   isShowDrop: false,
@@ -26,6 +27,18 @@ let state = reactive({
 watch(() => props.message, (msg) => {
   state.mentionMsgs = im.mentionShortFormat(msg);
 });
+
+let context = getCurrentInstance();
+
+function onCopy(){
+  let { content } = props.message;
+  Clipboard.copy(content.content, utils.noop, utils.noop);
+  context.proxy.$toast({
+    text: `已复制`,
+    icon: 'success'
+  });
+  onShowDrop(false);
+}
 
 function onShowDrop(isShow) {
   state.isShowDrop = isShow;
@@ -153,7 +166,7 @@ function onResend(){
       </div>
       <ul class="tyn-reply-tools">
         <li>
-          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onmodify="onShowModify()" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" @onreply="onReply()" @onhide="onShowDrop(false)"></Dropdownmenu>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @oncopy="onCopy" @onmodify="onShowModify()" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" @onreply="onReply()" @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
     </div>
