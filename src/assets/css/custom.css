@@ -807,7 +807,10 @@
   color: rgb(112,117,121);
 }
 .jg-asider-seach-box{
-  -webkit-app-region: no-drag;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column
 }
 .jg-asider-seach-box .form-group{
   border: 1px solid #DCDCDC !important;
@@ -877,7 +880,7 @@
   position: absolute;
   z-index: 999;
   background-color: #FFF;
-  margin-top: 10px;
+  margin-top: 52px;
   border-radius: 4px;
   font-size: 12px;
   display: flex;
@@ -922,6 +925,7 @@
   box-shadow: rgb(0 0 0 / 8%) 0px 0px 6px;
   display: flex;
   flex-direction: column;
+  width: 300px;
 }
 .jg-search-pv-header{
   display: flex;
