@@ -3,6 +3,7 @@ import { User, Group, Friend } from "../services/index";
 import html2canvas from 'html2canvas';
 import im from './im';
 import { IGNORE_CONVERSATIONS, FILE_TYPE } from "../common/enum"
+import  MarkdownIt from 'markdown-it';
 
 function isElementTop(message){
   var chatNode = document.querySelector('.tyn-chat-body');
@@ -316,6 +317,11 @@ function filterIgnoreConversations(conversations){
     return !utils.isInclude(IGNORE_CONVERSATIONS, item.conversationId);
   });
 }
+
+let md = MarkdownIt();
+function formatMarkdown(content){
+  return md.render(content);
+}
 export default {
  isElementTop,
  getAvatar,
@@ -331,4 +337,5 @@ export default {
  formatMention,
  formatSeconds,
  filterIgnoreConversations,
+ formatMarkdown,
 }

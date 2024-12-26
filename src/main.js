@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue';
 import { setupRouter } from './router';
 
+
 import './assets/css/bundle.css';
 import './assets/css/app.css';
 import './assets/css/custom.css';
