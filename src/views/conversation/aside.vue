@@ -346,6 +346,9 @@ watch(() => props.isShow, () => {
         state.groupNoticeContent = content;
       }
     });
+  }else{
+    updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, false, { isShow: false });
+    updateSwitchValue(ASIDER_SETTING_SWITCH.BAN, false, { isShow: false });
   }
 });
 </script>
