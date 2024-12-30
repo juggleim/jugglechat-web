@@ -44,7 +44,8 @@ let RESPONSE = {
 let GROUP_CHANGE_TYPE = {
   ADD_MEMBER: 1,
   REMOVE_MEMBER: 2,
-  RENAME: 3
+  RENAME: 3,
+  TRANSFER_OWNER: 4,
 };
 let MSG_NAME = {
   GROUP_NTF: 'jgd:grpntf',

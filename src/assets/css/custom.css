@@ -2258,3 +2258,21 @@
 .markdown-body table{
   border-radius: 2px;
 }
+.jg-aside-bli{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  user-select: none;
+}
+.jg-aside-bli .tyn-aside-icon::before{
+  font-size: 12px;
+}
+.jg-aside-bli:hover{
+  background-color: #f7f7f9;
+}
+.jg-aside-bli .tyn-aside-title{
+  margin-bottom: 0;
+}

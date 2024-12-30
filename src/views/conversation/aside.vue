@@ -7,6 +7,8 @@ import AsideVideo from "./aside-video.vue";
 import im from "../../common/im";
 import ModalAddMemberGroup from "../../components/modal-add-member-group.vue";
 import ModalRemoveMemberGroup from "../../components/modal-remove-member-group.vue";
+import ModalTranserGroupOwner from "../../components/modal-transfer-group-owner.vue";
+
 import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import JSwitch from "../../components/switch.vue";
 
@@ -23,16 +25,12 @@ const emit = defineEmits(["onclearmsg", "onquitgroup", "ontop", "ondisturb", "on
 const context = getCurrentInstance();
 let juggle = im.getCurrent();
 let { MessageType, ConversationType, UndisturbType } = juggle;
-let defaultMsgs = {
-  image: { msgs: [], isFinished: false },
-  file: { msgs: [], isFinished: false },
-  video: { msgs: [], isFinished: false },
-}
+
 let state = reactive({
   members: [],
-  ...utils.clone(defaultMsgs),
   isShowFriend: false,
   isShowGroupNotice: false,
+  isShowTransferGroupOwner: false,
   isCreateGroupLoading: false,
   isGroupRemoveMemberLoading: false,
   currentGroupId: '',
@@ -303,8 +301,16 @@ function updateSwitchValue(name, value, option){
   }
 }
 
+function onShowTransferGroupOwner(isShow){
+  state.isShowTransferGroupOwner = isShow;
+}
+function onFinishTransferGroupOwner(){
+  state.group.my_role = GROUP_ROLE.MEMBER;
+  updateSwitchValue(ASIDER_SETTING_SWITCH.BAN, false, { isShow: false });
+  updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, false, { isShow: false });
+  onShowTransferGroupOwner(false);
+}
 watch(() => props.conversation, (conversation) => {
-  utils.extend(state, utils.clone(defaultMsgs))
   state.groupName = conversation.conversationTitle;
 });
 
@@ -378,6 +384,11 @@ watch(() => props.isShow, () => {
               <div class="wr jg-df-modify-icon"></div>
             </div>
           </li>
+          <li class="jg-aside-li jg-aside-bli" v-if="state.group.my_role == GROUP_ROLE.OWNER" @click="onShowTransferGroupOwner(true)">
+            <div class="tyn-aside-title">转让群主</div>
+            <span class="tyn-aside-icon wr wr-right"></span>
+          </li>
+          <li class="jg-bottom-line"></li>
         </ul>
         <ul class="jg-aside-ul">
           <li class="jg-aside-li jg-aside-btn-li" v-for="item in state.switches">
@@ -401,9 +412,14 @@ watch(() => props.isShow, () => {
       :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"
       @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
     
-      <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
+    <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
       :is-loading="state.isGroupRemoveMemberLoading" :members="state.members" @oncancel="onCancelRemoveGroupMember"
       @onconfirm="onConfirmRemoveGroupMember"></ModalRemoveMemberGroup>
+
+    <ModalTranserGroupOwner :is-show="state.isShowTransferGroupOwner" :group-id="props.conversation.conversationId" 
+      :members="state.members" 
+      @onfinish="onFinishTransferGroupOwner"
+      @oncancel="onShowTransferGroupOwner(false)"></ModalTranserGroupOwner>
 
     <ModalGroupNotice :is-show="state.isShowGroupNotice" :content="state.groupNoticeContent" @onconfirm="onUpdateNotice" @oncancel="onShowGroupNotice(false)"></ModalGroupNotice>
   </div>

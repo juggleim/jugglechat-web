@@ -113,6 +113,13 @@ function setMute({ id, isMute }){
     body: utils.toJSON({ group_id: id, is_mute: Number(isMute) })
   });
 }
+
+function transfer({ group_id, memberId }){
+  return request(SERVER_PATH.GROUP_TRANSFER_OWNER, {
+    method: 'POST',
+    body: utils.toJSON({ group_id, owner_id: memberId })
+  });
+}
 export default {
   create,
   quit,
@@ -127,4 +134,5 @@ export default {
   getNotice,
   setGroupHisVerify,
   setMute,
+  transfer,
 }
