@@ -8,6 +8,7 @@ import im from "../../common/im";
 import ModalAddMemberGroup from "../../components/modal-add-member-group.vue";
 import ModalRemoveMemberGroup from "../../components/modal-remove-member-group.vue";
 import ModalTranserGroupOwner from "../../components/modal-transfer-group-owner.vue";
+import ModalTranslator from "../../components/modal-translator.vue";
 
 import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import JSwitch from "../../components/switch.vue";
@@ -31,6 +32,7 @@ let state = reactive({
   isShowFriend: false,
   isShowGroupNotice: false,
   isShowTransferGroupOwner: false,
+  isShowTranslator: false,
   isCreateGroupLoading: false,
   isGroupRemoveMemberLoading: false,
   currentGroupId: '',
@@ -310,6 +312,13 @@ function onFinishTransferGroupOwner(){
   updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, false, { isShow: false });
   onShowTransferGroupOwner(false);
 }
+
+function onFinishTranslator(){
+  onShowTranslator(false); 
+}
+function onShowTranslator(isShow){
+  state.isShowTranslator = isShow;
+}
 watch(() => props.conversation, (conversation) => {
   state.groupName = conversation.conversationTitle;
 });
@@ -391,6 +400,13 @@ watch(() => props.isShow, () => {
           <li class="jg-bottom-line"></li>
         </ul>
         <ul class="jg-aside-ul">
+          <li class="jg-aside-li jg-aside-bli" @click="onShowTranslator(true)">
+            <div class="tyn-aside-title">接收消息自动翻译</div>
+            <span class="tyn-aside-icon wr wr-right"></span>
+          </li>
+          <li class="jg-bottom-line"></li>
+        </ul>
+        <ul class="jg-aside-ul">
           <li class="jg-aside-li jg-aside-btn-li" v-for="item in state.switches">
             <div class="tyn-aside-title" v-if="item.isShow">{{ item.title }}</div>
             <div class="tyn-aside-button" v-if="item.isShow">
@@ -420,6 +436,11 @@ watch(() => props.isShow, () => {
       :members="state.members" 
       @onfinish="onFinishTransferGroupOwner"
       @oncancel="onShowTransferGroupOwner(false)"></ModalTranserGroupOwner>
+
+    <ModalTranslator :is-show="state.isShowTranslator" 
+      :conversation="props.conversation" 
+      @onfinish="onFinishTranslator"
+      @oncancel="onShowTranslator(false)"></ModalTranslator>
 
     <ModalGroupNotice :is-show="state.isShowGroupNotice" :content="state.groupNoticeContent" @onconfirm="onUpdateNotice" @oncancel="onShowGroupNotice(false)"></ModalGroupNotice>
   </div>
