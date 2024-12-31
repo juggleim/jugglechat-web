@@ -9,6 +9,7 @@ import Storage from "../../common/storage";
 import { User } from "../../services/index";
 import im from "../../common/im";
 import WinHeader from '../../components/win-header.vue';
+import ModalServerSetting from "../../components/modal-server-setting.vue";
 
 let juggle = im.getCurrent();
 let context = getCurrentInstance();
@@ -158,6 +159,9 @@ function startPolling(){
 function stopPolling(){
   clearTimeout(pollingTimer);
 }
+function onShowServerSetting(isShow){
+  state.isShowServerSetting = isShow;
+}
 watch(() => state.isQRLogin, (isQR) => {
   if(isQR){
     startPolling();
@@ -169,6 +173,7 @@ watch(() => state.isQRLogin, (isQR) => {
 <template>
   <WinHeader></WinHeader>
   <div class="tyn-root jg-login-container" :class="{ 'tyn-desktop-root': juggle.isDesktop(), 'tyn-web-root': !juggle.isDesktop() }">
+    <div class="jg-server-settings wr wr-security-sum" @click="onShowServerSetting(true)"></div>
     <div class="jg-nlogin-main" v-if="state.isQRLogin">
       <div class="jg-nlogin-qrbox" :style="{ 'background-image': 'url(data:image/png;base64,' + state.qrcode.img + ')' }">
         <div class="jg-nlogin-icon"></div>
@@ -226,4 +231,5 @@ watch(() => state.isQRLogin, (isQR) => {
     </div>
   </div>
   <JFooter></JFooter>
+  <ModalServerSetting :is-show="state.isShowServerSetting" @oncancel="onShowServerSetting(false)"></ModalServerSetting>
 </template>

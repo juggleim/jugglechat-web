@@ -19,7 +19,8 @@ let EVENT_NAME = {
 };
 export let STORAGE = {
   PREFIX: 'jgweb',
-  USER_TOKEN: 'user_auth_token'
+  USER_TOKEN: 'user_auth_token',
+  SERVER_SETTING: 'server_setting'
 }
 let TRANSFER_TYPE = {
   NONE: -1,

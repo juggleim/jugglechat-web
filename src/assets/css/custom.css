@@ -1203,7 +1203,7 @@
   display: flex;
   background-color: #f7f9fa;
   background-image: none;
-  -webkit-app-region: drag;
+  -webkit-app-region: no-drag;
   align-items: center;
   justify-content: center;
   user-select: none;
@@ -1221,6 +1221,7 @@
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;  
+  position: relative;
 }
 .jg-nlogin-qrbox{
   height: 260px;
@@ -1367,6 +1368,36 @@
   }
 }
 
+.jg-server-settings{
+  position: absolute;
+  right: 20%;
+  top: 2%;
+}
+.jg-server-settings::before{
+  font-size: 20px;
+  font-weight: 700;
+  color:#15b515;
+}
+.jg-server-input{
+  width: 70%;
+  padding: 4px;
+  font-size: 12px;
+}
+.jg-form-box{
+  width: 70%;
+}
+.jg-form-box .jg-server-input{
+  width: 100%;
+}
+.jg-form-box .text-danger{
+  font-size: 10px;
+}
+.jg-serversetting-modal .modal-content{
+  width: 410px;
+}
+.jg-serversetting-modal .modal-body{
+  height: 230px;
+}
 /* New Login End */
 
 /* Reactions */

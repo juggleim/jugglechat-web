@@ -9,7 +9,7 @@ import emitter from "../common/emmit";
 import Storage from "../common/storage";
 
 
-let option = { appkey: CONFIG.appkey, upload: OSS, navList: CONFIG.navList };
+let option = { appkey: CONFIG.appkey, upload: OSS, serverList: CONFIG.serverList };
 let juggle = JuggleChat.init(option);
 juggle.registerMessage([
   { name: MSG_NAME.GROUP_NTF,  isCount: true, isStorage: true },
