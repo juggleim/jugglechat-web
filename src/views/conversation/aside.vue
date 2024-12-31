@@ -9,7 +9,6 @@ import ModalAddMemberGroup from "../../components/modal-add-member-group.vue";
 import ModalRemoveMemberGroup from "../../components/modal-remove-member-group.vue";
 import ModalTranserGroupOwner from "../../components/modal-transfer-group-owner.vue";
 import ModalTranslator from "../../components/modal-translator.vue";
-
 import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import JSwitch from "../../components/switch.vue";
 
@@ -238,7 +237,15 @@ function onQuitGroup(){
   });
 }
 function onClearMessages(){
-  emit('onclearmsg', {});
+  context.proxy.$showModal({
+    title: '提醒',
+    icon: 'error',
+    content: '是否清空历史消息?',
+    onCancel: () => { },
+    onConfirm: () => {
+      emit('onclearmsg', {});
+    }
+  });
 }
 function onSwitchChanged({ uid, isOpen }){
   if(utils.isEqual(uid, ASIDER_SETTING_SWITCH.TOP)){
@@ -444,7 +451,6 @@ watch(() => props.isShow, () => {
       :conversation="props.conversation" 
       @onfinish="onFinishTranslator"
       @oncancel="onShowTranslator(false)"></ModalTranslator>
-
     <ModalGroupNotice :is-show="state.isShowGroupNotice" :content="state.groupNoticeContent" @onconfirm="onUpdateNotice" @oncancel="onShowGroupNotice(false)"></ModalGroupNotice>
   </div>
 </template>
