@@ -140,6 +140,7 @@ function onResend(){
         <ReplyMessage :message="props.message.referMsg"></ReplyMessage>
         <span class="tyn-msg-mention tyn-mention-me" v-for="msg in state.mentionMsgs">{{ msg }}</span>
         <span v-html="getContent(props.message.content.content)"></span>
+        <div class="jg-translate" v-if="props.message.translation" v-html="getContent(props.message.translation)"></div>
         <span class="tyn-text-modify" v-if="props.message.isUpdated">（已修改）</span>
         
         <Reaction :is-show="!utils.isEmpty(props.message.reactions)" :reactions="props.message.reactions" @oncancel="onChoiceEmoji"></Reaction>

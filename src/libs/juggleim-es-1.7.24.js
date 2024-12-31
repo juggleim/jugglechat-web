@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.7.23
+* JuggleIM.js v1.7.24
 * (c) 2022-2024 JuggleIM
 * Released under the MIT License.
 */
@@ -1012,6 +1012,14 @@ let FUNC_PARAM_CHECKER = {
     name: 'reactionId',
     type: 'String'
   }],
+  TRANSLATE: [{
+    name: 'sourceLang'
+  }, {
+    name: 'targetLang'
+  }, {
+    name: 'content',
+    type: 'Object'
+  }],
   CREATE_CONVERSATION_TAG: [{
     name: 'id',
     type: 'String'
@@ -1083,6 +1091,7 @@ let COMMAND_TOPICS = {
   REMOVE_MESSAGE: 'del_msg',
   GET_MSG_BY_IDS: 'qry_hismsg_by_ids',
   GET_FILE_TOKEN: 'file_cred',
+  BATCH_TRANSLATE: 'batch_trans',
   GET_USER_INFO: 'qry_user_info',
   JOIN_CHATROOM: 'c_join',
   QUIT_CHATROOM: 'c_quit',
@@ -6333,6 +6342,35 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           CallTimeout: 1,
           PingTimeout: 2
         }
+      },
+      TransReq: {
+        fields: {
+          items: {
+            rule: "repeated",
+            type: "TransItem",
+            id: 1
+          },
+          targetLang: {
+            type: "string",
+            id: 2
+          },
+          sourceLang: {
+            type: "string",
+            id: 3
+          }
+        }
+      },
+      TransItem: {
+        fields: {
+          key: {
+            type: "string",
+            id: 1
+          },
+          content: {
+            type: "string",
+            id: 2
+          }
+        }
       }
     }
   }
@@ -8308,6 +8346,30 @@ function getQueryBody({
     targetId = roomId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isEqual(COMMAND_TOPICS.BATCH_TRANSLATE, topic)) {
+    let {
+      userId,
+      content,
+      sourceLang,
+      targetLang
+    } = data;
+    let codec = $root.lookup('codec.TransReq');
+    let items = [];
+    utils.forEach(content, (val, key) => {
+      items.push({
+        key,
+        content: val
+      });
+    });
+    sourceLang = utils.isEqual(sourceLang, 'auto') ? '' : sourceLang;
+    let message = codec.create({
+      items,
+      sourceLang,
+      targetLang
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
   let codec = $root.lookup('codec.QueryMsgBody');
   let message = codec.create({
     index,
@@ -9193,6 +9255,9 @@ function getQueryAckBody(stream, {
   if (utils.isEqual(topic, COMMAND_TOPICS.CONVERSATION_TAG_QUERY)) {
     result = getConversationTags(index, data);
   }
+  if (utils.isEqual(topic, COMMAND_TOPICS.BATCH_TRANSLATE)) {
+    result = getBatchTranslate(index, data);
+  }
   if (utils.isInclude([COMMAND_TOPICS.RTC_ACCEPT, COMMAND_TOPICS.RTC_INVITE], topic)) {
     result = getRTCAuth(index, data);
   }
@@ -9205,6 +9270,14 @@ function getQueryAckBody(stream, {
     index
   });
   return result;
+}
+function getBatchTranslate(index, data) {
+  let payload = $root.lookup('codec.TransReq');
+  let trans = payload.decode(data);
+  return {
+    index,
+    trans
+  };
 }
 function getRTCAuth(index, data) {
   let payload = $root.lookup('codec.RtcAuth');
@@ -10488,7 +10561,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.23';
+let VERSION = '1.7.24';
 
 function NetworkWatcher (callbacks) {
   let onlineEvent = () => {
@@ -14331,6 +14404,62 @@ function Message$1 (io, emitter, logger) {
   };
 
   /* 
+    let params = {
+      targetLang: '',
+      sourceLang: '',
+      content: {
+        key1: content,
+        key2: content2
+      }
+    }
+  */
+  let translate = params => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, params, FUNC_PARAM_CHECKER.TRANSLATE);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        content
+      } = params;
+      if (utils.isEmpty(content)) {
+        return resolve(params);
+      }
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.BATCH_TRANSLATE,
+        ...params,
+        userId: user.id
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg,
+          trans
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        let {
+          items
+        } = trans;
+        let _result = {};
+        utils.forEach(items, item => {
+          let {
+            key,
+            content
+          } = item;
+          _result[key] = content;
+        });
+        resolve(_result);
+      });
+    });
+  };
+
+  /* 
      let subscribeMsgCache = {
       conversationType_convesationId: { 
         timer: '定时器',
@@ -14442,6 +14571,7 @@ function Message$1 (io, emitter, logger) {
     removeMessageReaction,
     subscribeMessage,
     unsubscribeMessage,
+    translate,
     _uploadFile
   };
 }
@@ -15131,6 +15261,9 @@ function Message ($message, {
   };
   invokes.unsubscribeMessage = conversation => {
     return webAgent.unsubscribeMessage(conversation);
+  };
+  invokes.translate = params => {
+    return webAgent.translate(params);
   };
   invokes.getMessages = conversation => {
     return utils.deferred((resolve, reject) => {
@@ -16141,7 +16274,8 @@ let init = config => {
     UnreadTag: UNREAD_TAG,
     ConversationTagType: CONVERATION_TAG_TYPE,
     MediaType: MEDIA_TYPE,
-    UserType: USER_TYPE
+    UserType: USER_TYPE,
+    StreamEvent: STREAM_EVENT
   };
   return _export;
 };
@@ -16162,7 +16296,8 @@ var client = {
   UnreadTag: UNREAD_TAG,
   ConversationTagType: CONVERATION_TAG_TYPE,
   MediaType: MEDIA_TYPE,
-  UserType: USER_TYPE
+  UserType: USER_TYPE,
+  StreamEvent: STREAM_EVENT
 };
 
 var index = {

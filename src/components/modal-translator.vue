@@ -26,6 +26,9 @@ function onCancel() {
 }
 function onConfirm() {
   console.log(state.receiveFrom, state.receiveTo, props.conversation.conversationId);
+  let { receiveFrom, receiveTo } = state;
+  let { conversationId, conversationType } = props.conversation;
+  Storage.set(`${STORAGE.TRANSLATE_CONF}_${conversationType}_${conversationId}`, { source: receiveFrom, target: receiveTo })
   emit('onfinish', {});
 }
 function onChanged(result) {

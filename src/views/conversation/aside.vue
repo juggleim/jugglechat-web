@@ -48,20 +48,6 @@ let state = reactive({
   ]
 });
 
-function getMessages(params, callback) {
-  let { name, type } = params;
-  let { msgs } = state[type];
-  let { sentTime: time } = msgs[msgs.length - 1] || { sentTime: 0 };
-  juggle.getMessages({
-    conversationId: props.conversation.conversationId,
-    conversationType: props.conversation.conversationType,
-    count: 20,
-    time: time,
-    names: [name]
-  }).then((result) => {
-    callback(type, result);
-  });
-}
 function onShowFriendAdd(isShow) {
   state.isShowFriend = isShow;
 }

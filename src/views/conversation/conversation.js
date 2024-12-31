@@ -3,6 +3,8 @@ import im from "../../common/im";
 import messageUtils from "../../components/message-utils";
 import { TRANSFER_TYPE } from "../../common/enum";
 import common from "../../common/common";
+import { STORAGE } from "../../common/enum";
+import Storage from "../../common/storage";
 
 let juggle = im.getCurrent();
 let { MessageType, ConversationType, MentionType, UndisturbType, UnreadTag } = juggle;
@@ -44,7 +46,12 @@ function getMessages(isFirst, callback, state, props) {
     messages.reverse();
     console.log('getMessages', messages)
     let unReadMsgs = [];
+
+    let tranMgs = [];
     utils.forEach(messages, (message, index) => {
+      if(!message.isSender && utils.isEqual(message.name, MessageType.TEXT)){
+        tranMgs.push(message);
+      }
       if (index % 6 == 0 && index > 0) {
         let time = utils.formatTime(message.sentTime);
         let notifyMsg = { name: 'notify', sentTime: time };
@@ -82,11 +89,49 @@ function getMessages(isFirst, callback, state, props) {
     state.isFinished = isFinished;
     callback(callback);
 
+    translate(state, tranMgs);
+
     readMessage(unReadMsgs);
   }, (error) => {
     console.log(error);
   })
 }
+
+function translate(state, msgs){
+  if(utils.isEmpty(msgs)){
+    return;
+  }
+  let list = utils.clone(msgs);
+  let next = () => {
+    let msg = list.splice(0, 1)[0];
+    if(!msg){
+      return;
+    }
+
+    let { messageId, content: { content } , conversationType, conversationId } = msg;
+
+    let tranConf = Storage.get(`${STORAGE.TRANSLATE_CONF}_${conversationType}_${conversationId}`)
+    if(utils.isEmpty(tranConf)){
+      return;
+    }
+
+    let data = {};
+    data[messageId] = content;
+    
+    juggle.translate({ targetLang: tranConf.target, sourceLang: tranConf.source, content: data }).then((result) => {
+      let { messages } = state;
+      utils.forEach(result, (content, messageId) => {
+        let index = utils.find(messages, (msg ) => { return utils.isEqual(msg.messageId, messageId) });
+        if(index > -1){
+          messages[index].translation = content;
+        }
+      });
+      next();
+    });
+  };
+  next()
+}
+
 function sendVideo(file, message, callback, state){
   let content = { 
     file: file
@@ -435,4 +480,5 @@ export default {
   insertTempConversation,
   isSame,
   getTops,
+  translate,
 }

@@ -2352,3 +2352,10 @@
   border-radius: 3px;
   font-size: 10px;
 }
+.jg-translate{
+  border-top: 1px solid #DCDCDC;
+  margin-top: 4px;
+  padding-top: 2px;
+  font-size: 12px;
+  animation: fadein-o 300ms forwards;
+}

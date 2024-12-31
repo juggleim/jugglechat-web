@@ -93,6 +93,10 @@ juggle.once(Event.MESSAGE_RECEIVED, (message) => {
     scrollBottom();
     conversationTools.readMessage([message]);
     conversationTools.clearUnreadCount(message)
+    let isText = utils.isEqual(message.name, MessageType.TEXT);
+    if(isText && !message.isSender){
+      conversationTools.translate(state, [message]);
+    }
   }
 });
 
