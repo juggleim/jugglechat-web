@@ -380,6 +380,10 @@ function onSend() {
   }
   
   utils.extend(state, { content: '', mentions: [] })
+  
+  state.draft = '';
+  emit('ondraft', { conversationType: conversation.conversationType, conversationId: conversation.conversationId, draft: '' });
+  
   onShowEmoji(false);
   scrollBottom();
   juggle.sendMessage(msg,  {
@@ -411,7 +415,7 @@ function onSend() {
   });
 }
 function onInputBlur() {
-  state.draft = state.content;
+  
 }
 function onFileClick(e){
   e.target.parentNode.children[1].click()
@@ -516,6 +520,7 @@ function onModifyText({ message, content }) {
 
 function onInputDown() {
   conversationTools.updateMentionMember('down', state);
+  state.draft = state.content;
 }
 function onInputUp() {
   conversationTools.updateMentionMember('up', state);
@@ -846,7 +851,7 @@ watch(() => state.content, (val) => {
           </li>
         </ul>
         <input  class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" :disabled="state.isShowGroupMute" @keydown.esc="onInputEsc"
-          @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" @paste="onPaste" placeholder="Write a message" @blur="onInputBlur" ref="messageInput"/>
+          @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" @paste="onPaste" placeholder="Write a message" ref="messageInput"/>
         <ul class="tyn-list-inline me-n2 my-1">
           <li class="d-none d-sm-block">
             <div type="file" class="btn btn-icon btn-light btn-md btn-pill wr wr-smile j-pointer" @click="onShowEmoji(true)" ></div>

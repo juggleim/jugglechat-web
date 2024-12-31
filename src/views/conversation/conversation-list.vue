@@ -257,7 +257,9 @@ function onQuitGroup(conversation){
 }
 
 function onDraft(conversation) {
-  return conversationTools.updateDraft({ conversation, conversations: state.conversations });
+  let { currentTag } = state;
+  let conversations = state.conversationMap[currentTag.id];
+  return conversationTools.updateDraft({ conversation, conversations });
 }
 
 function onSetConversationTop(item, isTop) {

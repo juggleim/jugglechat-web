@@ -142,21 +142,21 @@ async function clearUnreadCount(item, index) {
               <span class="typing" v-if="item.isTyping">typing ...</span>
             </div>
             <div class="tyn-media-row has-dot-sap between">
-              <p
+              <span
                 class="content wr"
                 v-if="item.draft"
                 :class="{ 'wr-modify-pen content-draft': item.draft }"
               >
                 {{
                 item.draft }}
-              </p>
-              <p class="content" v-else>
+              </span>
+              <span class="content" v-else>
                 <span
                   class="text-danger lastmsg-mention"
                   v-if="item.f_mentionContent != ''"
                 >{{ item.f_mentionContent }}</span>
                 {{ item.shortName }}
-              </p>
+              </span>
               <span class="meta">{{ item.f_time }}</span>
             </div>
           </div>

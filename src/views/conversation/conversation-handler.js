@@ -48,8 +48,10 @@ export default function(conversations, state){
       });
       if (!utils.isEqual(index, -1)) {
         let oldConversation = state.conversationMap[currentTag.id][index];
-        let { isActive } = oldConversation;
+        let { isActive, draft } = oldConversation;
 
+        utils.extend(conversation, { draft });
+        
         if (!conversation.conversationTitle) {
           let { conversationTitle } = oldConversation;
           utils.extend(conversation, { conversationTitle });

@@ -150,6 +150,7 @@
 .content-draft::before{
   color: red;
   margin-right: 2px;
+  font-size: 10px;
 }
 .tyn-conver-avatar{
   background-size: 100%;
