@@ -2331,3 +2331,23 @@
 .jg-translator-modal .modal-body{
   height: 200px;
 }
+
+.jg-confirm-modal .modal-content{
+  height: 160px;
+  width: 320px;
+}
+.jg-confirm-content{
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jg-confirm-content .wr::before{
+  font-size: 30px;
+  margin-right: 10px;
+}
+.jg-confirm-modal button{
+  height: 20px;
+  border-radius: 3px;
+  font-size: 10px;
+}
