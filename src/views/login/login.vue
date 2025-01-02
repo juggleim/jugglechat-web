@@ -198,7 +198,7 @@ watch(() => state.isQRLogin, (isQR) => {
       <div class="jg-nlogin-normalbox">
         <div class="jg-nlogin-nlicon"></div>
         <h2 class="jg-nlogin-nltitle">JuggleChat</h2>
-        <span class="fs10">v1.7.23</span>
+        <span class="fs10">v1.7.24</span>
       </div>
       <div class="jg-nlogin-intro-box jg-nlogin-btnbox">
         <div class="form-group">
