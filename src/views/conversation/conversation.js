@@ -111,7 +111,7 @@ function translate(state, msgs){
     let { messageId, content: { content } , conversationType, conversationId } = msg;
 
     let tranConf = Storage.get(`${STORAGE.TRANSLATE_CONF}_${conversationType}_${conversationId}`)
-    if(utils.isEmpty(tranConf)){
+    if(!tranConf.isOpen){
       return;
     }
 

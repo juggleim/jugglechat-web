@@ -2330,7 +2330,7 @@
   width: 440px;
 }
 .jg-translator-modal .modal-body{
-  height: 200px;
+  height: auto;
 }
 
 .jg-confirm-modal .modal-content{
@@ -2358,4 +2358,9 @@
   padding-top: 2px;
   font-size: 12px;
   animation: fadein-o 300ms forwards;
+}
+.jg-flex-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
