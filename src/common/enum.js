@@ -21,7 +21,8 @@ export let STORAGE = {
   PREFIX: 'jgweb',
   USER_TOKEN: 'user_auth_token',
   SERVER_SETTING: 'server_setting',
-  TRANSLATE_CONF: 'translate_conf'
+  TRANSLATE_CONF: 'translate_conf',
+  USERS: 'users_auth',
 }
 let TRANSFER_TYPE = {
   NONE: -1,

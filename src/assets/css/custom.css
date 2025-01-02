@@ -2364,3 +2364,61 @@
   align-items: center;
   justify-content: space-between;
 }
+
+.tyn-user-acount-modal .modal-content{
+  height: 400px;
+}
+.tyn-user-acount-modal .modal-body{
+  height: 100%;
+}
+.jg-acount-ul{
+  overflow-y: auto;
+}
+.jg-acount-li{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+  border: 2px solid transparent;
+  user-select: none;
+}
+.jg-acount-li:hover{
+  background-color: #f1f5f9;
+}
+.jg-account{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.jg-account-name{
+  margin-left: 10px;
+}
+.jg-account-status{
+  cursor: pointer;
+  color: #b0aeae;
+}
+.jg-account-remove{
+  color: red;
+  font-size: 12px;
+}
+.jg-account-status-selected{
+  border-color: #17e017;
+}
+.jg-account-add{
+  color: #b0aeae;
+}
+.jg-acount-avatar::before{
+  font-size: 20px;
+  color: #b0aeae;
+}
+.jg-avatar{
+  background-size: 100%;
+}
+
+.tyn-account-login-modal .modal-content,
+.tyn-account-login-modal .modal-body{
+  width: 600px;
+  height: 650px;
+  background-color: #f7f9fa;
+  border-radius: 8px;
+}

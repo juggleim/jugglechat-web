@@ -16,6 +16,7 @@ import ModalAddMemberGroup from "./modal-add-member-group.vue";
 import ModalFriendAdd from "./modal-friend-add.vue";
 import ModalUserSetting from "./modal-user-setting.vue";
 import ModalSearch from "./modal-search.vue";
+import ModalUserAccount from "./modal-user-account.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -31,7 +32,8 @@ let ASIDE_MENU_TYPE = {
   CONTACT: 4,
   USER_SETTING: 6,
   USER_UPDATE: 7,
-  USER_LOGOUT: 8
+  USER_LOGOUT: 8,
+  USER_ACCOUNT: 9
 };
 
 let { _value: { path } } = router.currentRoute;
@@ -48,6 +50,7 @@ let state = reactive({
   userMenus: [
     { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
     { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
+    { name: '添加账号', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
     { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
   ],
   bottomMenus: [],
@@ -60,6 +63,7 @@ let state = reactive({
   isShowUserClose: true,
   isShowUser: false,
   isShowUserSetting: false,
+  isShowAddAccount: false,
 });
 
 function onShowAddMenu(isShow){
@@ -72,6 +76,10 @@ function onShowSearchModal(isShow){
 
 function onShowSettingMenu(isShow){
   state.isShowSettingMenu = isShow;
+}
+
+function onShowAccountModal(isShow){
+  state.isShowAddAccount = isShow;
 }
 
 function onConversationChanged({ conversations }){
@@ -152,6 +160,9 @@ function onDropMenuClick(menu){
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
     onShowUserSettingModal(true);
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_ACCOUNT)){
+    onShowAccountModal(true);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
@@ -347,4 +358,5 @@ watch(useRouterCurrent, (value) => {
   <ModalUser :is-show="state.isShowUser" :is-show-close="state.isShowUserClose" :user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser>
   <ModalUserSetting :is-show="state.isShowUserSetting" @oncancel="onUserSettingCancel" ></ModalUserSetting>
   <ModalSearch :is-show="state.isShowSearchModal" @oncancel="onShowSearchModal(false)" @onnav="onNavChat"></ModalSearch>
+  <ModalUserAccount :is-show="state.isShowAddAccount" @oncancel="onShowAccountModal(false)"></ModalUserAccount>
 </template>

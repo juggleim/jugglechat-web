@@ -44,8 +44,27 @@ function onVerifySuccess(result){
   if(!im_token){
     return state.errorMsg.code = '登录失败，IM Token 为空'
   }
-  Storage.set(STORAGE.USER_TOKEN, { id: user_id, token: im_token, authorization: authorization, name: nickname, portrait: avatar });
-  router.replace({ name: 'ConversationList' });
+  let user = { id: user_id, token: im_token, authorization: authorization, name: nickname, portrait: avatar, isUsed: true };
+  Storage.set(STORAGE.USER_TOKEN,  user);
+
+  let accounts = Storage.get(STORAGE.USERS);
+  if(utils.isEmpty(accounts)){
+    accounts = [user]
+  }
+  if(!props.isLogin){
+    let index = utils.find(accounts, (account) => {
+      return utils.isEqual(account.id, user.id);
+    });
+    if(utils.isEqual(index, -1)){
+      accounts.push(user);
+    }
+  }
+  Storage.set(STORAGE.USERS, accounts);
+  if(props.isLogin){
+    router.replace({ name: 'ConversationList' });
+  }else{
+    location.reload();
+  }
 }
 
 function onLogin() {
