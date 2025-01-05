@@ -1,11 +1,3 @@
-@media (min-width: 992px){
-  .tyn-profile-cover-image {
-    height: 100px;
-    background-repeat: no-repeat;
-    background-position: top;
-    background-size: cover;
-  }
-}
 .contact_dp_show{
   position: absolute; 
   inset: 0px 0px auto auto; 

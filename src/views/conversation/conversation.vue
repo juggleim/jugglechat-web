@@ -36,7 +36,7 @@ import emitter from "../../common/emmit";
 import { Group } from "../../services/index";
 
 const props = defineProps(['conversation']);
-const emit = defineEmits(["ondraft", "onclearmsg", "onquitgroup", "ontop", "ondisturb"]);
+const emit = defineEmits(["ondraft", "onclearmsg", "onquitgroup", "ontop", "ondisturb", "onback"]);
 
 let TimelineMessage = shallowRef(Timeline);
 let WithoutMessage = shallowRef(Without);
@@ -533,6 +533,7 @@ function onInputEsc() {
   utils.extend(state, { isShowMention: false, isShowTransfer: false });
 }
 function onHideBack() {
+  emit('onback', {});
   state.isShowMobileBack = false;
 }
 function onShowAside() {
@@ -848,7 +849,7 @@ watch(() => state.content, (val) => {
       <Emoji :is-show="state.isShowEmoji" @onhide="onShowEmoji(false)" @onemit="onChoiceEmoji"></Emoji>
       <div class="tyn-chat-form-enter tyn-conversation-input">
         <ul class="tyn-list-inline me-n2 my-1 tyn-chat-file">
-          <li class="d-none d-sm-block">
+          <li class="d-sm-block">
             <div class="btn btn-icon btn-light btn-md btn-pill wr wr-huixing tyn-input-file" @click="onFileClick"></div>
             <input type="file" style="display: none;"
               @change="onFileChange" />
@@ -857,10 +858,10 @@ watch(() => state.content, (val) => {
         <input  class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" :disabled="state.isShowGroupMute" @keydown.esc="onInputEsc"
           @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" @paste="onPaste" placeholder="Write a message" ref="messageInput"/>
         <ul class="tyn-list-inline me-n2 my-1">
-          <li class="d-none d-sm-block">
+          <li class="d-sm-block">
             <div type="file" class="btn btn-icon btn-light btn-md btn-pill wr wr-smile j-pointer" @click="onShowEmoji(true)" ></div>
           </li>
-          <li class="d-none d-sm-block tyn-input-block">
+          <li class="d-sm-block tyn-input-block">
             <button :class="{'tyn-chat-has-content': state.content.length > 0}" class="btn btn-icon btn-light btn-md btn-pill  wr wr-send j-pointer" @click="onSend()"></button>
           </li>
         </ul>

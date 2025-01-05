@@ -4,7 +4,7 @@ import { reactive, getCurrentInstance, watch } from "vue";
 import { useRouter } from "vue-router";
 import utils from "../common/utils";
 import common from "../common/common";
-import { STORAGE, RESPONSE, EVENT_NAME, SYS_CONVERSATION_FRIEND, IGNORE_CONVERSATIONS, GROUP_AVATAR } from "../common/enum";
+import { ASIDE_MENU_TYPE, STORAGE, RESPONSE, EVENT_NAME, SYS_CONVERSATION_FRIEND, IGNORE_CONVERSATIONS, GROUP_AVATAR } from "../common/enum";
 import Storage from "../common/storage";
 import { Friend } from "../services";
 import emitter from "../common/emmit";
@@ -24,17 +24,6 @@ const context = getCurrentInstance();
 
 let juggle = im.getCurrent();
 let { ConversationType, Event, ConnectionState } = juggle;
-
-let ASIDE_MENU_TYPE = {
-  ADD_FRIREND: 1,
-  ADD_GROUP: 2,
-  MESSAGE: 3,
-  CONTACT: 4,
-  USER_SETTING: 6,
-  USER_UPDATE: 7,
-  USER_LOGOUT: 8,
-  USER_ACCOUNT: 9
-};
 
 let { _value: { path } } = router.currentRoute;
 

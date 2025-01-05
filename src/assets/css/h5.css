@@ -1,0 +1,89 @@
+@media (max-width: 768px) {  
+  .tyn-root{
+    height: 100%;
+  }
+  .tyn-web-root {
+    --footer-height: 0;
+    height: 100%;
+  }
+  .tyn-root::after,
+  .tyn-root::before{
+    position: fixed;
+  }
+
+  .tyn-aside-footer,
+  .tyn-footer,
+  .jg-conver-group-container,
+  .jg-conversations-header{
+    display: none;
+  }
+  .tyn-aside{
+    width: 100%;
+    position: absolute;
+  }
+  .tyn-chat-head{
+    height: 74px;
+  }
+  .tyn-content .tyn-aside{
+    left: 0;
+  }
+  .tyn-content .tyn-chat-content{
+    right: -100%;
+    transition: right 0.3s ease;
+  }
+  .tyn-content-active .tyn-aside{
+    left: -100%;
+    transition: left 0.3s ease;
+  }
+  .tyn-content-active .tyn-chat-content{
+    right: 0;
+  }
+  .tyn-content{
+    --aside-item-gap-y: 0.5rem 0.8rem;
+    width: 100vw;
+    height: 100vh !important;
+  }
+  .jg-conversation-body,
+  .jg-conver-list{
+    width: 100%;
+  }
+  .jg-conver-list{
+    transition: none;
+  }
+  .tyn-aside-list{
+    margin-bottom: 10px;
+  }
+  .tyn-chat-content {
+    transition: none;
+    flex-direction: column;
+    display: flex;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+  }
+  .tyn-media-group{
+    gap: 0.5rem;
+  }
+  .tyn-size-lg{
+    --tyn-size: 3rem;
+  }
+  .jg-conversation-title{
+    min-height: 1.5rem;
+  }
+  .tyn-chat-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+  .jg-stream-text{
+    max-width: 300px;
+  }
+  .jg-h5header,
+  .jg-h5footer{
+    display: flex;
+  }
+  .fadeoutxr{
+    animation: fadeoutyr 0.3s;
+  }
+}

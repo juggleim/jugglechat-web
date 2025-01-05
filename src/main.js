@@ -6,6 +6,7 @@ import { setupRouter } from './router';
 import './assets/css/bundle.css';
 import './assets/css/app.css';
 import './assets/css/custom.css';
+import './assets/css/h5.css';
 import Toast from './components/toast';
 import Modal from './components/modal-confirm';
 // if(location.search == '?debug'){

@@ -19,7 +19,8 @@ import conversationHandler from "./conversation-handler";
 import conversationTopHandler from "./conversation-top-handler";
 import conversationRemoveHandler from "./conversation-remove-handler";
 import ConversationBody from "./conversation-body.vue";
-
+import H5TBar from "./conversation-tbar.vue";
+import H5Header from "./conversation-header.vue";
 
 /* 
 会话列表支持多分组
@@ -262,6 +263,10 @@ function onDraft(conversation) {
   return conversationTools.updateDraft({ conversation, conversations });
 }
 
+function onBack(){
+  state.currentConversation = {};
+}
+
 function onSetConversationTop(item, isTop) {
   let { tops, conversations } = state;
   return conversationTools.setConversationTop({ item, isTop, tops, conversations });
@@ -341,9 +346,9 @@ function onTagConversationChanged({ removes, adds, tag }){
 
 </script>
 <template>
-  <div class="tyn-content">
+  <div class="tyn-content" :class="{'tyn-content-active': !utils.isEmpty(state.currentConversation)}">
     <div class="tyn-aside">
-      <!-- <AisdeHeader @onnav="onNavChat"></AisdeHeader> -->
+      <H5Header></H5Header>
       <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)" @onconfirm="onTagConversationChanged" :tag="state.currentTag"></ModalGroupMember>
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup" @onchange="onGroupChange"></ConversationGroup>
@@ -399,7 +404,7 @@ function onTagConversationChanged({ removes, adds, tag }){
           </ConversationBody>
         </div>
       </div>
-      <!-- <AisdeFooter></AisdeFooter> -->
+      <H5TBar></H5TBar>
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
     <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" 
@@ -407,6 +412,7 @@ function onTagConversationChanged({ removes, adds, tag }){
       @ontop="onSetConversationTop" 
       @ondisturb="onConversationDisturb"
       @onclearmsg="onClearMessages" 
+      @onback="onBack"
       @onquitgroup="onQuitGroup">
     </Conversation>
   </div>
