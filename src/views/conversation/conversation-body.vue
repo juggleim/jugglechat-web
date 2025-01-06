@@ -38,6 +38,7 @@ function onSetConversationTop(item, isTop) {
 }
 
 function onShowDropmenu(e) {
+  e.preventDefault();
   let current = e.currentTarget;
   let index = current.getAttribute("index");
 
@@ -45,6 +46,9 @@ function onShowDropmenu(e) {
   let x = e.x - rect.x;
   if(x > 150){
     x = 150;
+  }
+  if(isNaN(x)){
+    x = 80;
   }
   state.dropmenuX = x;
 
@@ -113,7 +117,9 @@ async function clearUnreadCount(item, index) {
         @click="onConversation"
         :index="index"
         :uid="item.conversationType + '_' + item.conversationId"
-        @click.right.prevent="onShowDropmenu"
+        @click.right.stop="onShowDropmenu"
+        v-use-longpress="500"
+        @longpress.prevent="onShowDropmenu"
       >
         <div class="tyn-media-group">
           <div class="tyn-media tyn-size-lg">
