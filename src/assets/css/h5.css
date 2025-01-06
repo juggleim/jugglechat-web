@@ -102,4 +102,16 @@
   .fadeoutxr{
     animation: fadeoutyr 0.3s;
   }
+  .tyn-emoji-pn{
+    width: 300px;
+  }
+  .tyn-emoji-pn.show-aside{
+    top: -244px;
+  }
+  .emojis__grid{
+    justify-content: center;
+  }
+  .wr-rtc-camera{
+    display: none;
+  }
 }

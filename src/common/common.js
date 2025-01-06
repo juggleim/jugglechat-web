@@ -234,7 +234,9 @@ function calcSize(params, patch = 20){
   let { width, height } = params;
   let maxWidth = 270;
   let maxHeight = 240;
-
+  if(utils.isMobile()){
+    maxWidth = 240;
+  }
   width = width || maxWidth;
   height = height || maxHeight;
 

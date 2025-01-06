@@ -66,6 +66,9 @@ function onClickRight(e){
   state.dropRectX = e.x - e.target.getBoundingClientRect().x
 }
 function onShowEmojiReaction(isShow){
+  if(utils.isMobile()){
+    return;
+  }
   if(props.isRead){
     return;
   }
@@ -86,7 +89,7 @@ function onChoiceEmoji(item){
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media wr" :messageid="props.message.messageId"  @click.right.prevent="onClickRight"  @click.prevent="onShowEmojiReaction(true)">
+      <div class="tyn-reply-media wr" :messageid="props.message.messageId" v-use-longpress="500" @longpress="onClickRight" @click.right.prevent="onClickRight"  @click.prevent="onShowEmojiReaction(true)">
         <a class="glightbox" data-gallery="media-video" @click="onPlay" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
           <video :src="props.message.content.url || props.message.localUrl" ref="video" class="tyn-image" controls></video>
           <!-- <div class="tyn-video-icon wr wr-video" v-if="!state.isPlaying"></div> -->

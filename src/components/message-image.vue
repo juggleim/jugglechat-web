@@ -71,6 +71,9 @@ function onClickRight(e){
 }
 
 function onShowEmojiReaction(isShow){
+  if(utils.isMobile()){
+    return;
+  }
   if(props.isRead){
     return;
   }
@@ -92,7 +95,7 @@ function onChoiceEmoji(item){
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId"  @click.right.prevent="onClickRight"  @click.prevent="onShowEmojiReaction(true)">
+      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" v-use-longpress="500" @longpress="onClickRight"  @click.right.prevent="onClickRight"  @click.prevent="onShowEmojiReaction(true)">
         <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId" v-if="!props.message.localUrl">
           <div class="jg-img-loader"></div>
         </div>

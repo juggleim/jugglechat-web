@@ -47,6 +47,9 @@ function onClickRight(e){
   state.dropRectX = e.x - e.target.getBoundingClientRect().x
 }
 function onShowEmojiReaction(isShow){
+  if(utils.isMobile()){
+    return;
+  }
   if(props.isRead){
     return;
   }
@@ -69,7 +72,7 @@ function onChoiceEmoji(item){
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble">
-      <div class="tyn-reply-file wr" :messageid="props.message.tid"  @click.right.prevent="onClickRight">
+      <div class="tyn-reply-file wr" :messageid="props.message.tid" v-use-longpress="500" @longpress="onClickRight" @click.right.prevent="onClickRight">
         <a :href="props.message.content.url" class="tyn-file" :download="props.message.content.name">
           <div class="tyn-media-group">
             <div class="tyn-media tyn-size-lg text-bg-light wr wr-file tyb-msg-fileicon">

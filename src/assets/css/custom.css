@@ -352,7 +352,7 @@
 }
 .tyn-emoji-pn{
   position: absolute;
-  width: 460px;
+  width: 470px;
   top: 60px;
   right: 0;
   padding: 10px;
@@ -372,7 +372,10 @@
   justify-content: center;
   box-shadow: #0000002e 0 3px 12px;
 }
-
+.emoji-item{
+  font-size: 1.5rem;
+  margin: 4px;
+}
 .transfer-icon{
   position: relative;
   display: flex;
