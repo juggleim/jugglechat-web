@@ -407,7 +407,7 @@ function onTagConversationChanged({ removes, adds, tag }){
       <H5TBar></H5TBar>
     </div>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
-    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation)" 
+    <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation) || utils.isMobile()" 
       @ondraft="onDraft" 
       @ontop="onSetConversationTop" 
       @ondisturb="onConversationDisturb"

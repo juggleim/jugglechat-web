@@ -722,11 +722,15 @@ watch(() => state.currentConversation, () => {
 
 watch(() => props.conversation.conversationTitle, () => {
   onCancelTransfer(false)
-  inputFocus()
+  if(!utils.isMobile()){
+    inputFocus()
+  }
 });
 
 nextTick(() => {
-  inputFocus()
+  if(!utils.isMobile()){
+    inputFocus()
+  }
 })
 
 function inputFocus(){

@@ -2418,7 +2418,7 @@
   border-radius: 8px;
 }
 .jg-h5header{
-  display: none;
+  display: flex;
   justify-content: space-between;
   background: #FAFAFA;
   height: 66px;
@@ -2427,12 +2427,12 @@
   padding: 0 .5rem;
 }
 .jg-h5footer{
-  height: 60px;
-  display: none;
+  height: 70px;
   background: #FAFAFA;
   justify-content: space-between;
   align-items: center;
   padding: 0 1rem;
+  width: 100%;
 }
 .jg-h5footer-item{
   display: flex;

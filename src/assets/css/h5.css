@@ -24,18 +24,31 @@
   .tyn-chat-head{
     height: 74px;
   }
+  .tyn-chat-content {
+    flex-direction: column;
+    display: flex;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+  }
   .tyn-content .tyn-aside{
     left: 0;
   }
+  .tyn-chat-none-box{
+    display: none;
+  }
   .tyn-content .tyn-chat-content{
     right: -100%;
-    transition: right 0.3s ease;
+    
   }
   .tyn-content-active .tyn-aside{
+    opacity: 0;
     left: -100%;
-    transition: left 0.3s ease;
   }
   .tyn-content-active .tyn-chat-content{
+    transition: right 0.3s ease;
     right: 0;
   }
   .tyn-content{
@@ -53,16 +66,7 @@
   .tyn-aside-list{
     margin-bottom: 10px;
   }
-  .tyn-chat-content {
-    transition: none;
-    flex-direction: column;
-    display: flex;
-    overflow: hidden;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 100%;
-  }
+ 
   .tyn-media-group{
     gap: 0.5rem;
   }
