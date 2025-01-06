@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import { Layout } from '@/views/layout';
 import Common from '@/common/common';
 import utils from '@/common/utils';
@@ -44,7 +44,7 @@ let routes = [{
 }];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: routes
 })
 router.beforeEach((to, from, next)=> {

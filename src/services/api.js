@@ -33,8 +33,11 @@ let SERVER_PATH = {
   GROUP_TRANSFER_OWNER: 'groups/management/chgowner',
 };
 utils.forEach(SERVER_PATH, (url, name) => {
-  
-  SERVER_PATH[name] = `${location.protocol}//${CONFIG.API}/jim/${url}`;
+  let protoclName = location.protocol;
+  if(protoclName == 'file:'){
+    protoclName = 'https:';
+  }
+  SERVER_PATH[name] = `${protoclName}//${CONFIG.API}/jim/${url}`;
 });
 
 export default SERVER_PATH;
