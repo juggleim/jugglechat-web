@@ -10,9 +10,9 @@ let { currentRoute: { _value: { name } } } = router;
 
 let state = reactive({
   tbars: [
-    { name: 'ConversationList', title: '消息', icon: 'message', type: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(name, 'ConversationList'),  },
-    { name: 'Contacts', title: '通讯录', icon: 'contact', type: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(name, 'Contacts') },
-    { name: 'Setting', title: '我的', icon: 'user', type: ASIDE_MENU_TYPE.SETTING, isActive: utils.isEqual(name, 'Setting') },
+    { name: 'ConversationList', title: '消息', icon: 'hmsg', type: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(name, 'ConversationList'),  },
+    { name: 'Contacts', title: '通讯录', icon: 'hcontact', type: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(name, 'Contacts') },
+    { name: 'Setting', title: '我的', icon: 'hsetting', type: ASIDE_MENU_TYPE.SETTING, isActive: utils.isEqual(name, 'Setting') },
   ]
 });
 

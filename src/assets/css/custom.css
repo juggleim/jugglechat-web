@@ -2439,25 +2439,26 @@
   background: #FAFAFA;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1rem;
+  padding: 0 1.8rem;
   width: 100%;
 }
 .jg-h5footer-item{
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #464646;
+  color: #9b9b9b;
 }
 .jg-h5footer-item .icon::before{
-  font-size: 18px;
+  font-size: 1.5rem;
   font-weight: 500;
 }
 .jg-h5footer-item .name{
   font-size: 10px;
   font-weight: 700;
+  margin-top: -4px;
 }
 .jg-h5footer-active{
-  color: #0000ffe8;
+  color: #3030f5e8;
 }
 .tyn-h5header-create-list .jg-footer-dropdownmenu{
   left: -5.5rem;

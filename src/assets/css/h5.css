@@ -83,7 +83,7 @@
     gap: 0.5rem;
   }
   .tyn-size-lg{
-    --tyn-size: 3rem;
+    --tyn-size: 3.5rem;
   }
   .jg-conversation-title{
     min-height: 1.5rem;
@@ -111,7 +111,23 @@
   .emojis__grid{
     justify-content: center;
   }
+  .wr-rtc-mic,
   .wr-rtc-camera{
     display: none;
+  }
+
+  .tyn-media-col .name{
+    font-size: 1rem;
+  }
+  .tyn-media-col .content{
+    font-size: 14px;
+  }
+  .tyn-media-col .meta{
+    font-size: 14px;
+  }
+  .jg-h5header-title{
+    font-size: 1rem;
+    font-weight: 600;
+    color: #000000ba;
   }
 }
