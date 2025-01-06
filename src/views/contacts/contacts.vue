@@ -6,6 +6,9 @@ import Dropmenu from "./dropmenu.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
 import { CONTACT_TAB_TYPE, RESPONSE, EVENT_NAME, CONTACT_TYPE, FRIEND_APPLY_STATUS, IGNORE_CONVERSATIONS, SYS_CONVERSATION_FRIEND }  from "../../common/enum";
 
+import H5TBar from "../conversation/conversation-tbar.vue";
+import H5Header from "../conversation/conversation-header.vue";
+
 import im from "../../common/im";
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -245,7 +248,7 @@ getFriends();
 <template>
   <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
     <div class="tyn-aside tyn-contact-aside">
-      <!-- <AisdeHeader :title="'通讯录'"></AisdeHeader> -->
+      <H5Header></H5Header>
       <div class="tyn-aside-row pt-1 tyn-aside-contact-row">
         <ul class="nav nav-tabs nav-tabs-line jg-contact-navs">
           <li class="nav-item" v-for="tab in state.tabs">
@@ -275,6 +278,7 @@ getFriends();
           </div>
         </div>
       </div>
+      <H5TBar></H5TBar>
     </div>
     <ContactDetail :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
   </div>

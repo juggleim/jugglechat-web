@@ -10,7 +10,18 @@
   .tyn-root::before{
     position: fixed;
   }
-
+  .tyn-web-root .jg-nlogin-num-btn{
+    display: none;
+  }
+  .jg-nlogin-main{
+    height: 100vh;
+  }
+  .jg-nlogin-btnbox{
+    width: 18rem;
+  }
+  .jg-server-settings{
+    right: 4%;
+  }
   .tyn-aside-footer,
   .tyn-footer,
   .jg-conver-group-container,

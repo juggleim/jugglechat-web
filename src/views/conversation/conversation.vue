@@ -684,7 +684,7 @@ function getMembers() {
   Group.get({ id: conversationId }, (result) => {
     
     state.group = result;
-    let { group_mute } = result.group_management;
+    let { group_mute } = result.group_management || {};
     state.isShowGroupMute = !!group_mute;
     let { members } = result;
     let mentionMembers = [

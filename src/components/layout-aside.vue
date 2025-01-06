@@ -285,7 +285,9 @@ watch(useRouterCurrent, (value) => {
     return utils.isEqual(item.name, name);
   });
   let menu = list[index];
-  selectMenu(menu)
+  if(!utils.isMobile()){
+    selectMenu(menu);
+  }
 });
 </script>
 

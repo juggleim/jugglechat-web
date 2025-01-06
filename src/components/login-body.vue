@@ -17,7 +17,7 @@ let context = getCurrentInstance();
 const router = useRouter();
 let defalutBtnLabel = '发送';
 let state = reactive({
-  isQRLogin: true,
+  isQRLogin: !utils.isMobile(),
   isLoadingQR: false,
   isShowRefreshQrcode: false,
   qrcode: {

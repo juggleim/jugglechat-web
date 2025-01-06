@@ -19,6 +19,11 @@ let routes = [{
       path: '/contacts',
       name: 'Contacts',
       component: () => import('@/views/contacts/contacts.vue'),
+    },
+    {
+      path: '/setting',
+      name: 'Setting',
+      component: () => import('@/views/setting/setting.vue'),
     }
   ],
 },

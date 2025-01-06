@@ -1368,6 +1368,7 @@
   position: absolute;
   right: 20%;
   top: 2%;
+  z-index: 1201;
 }
 .jg-server-settings::before{
   font-size: 20px;
@@ -2418,16 +2419,19 @@
   border-radius: 8px;
 }
 .jg-h5header{
-  display: flex;
+  display: none;
   justify-content: space-between;
   background: #FAFAFA;
   height: 66px;
+  min-height: 66px;
   align-items: center;
   color: #000;
   padding: 0 .5rem;
 }
 .jg-h5footer{
+  display: none;
   height: 70px;
+  min-height: 70px;
   background: #FAFAFA;
   justify-content: space-between;
   align-items: center;
