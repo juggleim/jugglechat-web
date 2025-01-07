@@ -94,8 +94,8 @@ function onChoiceEmoji(item){
   <ReactionEmoji :is-show="state.isShowReaction" @onhide="onShowEmojiReaction(false)" @onemit="onChoiceEmoji" :message="props.message"></ReactionEmoji>
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
-    <div class="tyn-reply-bubble">
-      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" v-use-longpress="500" @longpress="onClickRight"  @click.right.prevent="onClickRight"  @click.prevent="onShowEmojiReaction(true)">
+    <div class="tyn-reply-bubble" v-use-longpress="500" @longpress="onClickRight" >
+      <div class="tyn-reply-media tyn-reply-meida-img" :messageid="props.message.messageId" @click.right.prevent="onClickRight"  @click.prevent="onShowEmojiReaction(true)">
         <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId" v-if="!props.message.localUrl">
           <div class="jg-img-loader"></div>
         </div>

@@ -128,7 +128,7 @@ function onResend(){
     </div>
   </div>
   <ReactionEmoji :is-show="state.isShowReaction" @onhide="onShowEmojiReaction(false)" @onemit="onChoiceEmoji" :message="props.message"></ReactionEmoji>
-  <div class="tyn-reply-group">
+  <div class="tyn-reply-group" v-use-longpress="500" @longpress="onClickRight">
     <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
     <div class="tyn-reply-bubble" :messageid="props.message.messageId" :messageId="props.message.tid">
       <div class="tyn-reply-text" v-if="state.isModify">
@@ -139,7 +139,7 @@ function onResend(){
         </div>
         <span class="small ms-2 text-warning" v-if="state.errorMsg">{{ state.errorMsg }}</span>
       </div>
-      <div class="tyn-reply-text wr" v-else v-use-longpress="500" @longpress="onClickRight" @click.right.prevent="onClickRight" @click.prevent="onShowEmojiReaction(true)">
+      <div class="tyn-reply-text wr" v-else  @click.right.prevent="onClickRight" @click.prevent="onShowEmojiReaction(true)">
         <ReplyMessage :message="props.message.referMsg"></ReplyMessage>
         <span class="tyn-msg-mention tyn-mention-me" v-for="msg in state.mentionMsgs">{{ msg }}</span>
         <span v-html="getContent(props.message.content.content)"></span>

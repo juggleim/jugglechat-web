@@ -130,4 +130,13 @@
     font-weight: 600;
     color: #000000ba;
   }
+  .jg-message-senttime,
+  .tyn-reply-text,
+  .tyn-reply-bubble{
+    -webkit-touch-callout:none; 
+    -webkit-user-select:none; 
+    -moz-user-select:none; 
+    -ms-user-select:none; 
+    user-select:none;
+  }
 }

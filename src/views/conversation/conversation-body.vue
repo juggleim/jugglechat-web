@@ -74,6 +74,7 @@ nextTick(() => {
 
 // function onConversation(item, index) {
 function onConversation(e) {
+  e.preventDefault();
   let index = e.currentTarget.getAttribute('index');
   let item = props.conversations[index];
   
