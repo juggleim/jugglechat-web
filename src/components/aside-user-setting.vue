@@ -6,6 +6,7 @@ import emitter from "../common/emmit";
 import Asider from "./aside.vue";
 
 import AsiderUserUpdate from "./aside-user-update.vue";
+import AsiderUserConfig from "./aside-user-config.vue";
 
 import { User } from "../services/index";
 import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME } from "../common/enum";
@@ -106,4 +107,5 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
     </div>
   </Asider>
   <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
+  <AsiderUserConfig :is-show="state.isShowUserSettingAsider" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
 </template>
