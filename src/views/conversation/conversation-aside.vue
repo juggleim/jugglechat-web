@@ -10,6 +10,7 @@ import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import JSwitch from "../../components/switch.vue";
 import Asider from "../../components/aside.vue";
 import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
+import AsiderGroupRemoveMember from "../../components/aside-group-remove-member.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -68,37 +69,16 @@ function onCancelGroupCreate(result) {
 function onCancelRemoveGroupMember() {
   onShowMemberRemove('');
 }
-/* 
-1、删人（内存+服务端）
-2、修改头像
-3、发通知
-*/
-function onConfirmRemoveGroupMember({ members }) {
-  if (state.isGroupRemoveMemberLoading) {
-    return;
-  }
-  state.isGroupRemoveMemberLoading = true;
-  let { conversationId, conversationTitle } = props.conversation;
-  if (utils.isEqual(members.length, state.members.length)) {
-    return context.proxy.$toast({
-      text: `留个人，不能都移除了吧～`,
-      icon: 'warn'
-    });
-  }
 
-  Group.removeMember({ id: conversationId, members }).then(() => {
-    utils.forEach(members, (rMember) => {
-      utils.forEach(state.members, (member, index) => {
-        if (member && utils.isEqual(rMember.id, member.id)) {
-          state.members.splice(index, 1);
-        }
-      })
-    });
-    let conversation = { conversationId, conversationPortrait: GROUP_AVATAR, conversationTitle };
-    emitter.$emit(EVENT_NAME.ON_GROUP_MEMBER_REMOVED, { conversation, members })
-    onCancelRemoveGroupMember();
-    state.isGroupRemoveMemberLoading = false;
+function onConfirmRemoveGroupMember({ members }) {
+  utils.forEach(members, (rMember) => {
+    utils.forEach(state.members, (member, index) => {
+      if (member && utils.isEqual(rMember.id, member.id)) {
+        state.members.splice(index, 1);
+      }
+    })
   });
+  onCancelRemoveGroupMember();
 }
 
 function onConfirmGroupCreate({ friends }) {
@@ -440,13 +420,21 @@ watch(() => props.isShow, () => {
     @oncancel="onCancelGroupCreate">
   </AsiderGroupAddMember>
 
+  <AsiderGroupRemoveMember
+    :is-show="state.currentGroupId" 
+    :group-id="state.currentGroupId"
+    :members="state.members" 
+    :right="1"
+    @oncancel="onCancelRemoveGroupMember"
+    @onconfirm="onConfirmRemoveGroupMember"
+  ></AsiderGroupRemoveMember>
   <!-- <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
     :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"
     @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup> -->
   
-  <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
+  <!-- <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
     :is-loading="state.isGroupRemoveMemberLoading" :members="state.members" @oncancel="onCancelRemoveGroupMember"
-    @onconfirm="onConfirmRemoveGroupMember"></ModalRemoveMemberGroup>
+    @onconfirm="onConfirmRemoveGroupMember"></ModalRemoveMemberGroup> -->
 
   <ModalTranserGroupOwner :is-show="state.isShowTransferGroupOwner" :group-id="props.conversation.conversationId" 
     :members="state.members" 

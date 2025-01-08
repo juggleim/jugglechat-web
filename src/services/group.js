@@ -65,9 +65,8 @@ function removeMember({ id, members }){
     method: 'POST',
     body: utils.toJSON({
       group_id: id,
-      members: utils.map(members, (member) => {
-        let { id } = member;
-        return { user_id: id };
+      member_ids: utils.map(members, (member) => {
+        return member.id;
       })
     })
   });
