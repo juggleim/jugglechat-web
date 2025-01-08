@@ -2,8 +2,7 @@
 import { reactive, watch, getCurrentInstance } from "vue";
 import utils from "../../common/utils";
 import im from "../../common/im";
-import ModalAddMemberGroup from "../../components/modal-add-member-group.vue";
-import ModalRemoveMemberGroup from "../../components/modal-remove-member-group.vue";
+
 import ModalTranserGroupOwner from "../../components/modal-transfer-group-owner.vue";
 import ModalTranslator from "../../components/modal-translator.vue";
 import ModalGroupNotice from "../../components/modal-group-notice.vue";
@@ -428,13 +427,6 @@ watch(() => props.isShow, () => {
     @oncancel="onCancelRemoveGroupMember"
     @onconfirm="onConfirmRemoveGroupMember"
   ></AsiderGroupRemoveMember>
-  <!-- <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
-    :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"
-    @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup> -->
-  
-  <!-- <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
-    :is-loading="state.isGroupRemoveMemberLoading" :members="state.members" @oncancel="onCancelRemoveGroupMember"
-    @onconfirm="onConfirmRemoveGroupMember"></ModalRemoveMemberGroup> -->
 
   <ModalTranserGroupOwner :is-show="state.isShowTransferGroupOwner" :group-id="props.conversation.conversationId" 
     :members="state.members" 
