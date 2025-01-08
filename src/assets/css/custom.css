@@ -2577,3 +2577,6 @@
 .jg-aside-contact-body .tyn-media-row{
   width: 100%;
 }
+.jg-aside-translator-body .tyn-media-list li{
+  margin-bottom: 1rem;
+}

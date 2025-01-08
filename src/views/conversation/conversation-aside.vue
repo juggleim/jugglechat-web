@@ -10,6 +10,7 @@ import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
 import AsiderGroupRemoveMember from "../../components/aside-group-remove-member.vue";
 import AsiderGroupNotice from "../../components/aside-group-notice.vue";
 import AsideGroupTransferOwner from "../../components/aside-group-transfer-owner.vue";
+import AsiderTranslator from "../../components/aside-translator.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -436,10 +437,17 @@ watch(() => props.isShow, () => {
     @oncancel="onShowTransferGroupOwner(false)">
   </AsideGroupTransferOwner>
 
-  <ModalTranslator :is-show="state.isShowTranslator" 
+  <!-- <ModalTranslator :is-show="state.isShowTranslator" 
     :conversation="props.conversation" 
     @onfinish="onFinishTranslator"
-    @oncancel="onShowTranslator(false)"></ModalTranslator>
+    @oncancel="onShowTranslator(false)"></ModalTranslator> -->
+
+  <AsiderTranslator 
+    :is-show="state.isShowTranslator" 
+    :conversation="props.conversation" 
+    @onfinish="onFinishTranslator"
+    @oncancel="onShowTranslator(false)">
+  </AsiderTranslator>
 
   <AsiderGroupNotice 
     :is-show="state.isShowGroupNotice" 
