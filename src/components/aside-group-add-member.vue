@@ -10,7 +10,7 @@ import { RESPONSE, STORAGE, GROUP_AVATAR, EVENT_NAME } from "../common/enum";
 import Storage from "../common/storage";
 
 const context = getCurrentInstance();
-const props = defineProps(["isShow", "conversation", "members"]);
+const props = defineProps(["isShow", "conversation", "members", "right"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 let juggle = im.getCurrent();
 let { ConversationType } = juggle;
@@ -51,8 +51,8 @@ watch(() => props.isShow, () => {
   });
 });
 
-function onCancel() {
-  emit('oncancel', {});
+function onCancel(members = []) {
+  emit('oncancel', { members });
 }
 
 function onConfirm(){
@@ -76,6 +76,18 @@ function onConfirm(){
   let members = utils.filter(friends, (friend) => {
     return !friend.disabled;
   });
+
+  if(props.members.length > 0){
+    let { conversationId } = props.conversation;
+    return Group.invite({ group_id: conversationId, members }).then((result) => {
+      let { code } = result;
+      state.isCreateGroupLoading = false;
+      onCancel(members);
+      utils.forEach(list, (item) => {
+        utils.extend(item, { isTransferChecked: false });
+      });
+    });
+  }
   let avatar = GROUP_AVATAR;
   Group.create({ name, avatar, members }).then((result) => {
     let { data: group } = result;
@@ -87,12 +99,12 @@ function onConfirm(){
       latestMessage: {}
     };
     emitter.$emit(EVENT_NAME.ON_GROUP_CREATED, { conversation })
-    utils.forEach(list, (item) => {
-      utils.extend(item, { isTransferChecked: false });
-    });
     state.isCreateGroupLoading = false;
     setTimeout(() => {
       onCancel();
+      utils.forEach(list, (item) => {
+        utils.extend(item, { isTransferChecked: false });
+      });
     }, 200)
   });
 }
@@ -107,7 +119,7 @@ function onSelected(item) {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'创建群组'" @oncancel="onCancel">
+  <Asider :is-show="props.isShow" :title="props.title || '创建群组'" @oncancel="onCancel" :right="props.right">
     <div class="jg-aside-group-body">
       <ul class="tyn-media-list gap gap-2">
         <li v-for="item in state.friends" @click="onSelected(item)" class="tyn-media-item">

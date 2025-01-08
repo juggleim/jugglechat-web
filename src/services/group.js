@@ -48,14 +48,13 @@ function get({ id }, callback){
   });
 }
 
-function addMember({ id, members }){
-  return request(SERVER_PATH.GROUP_MEMBER_ADD, {
+function invite({ group_id, members }){
+  return request(SERVER_PATH.GROUP_MEMBER_INVITE, {
     method: 'POST',
     body: utils.toJSON({
-      group_id: id,
-      members: utils.map(members, (member) => {
-        let { user_id } = member;
-        return { user_id };
+      group_id: group_id,
+      member_ids: utils.map(members, (member) => {
+        return member.user_id;
       })
     })
   });
@@ -124,7 +123,7 @@ export default {
   create,
   quit,
   getList,
-  addMember,
+  invite,
   removeMember,
   get,
   getMemory,

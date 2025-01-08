@@ -21,7 +21,7 @@ let SERVER_PATH = {
   GROUP_CREATE: 'groups/add',
   GROUP_UPDATE: 'groups/update',
   GROUP_LIST: 'groups/mygroups',
-  GROUP_MEMBER_ADD: 'groups/members/add',
+  GROUP_MEMBER_INVITE: 'groups/invite',
   GROUP_MEMBER_REMOVE: 'groups/members/del',
   GROUP_QUIT: 'groups/quit',
   GROUP_GET: 'groups/info',

@@ -9,6 +9,7 @@ import ModalTranslator from "../../components/modal-translator.vue";
 import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import JSwitch from "../../components/switch.vue";
 import Asider from "../../components/aside.vue";
+import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -55,8 +56,14 @@ function onShowGroupNotice(isShow){
 function onShowMemberRemove(groupId) {
   state.currentGroupId = groupId;
 }
-function onCancelGroupCreate() {
+function onCancelGroupCreate(result) {
   onShowFriendAdd(false);
+  result = result || { members: []}
+  let { members } = result;
+  utils.forEach(members, (member) => {
+    let { avatar, nickname, user_id } = member;
+    state.members.push({ id: user_id, portrait: avatar, name: nickname  });
+  });
 }
 function onCancelRemoveGroupMember() {
   onShowMemberRemove('');
@@ -424,9 +431,18 @@ watch(() => props.isShow, () => {
     </div>
   </Asider>
 
-  <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
+  <AsiderGroupAddMember 
+    :is-show="state.isShowFriend" 
+    :right="1" 
+    :title="'添加成员'"
+    :conversation="props.conversation" 
+    :members="state.members" 
+    @oncancel="onCancelGroupCreate">
+  </AsiderGroupAddMember>
+
+  <!-- <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
     :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"
-    @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
+    @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup> -->
   
   <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
     :is-loading="state.isGroupRemoveMemberLoading" :members="state.members" @oncancel="onCancelRemoveGroupMember"
