@@ -7,6 +7,10 @@ import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE }  from "../../common/enum";
 import H5TBar from "../conversation/conversation-tbar.vue";
 import H5Header from "../conversation/conversation-header.vue";
 
+import AsiderUserUpdate from "../../components/aside-user-update.vue";
+import AsiderUserConfig from "../../components/aside-user-config.vue";
+import AsiderUserAccount from "../../components/aside-user-account.vue";
+
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
 import common from "../../common/common";
@@ -33,7 +37,7 @@ let state = reactive({
       ] 
     },
   ],
-  isShowUserAsider: false,
+  isShowUserUpdateAsider: false,
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,
 });
@@ -45,7 +49,7 @@ function onLogout(){
 function onClick(menu){
   let { event } = menu;
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_UPDATE)){
-    onShowUserAsider(true);
+    onShowUserUpdateAsider(true);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
     onShowUserSettingAsider(true);
@@ -58,8 +62,8 @@ function onClick(menu){
   }
 }
 
-function onShowUserAsider(isShow){
-  state.isShowUserAsider = isShow;
+function onShowUserUpdateAsider(isShow){
+  state.isShowUserUpdateAsider = isShow;
 }
 function onShowUserSettingAsider(isShow){
   state.isShowUserSettingAsider = isShow;
@@ -67,7 +71,9 @@ function onShowUserSettingAsider(isShow){
 function onShowAccountAsider(isShow){
   state.isShowAccountAsider = isShow;
 }
-
+emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
+  utils.extend(state.user, { ...user });
+});
 </script>
 <template>
   <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
@@ -98,6 +104,8 @@ function onShowAccountAsider(isShow){
       </div>
       <H5TBar></H5TBar>
     </div>
-    <ContactDetail :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
   </div>
+  <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
+  <AsiderUserConfig :is-show="state.isShowUserSettingAsider" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
+  <AsiderUserAccount :is-show="state.isShowAccountAsider" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
 </template>

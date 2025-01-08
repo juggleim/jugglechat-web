@@ -2554,8 +2554,8 @@
   float: left;
   margin: 0.2rem;
 }
-.jg-aside-userlogin-body .jg-login-container{
-  
+.jg-aside-userlogin-body .tyn-root{
+  height: unset;
 }
 .jg-aside-userlogin-body{
   display: flex;

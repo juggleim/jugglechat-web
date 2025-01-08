@@ -77,7 +77,7 @@ function onCancel() {
 }
 
 emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
-  utils.extend(state, { user });
+  utils.extend(state.user, { ...user });
 });
 </script>
 
@@ -89,7 +89,7 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
             <ul class="jg-ul">
               <li class="jg-li jg-card-li-userinfo">
                 <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
-                <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
+                <div class="jg-header-user-name">{{ state.user.name }}</div>
               </li>
               <li class="jg-li">
                 <div class="label">用户 ID</div>
