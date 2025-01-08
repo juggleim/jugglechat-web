@@ -11,11 +11,6 @@ import emitter from "../common/emmit";
 import im from "../common/im";
 import HeaderDropMenu from './header-menu.vue';
 import { Group, User } from "../services/index";
-import ModalUser from "./modal-user.vue";
-
-import ModalUserSetting from "./modal-user-setting.vue";
-import ModalSearch from "./modal-search.vue";
-import ModalUserAccount from "./modal-user-account.vue";
 
 import AsiderFriendAdd from "./aside-friend-add.vue";
 import AsiderGroupAddMember from "./aside-group-add-member.vue";
@@ -148,18 +143,6 @@ function onDropMenuClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_GROUP)){
     onShowGroupCreate(true);
   }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_UPDATE)){
-    onShowUserModal(true);
-  }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
-    onShowUserSettingModal(true);
-  }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_ACCOUNT)){
-    onShowAccountModal(true);
-  }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
-    emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
-  }
 }
 
 function onShowGroupCreate(isShow){
@@ -174,13 +157,6 @@ function onShowUserModal(isShow){
 }
 function onUserCanncel(){
   onShowUserModal(false);
-}
-
-function onShowUserSettingModal(isShow){
-  utils.extend(state, { isShowUserSetting: isShow });
-};
-function onUserSettingCancel(){
-  onShowUserSettingModal(false);
 }
 
 function onShowFriendAdd(isShow){
@@ -224,7 +200,6 @@ watch(useRouterCurrent, (value) => {
           <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
           <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
         </div>
-        <!-- <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.userMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu> -->
       </li>
       
       <li class="jg-footer-tool" v-if="juggle.isDesktop()">
@@ -271,8 +246,4 @@ watch(useRouterCurrent, (value) => {
   <AsiderUserSetting :is-show="state.isShowSettingMenu" @oncancel="onShowSettingMenu(false)"></AsiderUserSetting>
 
   <AsideUserUpdate :is-show="state.isShowUser" :disabled-close="state.disableClose" @oncancel="onUserCanncel"></AsideUserUpdate>
-  <!-- <ModalUser :is-show="state.isShowUser" :is-show-close="state.disableClose" user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser> -->
-  <ModalUserSetting :is-show="state.isShowUserSetting" @oncancel="onUserSettingCancel" ></ModalUserSetting>
-  <ModalSearch :is-show="state.isShowSearchModal" @oncancel="onShowSearchModal(false)" @onnav="onNavChat"></ModalSearch>
-  <ModalUserAccount :is-show="state.isShowAddAccount" @oncancel="onShowAccountModal(false)"></ModalUserAccount>
 </template>
