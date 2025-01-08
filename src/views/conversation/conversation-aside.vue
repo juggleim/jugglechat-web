@@ -1,9 +1,6 @@
 <script setup>
 import { reactive, watch, getCurrentInstance } from "vue";
 import utils from "../../common/utils";
-import AsideFile from "./aside-file.vue";
-import AsideImage from "./aside-image.vue";
-import AsideVideo from "./aside-video.vue";
 import im from "../../common/im";
 import ModalAddMemberGroup from "../../components/modal-add-member-group.vue";
 import ModalRemoveMemberGroup from "../../components/modal-remove-member-group.vue";
@@ -11,6 +8,7 @@ import ModalTranserGroupOwner from "../../components/modal-transfer-group-owner.
 import ModalTranslator from "../../components/modal-translator.vue";
 import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import JSwitch from "../../components/switch.vue";
+import Asider from "../../components/aside.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -20,7 +18,7 @@ import { GROUP_ROLE, ASIDER_SETTING_SWITCH, STORAGE, GROUP_CHANGE_TYPE, MSG_NAME
 import emitter from "../../common/emmit";
 
 const props = defineProps(["isShow", "conversation", "members", "group"]);
-const emit = defineEmits(["onclearmsg", "onquitgroup", "ontop", "ondisturb", "onbangroup"]);
+const emit = defineEmits(["onclearmsg", "onquitgroup", "ontop", "ondisturb", "onbangroup", "oncancel"]);
 
 const context = getCurrentInstance();
 let juggle = im.getCurrent();
@@ -296,6 +294,10 @@ function updateSwitchValue(name, value, option){
   }
 }
 
+function onCancel(){
+  emit('oncancel', {});
+}
+
 function onShowTransferGroupOwner(isShow){
   state.isShowTransferGroupOwner = isShow;
 }
@@ -347,7 +349,7 @@ watch(() => props.isShow, () => {
 </script>
 
 <template>
-  <div class="tyn-chat-content-aside show-aside" :class="[props.isShow ? 'jg-aside-show' : 'tyn-chat-content-aside']">
+  <Asider :is-show="props.isShow" :title="'会话详情'" @oncancel="onCancel" :right="1">
     <div class="tyn-media-group tyn-media-vr tyn-media-center">
       <div class="tyn-aside-members">
         <div class="tyn-aside-member" v-for="member in state.members">
@@ -420,23 +422,24 @@ watch(() => props.isShow, () => {
         <a class="btn w-100 jg-warn-letter" @click="onQuitGroup()">退出群聊</a>
       </div>
     </div>
-    <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
-      :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"
-      @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
-    
-    <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
-      :is-loading="state.isGroupRemoveMemberLoading" :members="state.members" @oncancel="onCancelRemoveGroupMember"
-      @onconfirm="onConfirmRemoveGroupMember"></ModalRemoveMemberGroup>
+  </Asider>
 
-    <ModalTranserGroupOwner :is-show="state.isShowTransferGroupOwner" :group-id="props.conversation.conversationId" 
-      :members="state.members" 
-      @onfinish="onFinishTransferGroupOwner"
-      @oncancel="onShowTransferGroupOwner(false)"></ModalTranserGroupOwner>
+  <ModalAddMemberGroup :is-show="state.isShowFriend" :is-loading="state.isCreateGroupLoading"
+    :conversation="props.conversation" :members="state.members" @oncancel="onCancelGroupCreate"
+    @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
+  
+  <ModalRemoveMemberGroup :is-show="state.currentGroupId" :group-id="state.currentGroupId"
+    :is-loading="state.isGroupRemoveMemberLoading" :members="state.members" @oncancel="onCancelRemoveGroupMember"
+    @onconfirm="onConfirmRemoveGroupMember"></ModalRemoveMemberGroup>
 
-    <ModalTranslator :is-show="state.isShowTranslator" 
-      :conversation="props.conversation" 
-      @onfinish="onFinishTranslator"
-      @oncancel="onShowTranslator(false)"></ModalTranslator>
-    <ModalGroupNotice :is-show="state.isShowGroupNotice" :content="state.groupNoticeContent" @onconfirm="onUpdateNotice" @oncancel="onShowGroupNotice(false)"></ModalGroupNotice>
-  </div>
+  <ModalTranserGroupOwner :is-show="state.isShowTransferGroupOwner" :group-id="props.conversation.conversationId" 
+    :members="state.members" 
+    @onfinish="onFinishTransferGroupOwner"
+    @oncancel="onShowTransferGroupOwner(false)"></ModalTranserGroupOwner>
+
+  <ModalTranslator :is-show="state.isShowTranslator" 
+    :conversation="props.conversation" 
+    @onfinish="onFinishTranslator"
+    @oncancel="onShowTranslator(false)"></ModalTranslator>
+  <ModalGroupNotice :is-show="state.isShowGroupNotice" :content="state.groupNoticeContent" @onconfirm="onUpdateNotice" @oncancel="onShowGroupNotice(false)"></ModalGroupNotice>
 </template>

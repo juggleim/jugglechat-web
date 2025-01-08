@@ -6,7 +6,7 @@ import ModalMergeMsgs from "../../components/modal-merge-msgs.vue";
 import Mention from "../../components/mention.vue";
 import Transfer from "../../components/transfer-panel.vue";
 import Reply from "../../components/reply.vue";
-import Aside from "./aside.vue";
+import ConversationAsider from "./conversation-aside.vue";
 import { reactive, shallowRef, watch, nextTick, getCurrentInstance } from "vue";
 import { preview } from 'vue3-image-preview';
 import im from "../../common/im";
@@ -873,16 +873,16 @@ watch(() => state.content, (val) => {
       <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
       <div class="jg-group-ban" v-if="state.isShowGroupMute">群组已禁言</div>
     </div>
-    <Aside :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group" 
+    <ConversationAsider :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group" 
       @ontop="onSetConversationTop" 
       @ondisturb="onConversationDisturb"
       @onclearmsg="onClearMessages" 
       @onquitgroup="onQuitGroup"
       @onbangroup="onBanGroup"
-      ></Aside>
+      @oncancel="onShowAside"
+      ></ConversationAsider>
     <ModalTransfer :is-show="state.isShowTransferMember" @oncancel="onCancelTransferModal" @onconfirm="onConfirmTranser"></ModalTransfer>
     <ModalMergeMsgs :is-show="!utils.isEmpty(state.currentMergeMessage)" :message="state.currentMergeMessage" @oncancel="onCancelMergeDetail"></ModalMergeMsgs>
     <ModalImgSender :is-show="!utils.isEmpty(state.imgSender)" :img="state.imgSender" :conversation="state.currentConversation" @oncancel="onShowImgSender({})" @onconfirm="onConfirmImgSender"></ModalImgSender>
-    <div class="modal-backdrop fade show" v-if="state.isShowAside" @click="onShowAside()"></div>  
   </div>
 </template>
