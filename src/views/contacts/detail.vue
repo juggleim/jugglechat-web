@@ -73,7 +73,7 @@ function onRemoveFriend(){
     <div class="contact-content">
       <div class="tyn-chat-head" v-if="!utils.isEmpty(props.current)">
         <div class="tyn-media-group">
-          <div class="tyn-media tyn-size-3xl d-none d-sm-inline-flex tyn-conver-avatar" :style="{ 'background-image': 'url('+props.current.avatar+')' }"></div>
+          <div class="tyn-media tyn-size-3xl tyn-conver-avatar" :style="{ 'background-image': 'url('+props.current.avatar+')' }"></div>
           <div class="tyn-media-col" v-if="utils.isEqual(props.current.type, CONTACT_TYPE.NEW_FRIEND)">
             <div class="tyn-media-row">
               <h3 class="name">{{ props.current.user.nickname }}</h3>
