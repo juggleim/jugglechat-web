@@ -2,7 +2,7 @@
 import utils from "../../common/utils";
 import { useRouter } from "vue-router";
 import { reactive, getCurrentInstance, watch } from "vue";
-import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE }  from "../../common/enum";
+import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE, SETTING_CARDS }  from "../../common/enum";
 
 import H5TBar from "../conversation/conversation-tbar.vue";
 import H5Header from "../conversation/conversation-header.vue";
@@ -19,24 +19,7 @@ import emitter from "../../common/emmit";
 let user = Storage.get(STORAGE.USER_TOKEN);
 let state = reactive({
   user: user,
-  cards: [
-    { tag: 1, 
-      menus: [ 
-      { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
-      { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
-      ] 
-    },
-    { tag: 2, 
-      menus: [ 
-      { name: '添加账号', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
-      ] 
-    },
-    { tag: 3, 
-      menus: [ 
-      { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
-      ] 
-    },
-  ],
+  cards: SETTING_CARDS,
   isShowUserUpdateAsider: false,
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,

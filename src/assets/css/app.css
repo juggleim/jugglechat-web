@@ -1829,7 +1829,7 @@ dl {
 
 .tyn-common-aside {
   position: absolute;
-  left: -200%;
+  left: -400%;
   background: #FAFAFA;
   height: 100%;
   display: flex;
@@ -1863,7 +1863,8 @@ dl {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1rem;
+  padding: 3.5rem 1rem 0 1rem;
+  margin-bottom: 3rem;
 }
 .tyn-common-header .title{
   font-size: 1rem;

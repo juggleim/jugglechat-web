@@ -2547,12 +2547,13 @@
   padding: 0;
 }
 .jg-aside-userupdate-body .form-avatars{
-  height: 40rem;
-  display: block;
+  height: 20rem;
+  display: flex;
+  justify-content: space-evenly;
 }
 .jg-aside-userupdate-body .form-avatar{
-  float: left;
-  margin: 0.2rem;
+  height: 3rem;
+  width: 3rem;
 }
 .jg-aside-userlogin-body .tyn-root{
   height: unset;

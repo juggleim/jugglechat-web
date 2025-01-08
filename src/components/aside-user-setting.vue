@@ -10,7 +10,7 @@ import AsiderUserConfig from "./aside-user-config.vue";
 import AsiderUserAccount from "./aside-user-account.vue";
 
 import { User } from "../services/index";
-import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME } from "../common/enum";
+import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME, SETTING_CARDS } from "../common/enum";
 import Storage from "../common/storage";
 
 const context = getCurrentInstance();
@@ -20,24 +20,7 @@ const emit = defineEmits(["oncancel"]);
 let user = Storage.get(STORAGE.USER_TOKEN);
 let state = reactive({
   user: user,
-  cards: [
-    { tag: 1, 
-      menus: [ 
-      { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
-      { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
-      ] 
-    },
-    { tag: 2, 
-      menus: [ 
-      { name: '账号管理', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
-      ] 
-    },
-    { tag: 3, 
-      menus: [ 
-      { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
-      ] 
-    },
-  ],
+  cards: SETTING_CARDS,
   isShowUserUpdateAsider: false,
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,

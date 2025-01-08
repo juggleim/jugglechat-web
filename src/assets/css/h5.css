@@ -3,6 +3,9 @@
   .tyn-root::before{
     position: fixed;
   }
+  .tyn-web-root{
+    --footer-height: 0;
+  }
   .tyn-web-root .jg-nlogin-num-btn{
     display: none;
   }
@@ -50,7 +53,7 @@
   }
   .tyn-content-active .tyn-aside{
     opacity: 0;
-    left: -100%;
+    left: -400%;
   }
   .tyn-content-active .tyn-chat-content{
     transition: right 0.3s ease;
@@ -135,5 +138,13 @@
 
   .tyn-common-aside.show-caside{
     width: 100%;
+  }
+  .nav-link,
+  .nav-link::before{
+    font-size: 1rem !important;
+  }
+  .jg-setting-aside .jg-li,
+  .jg-setting-aside .jg-li a::before{
+    font-size: 1rem;
   }
 }

@@ -89,8 +89,8 @@ watch(() => props.isShow, () => {
         <div class="form-group tyn-pill">
           <div class="form-control-wrap">
             <div class="form-control-icon start wr wr-search"></div>
-            <input type="text" class="form-control form-control-solid" placeholder="输入手机号回车搜索好友"
-              @keydown.enter="onSearch" v-model="state.phone" @input="onInput"/>
+            <input type="search" class="form-control form-control-solid" placeholder="输入手机号回车搜索好友"
+              @keydown.enter.self="onSearch" v-model="state.phone" @input="onInput"/>
             <label class="form-label" for="email-address">
               <span class="small ms-2 text-danger">{{ state.errorMsg }}</span>
             </label>
