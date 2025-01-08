@@ -4,8 +4,8 @@ import utils from "../common/utils";
 import common from "../common/common";
 import emitter from "../common/emmit";
 
-const props = defineProps(["isShow"]);
-const emit = defineEmits([]);
+const props = defineProps(["isShow", "title", "cls", "right"]);
+const emit = defineEmits(['oncancel']);
 
 const context = getCurrentInstance();
 
@@ -13,12 +13,24 @@ let state = reactive({
   list: []
 });
 
+function onCancel(){
+  emit('oncancel', {});
+}
 watch(() => props.isShow, () => {
 });
 </script>
 
 <template>
-  <div class="tyn-common-aside" :class="[props.isShow ? 'show-caside' : '']">
-  123123
+  <div class="tyn-common-aside" :class="[props.isShow ? 'show-caside' : '', props.cls, props.right ? 'tyn-common-aside-right' : '']">
+    <div class="tyn-common-header">
+      <div class="title">{{ props.title }}</div>
+      <ul class="tools">
+        <li class="tool close wr wr-close" @click.prevent="onCancel()"></li>
+      </ul>
+    </div>
+    <div class="tyn-common-body">
+      <slot></slot>
+    </div>
   </div>
+  <div class="modal-backdrop show" v-if="props.isShow" @click.prevent="onCancel()"></div>  
 </template>

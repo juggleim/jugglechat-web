@@ -1846,5 +1846,43 @@ dl {
   transform: none;
   width: 390px;
   left: 0;
-  
+}
+.tyn-common-aside-right{
+  right: -100%;
+  transition: right 0.6s ease;
+}
+.tyn-common-aside-right.show-caside {
+  transition: right 0.3s ease;
+  transform: none;
+  width: 390px;
+  right: 0;
+  left: unset;
+}
+
+.tyn-common-header{
+  height: 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+}
+.tyn-common-header .title{
+  font-size: 1rem;
+  color: #2b2a2a;
+  font-weight: 600;
+}
+.tyn-common-header .close{
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  height: 2rem;
+  width: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.tyn-common-header .tool{
+  user-select: none;
+}
+.tyn-common-body{
+  padding: 0 1rem;
 }
