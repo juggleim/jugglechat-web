@@ -148,7 +148,11 @@ function getLoginQR(){
     }
   });
 }
-getLoginQR();
+
+let user = Storage.get(STORAGE.USER_TOKEN);
+if(!utils.isMobile() && !user.id){
+  getLoginQR();
+}
 
 let pollingTimer = 0;
 function startPolling(){
