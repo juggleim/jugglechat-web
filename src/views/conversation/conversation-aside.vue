@@ -5,11 +5,11 @@ import im from "../../common/im";
 
 import ModalTranserGroupOwner from "../../components/modal-transfer-group-owner.vue";
 import ModalTranslator from "../../components/modal-translator.vue";
-import ModalGroupNotice from "../../components/modal-group-notice.vue";
 import JSwitch from "../../components/switch.vue";
 import Asider from "../../components/aside.vue";
 import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
 import AsiderGroupRemoveMember from "../../components/aside-group-remove-member.vue";
+import AsiderGroupNotice from "../../components/aside-group-notice.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -437,5 +437,11 @@ watch(() => props.isShow, () => {
     :conversation="props.conversation" 
     @onfinish="onFinishTranslator"
     @oncancel="onShowTranslator(false)"></ModalTranslator>
-  <ModalGroupNotice :is-show="state.isShowGroupNotice" :content="state.groupNoticeContent" @onconfirm="onUpdateNotice" @oncancel="onShowGroupNotice(false)"></ModalGroupNotice>
+
+  <AsiderGroupNotice 
+    :is-show="state.isShowGroupNotice" 
+    :content="state.groupNoticeContent" 
+    @onconfirm="onUpdateNotice" 
+    @oncancel="onShowGroupNotice(false)">
+  </AsiderGroupNotice>
 </template>
