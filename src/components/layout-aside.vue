@@ -20,6 +20,7 @@ import ModalUserAccount from "./modal-user-account.vue";
 import AsiderFriendAdd from "./aside-friend-add.vue";
 import AsiderGroupAddMember from "./aside-group-add-member.vue";
 import AsiderUserSetting from "./aside-user-setting.vue";
+import AsideUserUpdate from "./aside-user-update.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -52,7 +53,7 @@ let state = reactive({
   isShowAddFriend: false,
   isShowCreateGroup: false,
   isCreateGroupLoading: false,
-  isShowUserClose: true,
+  disableClose: false,
   isShowUser: false,
   isShowUserSetting: false,
   isShowAddAccount: false,
@@ -181,30 +182,7 @@ function onShowUserSettingModal(isShow){
 function onUserSettingCancel(){
   onShowUserSettingModal(false);
 }
-let isSaveingUser = false;
-function onUserSave(user){
-  if(isSaveingUser){
-    return;
-  }
-  isSaveingUser = true;
-  User.update(user).then((result) => {
-    isSaveingUser = false;
-    if(!utils.isEqual(result.code, RESPONSE.SUCCESS)){
-      let errorCode = result.code;
-      return context.proxy.$toast({
-        text: `保存失败：${errorCode}`,
-        icon: 'error'
-      });
-    }
-    utils.extend(state.user, user);
-    utils.extend(state, { isShowUser: false, isShowUserClose: true });
 
-    let _user = Storage.get(STORAGE.USER_TOKEN);
-    _user = utils.extend(_user, user);
-    Storage.set(STORAGE.USER_TOKEN, _user);
-    emitter.$emit(EVENT_NAME.ON_USER_INFO_UPDATE, { user: _user });
-  });
-}
 function onShowFriendAdd(isShow){
   state.isShowAddFriend = isShow;
 }
@@ -222,7 +200,7 @@ function onNavChat(item) {
 // 强制修改头像
 let portrait = user.portrait || '';
 let isShowUser = utils.isBase64(portrait.replace('data:image/jpeg;base64,', ''));
-utils.extend(state, { user, isShowUser, isShowUserClose: !isShowUser });
+utils.extend(state, { user, isShowUser, disableClose: isShowUser });
 
 let useRouterCurrent = reactive(router);
 watch(useRouterCurrent, (value) => {
@@ -292,7 +270,8 @@ watch(useRouterCurrent, (value) => {
   ></AsiderGroupAddMember>
   <AsiderUserSetting :is-show="state.isShowSettingMenu" @oncancel="onShowSettingMenu(false)"></AsiderUserSetting>
 
-  <ModalUser :is-show="state.isShowUser" :is-show-close="state.isShowUserClose" :user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser>
+  <AsideUserUpdate :is-show="state.isShowUser" :disabled-close="state.disableClose" @oncancel="onUserCanncel"></AsideUserUpdate>
+  <!-- <ModalUser :is-show="state.isShowUser" :is-show-close="state.disableClose" user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser> -->
   <ModalUserSetting :is-show="state.isShowUserSetting" @oncancel="onUserSettingCancel" ></ModalUserSetting>
   <ModalSearch :is-show="state.isShowSearchModal" @oncancel="onShowSearchModal(false)" @onnav="onNavChat"></ModalSearch>
   <ModalUserAccount :is-show="state.isShowAddAccount" @oncancel="onShowAccountModal(false)"></ModalUserAccount>

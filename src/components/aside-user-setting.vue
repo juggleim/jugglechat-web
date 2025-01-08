@@ -21,8 +21,8 @@ let state = reactive({
   cards: [
     { tag: 1, 
       menus: [ 
-      { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
       { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
+      { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
       ] 
     },
     { tag: 2, 

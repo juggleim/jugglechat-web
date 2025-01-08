@@ -9,7 +9,7 @@ import { User } from "../services/index";
 import { RESPONSE, STORAGE, EVENT_NAME } from "../common/enum";
 import Storage from "../common/storage";
 
-const props = defineProps(["isShow", "isShowClose"]);
+const props = defineProps(["isShow", "disabledClose"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 let avatars = common.getAvatars();
 
@@ -85,7 +85,7 @@ function onNameInput(){
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'修改信息'" @oncancel="onCancel" :disabled-close="props.isShowClose">
+  <Asider :is-show="props.isShow" :title="'修改信息'" @oncancel="onCancel" :disabled-close="props.disabledClose">
     <div class="jg-aside-userupdate-body">
       <div class="form-group">
         <input type="text" class="form-control" :class="{'form-control-warn': state.isNameError}" placeholder="输入昵称" v-model="state.username" @input="onNameInput()">

@@ -14,6 +14,9 @@ let state = reactive({
 });
 
 function onCancel(){
+  if(props.disabledClose){
+    return;
+  }
   emit('oncancel', {});
 }
 watch(() => props.isShow, () => {
