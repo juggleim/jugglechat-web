@@ -304,7 +304,7 @@ dl {
   top: 0;
   z-index: 1;
   padding: 0 var(--aside-gap-x) var(--aside-item-gap-y);
-  background: var(--aside-bg);
+  /* background: var(--aside-bg); */
 }
 .tyn-aside-item {
   padding: var(--aside-item-gap-y);
@@ -1829,7 +1829,7 @@ dl {
 
 .tyn-common-aside {
   position: absolute;
-  left: -100%;
+  left: -200%;
   background: #FAFAFA;
   height: 100%;
   display: flex;
@@ -1840,21 +1840,20 @@ dl {
   z-index: 1200;
   top: 0;
   transition: left 0.6s ease;
+  width: 390px;
 }
 .tyn-common-aside.show-caside {
   transition: left 0.3s ease;
   transform: none;
-  width: 390px;
   left: 0;
 }
 .tyn-common-aside-right{
-  right: -100%;
+  right: -200%;
   transition: right 0.6s ease;
 }
 .tyn-common-aside-right.show-caside {
   transition: right 0.3s ease;
   transform: none;
-  width: 390px;
   right: 0;
   left: unset;
 }

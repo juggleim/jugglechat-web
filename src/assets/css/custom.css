@@ -2464,3 +2464,40 @@
   left: -5.5rem;
   z-index: 1210;
 }
+.jg-aside-friend-body .form-check-algin{
+  padding: 0 1rem;
+}
+.jg-aside-group-body{
+  display: flex;
+  flex-direction: column;
+  height: 90%;
+}
+.jg-aside-group-body .tyn-media-list{
+  flex: 1 auto;
+  overflow-y: auto;
+  display: block;
+  height: 42rem;
+}
+.jg-aside-group-body .tyn-media-item{
+  display: flex;
+  float: left;
+  flex-direction: column;
+  width: 4rem;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 22px;
+  cursor: pointer;
+  position: relative;
+  padding: 0.5rem;
+}
+.jg-aside-group-body .tyn-media-item .name{
+  font-size: 10px;
+}
+.jg-aside-group-body .tyn-tfcontact-s{
+  position: absolute;
+  top: -2px;
+  right: 6px;
+}
+.jg-aside-group-body .jg-tools{
+  height: 2rem;
+}

@@ -12,11 +12,13 @@ import im from "../common/im";
 import HeaderDropMenu from './header-menu.vue';
 import { Group, User } from "../services/index";
 import ModalUser from "./modal-user.vue";
-import ModalAddMemberGroup from "./modal-add-member-group.vue";
-import ModalFriendAdd from "./modal-friend-add.vue";
+
 import ModalUserSetting from "./modal-user-setting.vue";
 import ModalSearch from "./modal-search.vue";
 import ModalUserAccount from "./modal-user-account.vue";
+
+import AsiderFriendAdd from "./aside-friend-add.vue";
+import AsiderGroupAddMember from "./aside-group-add-member.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -164,37 +166,6 @@ function onShowGroupCreate(isShow){
 function onCancelGroupCreate(e){
   onShowGroupCreate(false);
 }
-function onConfirmGroupCreate({ friends }){
-  if (state.isCreateGroupLoading) {
-    return;
-  }
-  state.isCreateGroupLoading = true;
-
-  let name = utils.map(friends, (friend) => {
-    return friend.nickname;
-  }).join(', ');
-  if(name.length > 20){
-    name = `${name.substr(0, 20)}...`;
-  }
-
-  let members = utils.filter(friends, (friend) => {
-    return !friend.disabled;
-  });
-  let avatar = GROUP_AVATAR;
-  Group.create({ name, avatar, members }).then((result) => {
-    let { data: group } = result;
-    let conversation = {
-      conversationType: ConversationType.GROUP,
-      conversationId: group.group_id,
-      conversationTitle: name,
-      conversationPortrait: avatar,
-      latestMessage: {}
-    };
-    emitter.$emit(EVENT_NAME.ON_GROUP_CREATED, { conversation })
-    onCancelGroupCreate();
-    state.isCreateGroupLoading = false;
-  });
-}
 
 function onShowUserModal(isShow){
   utils.extend(state, { isShowUser: isShow });
@@ -238,31 +209,6 @@ function onShowFriendAdd(isShow){
 }
 function onFriendAddCancel(){
   onShowFriendAdd(false);
-}
-function onFriendAddConfirm(friend){
-  let user = Storage.get(STORAGE.USER_TOKEN);
-  Friend.add(friend).then((result) => {
-    let { code } = result;
-    if(!utils.isEqual(code, RESPONSE.SUCCESS)){
-      return context.proxy.$toast({
-        text: `添加好友失败：${code}`,
-        icon: 'error'
-      });
-    }
-    context.proxy.$toast({
-      text: `已发送好友添加请求`,
-      icon: 'success'
-    });
-    onShowFriendAdd(false);
-    // let { ConversationType } = juggle;
-    // let _friend = {
-    //   id: friend.user.user_id,
-    //   type: ConversationType.PRIVATE, 
-    //   name: friend.user.nickname, 
-    //   avatar: friend.user.avatar
-    // }
-    // emitter.$emit(EVENT_NAME.ON_ADDED_FRIEND, _friend);
-  });
 }
 
 function onNavChat(item) {
@@ -336,15 +282,13 @@ watch(useRouterCurrent, (value) => {
     </ul> -->
   </div>
 
-  <ModalFriendAdd :is-show="state.isShowAddFriend" @oncancel="onFriendAddCancel" @onconfirm="onFriendAddConfirm"></ModalFriendAdd>
-  
-  <ModalAddMemberGroup 
+  <AsiderFriendAdd :is-show="state.isShowAddFriend" @oncancel="onFriendAddCancel"></AsiderFriendAdd>
+  <AsiderGroupAddMember
     :is-show="state.isShowCreateGroup" 
-    :is-loading="state.isCreateGroupLoading"
     :conversation="{}"
     :members="[]"
     @oncancel="onCancelGroupCreate"
-    @onconfirm="onConfirmGroupCreate"></ModalAddMemberGroup>
+  ></AsiderGroupAddMember>
 
   <ModalUser :is-show="state.isShowUser" :is-show-close="state.isShowUserClose" :user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser>
   <ModalUserSetting :is-show="state.isShowUserSetting" @oncancel="onUserSettingCancel" ></ModalUserSetting>

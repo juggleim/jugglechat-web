@@ -3,6 +3,8 @@ import { reactive, getCurrentInstance, nextTick, watch } from "vue";
 import HeaderDropMenu from '../../components/header-menu.vue';
 import { ASIDE_MENU_TYPE } from "../../common/enum";
 import utils from "../../common/utils";
+import AsiderFriendAdd from "../../components/aside-friend-add.vue";
+import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
 
 const props = defineProps(["isShow"]);
 
@@ -12,6 +14,8 @@ let state = reactive({
     { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
   ],
   isShowAddMenu: false,
+  isShowAddFriend: false,
+  isShowCreateGroup: false,
 });
 
 function onShowAddMenu(isShow){
@@ -21,11 +25,17 @@ function onDropMenuClick(menu){
   let { event } = menu;
   onShowAddMenu();
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_FRIREND)){
-    // onShowFriendAdd(true);
+    onShowAddFriend(true)
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_GROUP)){
-    // onShowGroupCreate(true);
+    onShowCreateGroup(true)
   }
+}
+function onShowAddFriend(isShow){
+  state.isShowAddFriend = isShow;
+}
+function onShowCreateGroup(isShow){
+  state.isShowCreateGroup = isShow;
 }
 </script>
 
@@ -41,4 +51,6 @@ function onDropMenuClick(menu){
       <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-h5header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
     </li>
   </ul>
+  <AsiderFriendAdd :is-show="state.isShowAddFriend" @oncancel="onShowAddFriend(false)"></AsiderFriendAdd>
+  <AsiderGroupAddMember :is-show="state.isShowCreateGroup" :conversation="{}" :members="[]" @oncancel="onShowCreateGroup(false)"></AsiderGroupAddMember>
 </template>
