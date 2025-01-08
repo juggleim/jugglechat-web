@@ -4,7 +4,7 @@ import utils from "../common/utils";
 import common from "../common/common";
 import emitter from "../common/emmit";
 
-const props = defineProps(["isShow", "title", "cls", "right"]);
+const props = defineProps(["isShow", "title", "cls", "right", "disabledClose"]);
 const emit = defineEmits(['oncancel']);
 
 const context = getCurrentInstance();
@@ -25,7 +25,7 @@ watch(() => props.isShow, () => {
     <div class="tyn-common-header">
       <div class="title">{{ props.title }}</div>
       <ul class="tools">
-        <li class="tool close wr wr-close" @click.prevent="onCancel()"></li>
+        <li class="tool close wr wr-close" @click.prevent="onCancel()" v-if="!props.disabledClose"></li>
       </ul>
     </div>
     <div class="tyn-common-body">

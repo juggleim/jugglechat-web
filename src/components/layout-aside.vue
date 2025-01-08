@@ -19,6 +19,7 @@ import ModalUserAccount from "./modal-user-account.vue";
 
 import AsiderFriendAdd from "./aside-friend-add.vue";
 import AsiderGroupAddMember from "./aside-group-add-member.vue";
+import AsiderUserSetting from "./aside-user-setting.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -41,7 +42,7 @@ let state = reactive({
   userMenus: [
     { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
     { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
-    { name: '添加账号', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
+    { name: '账号管理', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
     { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
   ],
   bottomMenus: [],
@@ -245,7 +246,7 @@ watch(useRouterCurrent, (value) => {
           <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
           <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
         </div>
-        <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.userMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
+        <!-- <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.userMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu> -->
       </li>
       
       <li class="jg-footer-tool" v-if="juggle.isDesktop()">
@@ -289,6 +290,7 @@ watch(useRouterCurrent, (value) => {
     :members="[]"
     @oncancel="onCancelGroupCreate"
   ></AsiderGroupAddMember>
+  <AsiderUserSetting :is-show="state.isShowSettingMenu" @oncancel="onShowSettingMenu(false)"></AsiderUserSetting>
 
   <ModalUser :is-show="state.isShowUser" :is-show-close="state.isShowUserClose" :user="state.user" @oncancel="onUserCanncel" @onconfirm="onUserSave"></ModalUser>
   <ModalUserSetting :is-show="state.isShowUserSetting" @oncancel="onUserSettingCancel" ></ModalUserSetting>

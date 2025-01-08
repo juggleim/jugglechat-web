@@ -1839,7 +1839,7 @@ dl {
   transform: translateX(100%);
   z-index: 1200;
   top: 0;
-  transition: left 0.6s ease;
+  /* transition: left 0.6s ease; */
   width: 390px;
 }
 .tyn-common-aside.show-caside {
@@ -1849,7 +1849,7 @@ dl {
 }
 .tyn-common-aside-right{
   right: -200%;
-  transition: right 0.6s ease;
+  /* transition: right 0.6s ease; */
 }
 .tyn-common-aside-right.show-caside {
   transition: right 0.3s ease;

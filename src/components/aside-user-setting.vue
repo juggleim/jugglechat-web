@@ -1,16 +1,19 @@
 <script setup>
-import utils from "../../common/utils";
-import { useRouter } from "vue-router";
-import { reactive, getCurrentInstance, watch } from "vue";
-import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE }  from "../../common/enum";
+import { reactive, watch, getCurrentInstance } from "vue";
+import utils from "../common/utils";
+import common from "../common/common";
+import emitter from "../common/emmit";
+import Asider from "./aside.vue";
 
-import H5TBar from "../conversation/conversation-tbar.vue";
-import H5Header from "../conversation/conversation-header.vue";
+import AsiderUserUpdate from "./aside-user-update.vue";
 
-import { STORAGE } from "../../common/enum";
-import Storage from "../../common/storage";
-import common from "../../common/common";
-import emitter from "../../common/emmit";
+import { User } from "../services/index";
+import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME } from "../common/enum";
+import Storage from "../common/storage";
+
+const context = getCurrentInstance();
+const props = defineProps(["isShow"]);
+const emit = defineEmits(["oncancel"]);
 
 let user = Storage.get(STORAGE.USER_TOKEN);
 let state = reactive({
@@ -33,7 +36,7 @@ let state = reactive({
       ] 
     },
   ],
-  isShowUserAsider: false,
+  isShowUserUpdateAsider: false,
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,
 });
@@ -45,7 +48,7 @@ function onLogout(){
 function onClick(menu){
   let { event } = menu;
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_UPDATE)){
-    onShowUserAsider(true);
+    onShowUserUpdateAsider(true);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_SETTING)){
     onShowUserSettingAsider(true);
@@ -58,8 +61,8 @@ function onClick(menu){
   }
 }
 
-function onShowUserAsider(isShow){
-  state.isShowUserAsider = isShow;
+function onShowUserUpdateAsider(isShow){
+  state.isShowUserUpdateAsider = isShow;
 }
 function onShowUserSettingAsider(isShow){
   state.isShowUserSettingAsider = isShow;
@@ -67,14 +70,19 @@ function onShowUserSettingAsider(isShow){
 function onShowAccountAsider(isShow){
   state.isShowAccountAsider = isShow;
 }
+function onCancel() {
+  emit('oncancel', {});
+}
 
+emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
+  utils.extend(state, { user });
+});
 </script>
+
 <template>
-  <div class="tyn-contact tyn-content tyn-content-full-height tyn-chat has-aside-base">
-    <div class="tyn-aside tyn-contact-aside">
-      <H5Header></H5Header>
-      <div class="tyn-aside-body jg-setting-aside">
-        <ul class="jg-cards">
+  <Asider :is-show="props.isShow" :title="'个人设置'" @oncancel="onCancel" :cls="'jg-aside-ust-box'">
+    <div class="jg-aside-userst-body jg-setting-aside">
+      <ul class="jg-cards">
           <li class="jg-card jg-card-userinfo">
             <ul class="jg-ul">
               <li class="jg-li jg-card-li-userinfo">
@@ -95,9 +103,7 @@ function onShowAccountAsider(isShow){
             </ul>
           </li>
         </ul>
-      </div>
-      <H5TBar></H5TBar>
     </div>
-    <ContactDetail :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
-  </div>
+  </Asider>
+  <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
 </template>

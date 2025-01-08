@@ -5,7 +5,9 @@ import { ASIDE_MENU_TYPE } from "../../common/enum";
 import utils from "../../common/utils";
 import AsiderFriendAdd from "../../components/aside-friend-add.vue";
 import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const props = defineProps(["isShow"]);
 
 let state = reactive({
@@ -16,6 +18,7 @@ let state = reactive({
   isShowAddMenu: false,
   isShowAddFriend: false,
   isShowCreateGroup: false,
+  isShowAddButton: true
 });
 
 function onShowAddMenu(isShow){
@@ -43,7 +46,7 @@ function onShowCreateGroup(isShow){
   <ul class="jg-h5header">
     <li class="jg-h5header-left"></li>
     <li class="jg-h5header-title">JuggleChat</li>
-    <li class="jg-h5header-right">
+    <li class="jg-h5header-right" v-if="state.isShowAddButton">
       <div class="jg-asider-footer-item" @click="onShowAddMenu(true)">
         <div class="icon wr wr-plus"></div>
         <div class="name"></div>

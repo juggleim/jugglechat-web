@@ -2501,3 +2501,57 @@
 .jg-aside-group-body .jg-tools{
   height: 2rem;
 }
+.jg-card{
+  background-color: rgb(255,255,255);
+  box-shadow: inset 0 -0.0625rem 0 0 rgb(228,228,229);
+  border-bottom: .625rem solid rgb(244,244,245);
+  padding: 0.8rem;
+}
+.jg-card:last-child{
+  border-bottom: 0; 
+  box-shadow: unset;
+}
+.jg-setting-aside .jg-li{
+  background-color: #FFF;
+  padding: 10px;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+.jg-setting-aside .jg-li:hover{
+  background-color: #FAFAFA;
+}
+.jg-setting-aside .jg-li a{
+  color: #3b4450;
+}
+.jg-setting-aside .jg-li a::before{
+  margin-right: 8px;
+}
+.jg-card-userinfo .jg-li:hover{
+  background-color: transparent;
+}
+.jg-card-li-userinfo{
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+.jg-card-li-userinfo .jg-header-user-avatar{
+  height: 6rem;
+  width: 6rem;
+  border-radius: 50%;
+}
+.jg-card-li-userinfo .jg-header-user-name{
+  font-size: 14px;
+  width: 100px;
+}
+.jg-aside-ust-box .tyn-common-body{
+  padding: 0;
+}
+.jg-aside-userupdate-body .form-avatars{
+  height: 40rem;
+  display: block;
+}
+.jg-aside-userupdate-body .form-avatar{
+  float: left;
+  margin: 0.2rem;
+}
