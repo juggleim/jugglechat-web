@@ -1,6 +1,7 @@
 <script setup>
 import utils from "../../common/utils";
 import ContactDetail from "./detail.vue";
+import AsiderContactDetail from "../../components/aside-contact-detail.vue";
 import { useRouter } from "vue-router";
 import Dropmenu from "./dropmenu.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
@@ -37,6 +38,7 @@ let state = reactive({
   currentList: contacts,
   current: {},
   isShowAddFriend: false,
+  isShowDetail: false,
 });
 
 function onConversationChanged({ conversations }){
@@ -84,6 +86,10 @@ function onShowProfile(item){
     return _item;
   });
   state.current = item;
+  onShowDetail(true)
+}
+function onShowDetail(isShow){
+  state.isShowDetail = isShow;
 }
 function onTab(tab){
   if(utils.isEqual(tab.type, CONTACT_TYPE.FRIEND)){
@@ -173,6 +179,7 @@ statusMap[FRIEND_APPLY_STATUS.EXPIRED] = '已过期';
 function onAddFriend({ item }){
   item.status = FRIEND_APPLY_STATUS.ACCEPTED;
   item.statusName = statusMap[item.status];
+  onShowDetail(false);
 }
 function onRemoveFriend({ item }){
   let index = utils.find(state.currentList, (contact) => {
@@ -182,6 +189,7 @@ function onRemoveFriend({ item }){
     state.currentList.splice(index, 1);
   }
   state.current = {};
+  onShowDetail(false);
 }
 function getFriendApplyName(status){
   return statusMap[status] || '';
@@ -280,6 +288,7 @@ getFriends();
       </div>
       <H5TBar></H5TBar>
     </div>
-    <ContactDetail :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
+    <ContactDetail v-if="state.isShowDetail && !utils.isMobile()" :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
   </div>
+  <AsiderContactDetail :is-show="state.isShowDetail && utils.isMobile()" :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend" @oncancel="onShowDetail(false)"></AsiderContactDetail>
 </template>
