@@ -46,7 +46,7 @@
                 <span class="wr tyn-tfcontact-s" :class="[item.isTransferChecked ? 'wr-success-square tyn-contact-checked' : 'wr-square']"></span>
                 <div class="form-check-label">
                   <div class="tyn-media-group">
-                  <div class="tyn-media tyn-size-md d-none d-sm-inline-flex tyn-conver-avatar"
+                  <div class="tyn-media tyn-size-md tyn-conver-avatar"
                     :style="{ 'background-image': 'url(' + item.conversationPortrait + ')' }">
                   </div>
                   <div class="tyn-media-col">
