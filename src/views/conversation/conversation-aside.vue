@@ -3,13 +3,13 @@ import { reactive, watch, getCurrentInstance } from "vue";
 import utils from "../../common/utils";
 import im from "../../common/im";
 
-import ModalTranserGroupOwner from "../../components/modal-transfer-group-owner.vue";
 import ModalTranslator from "../../components/modal-translator.vue";
 import JSwitch from "../../components/switch.vue";
 import Asider from "../../components/aside.vue";
 import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
 import AsiderGroupRemoveMember from "../../components/aside-group-remove-member.vue";
 import AsiderGroupNotice from "../../components/aside-group-notice.vue";
+import AsideGroupTransferOwner from "../../components/aside-group-transfer-owner.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -428,10 +428,13 @@ watch(() => props.isShow, () => {
     @onconfirm="onConfirmRemoveGroupMember"
   ></AsiderGroupRemoveMember>
 
-  <ModalTranserGroupOwner :is-show="state.isShowTransferGroupOwner" :group-id="props.conversation.conversationId" 
+  <AsideGroupTransferOwner
+    :is-show="state.isShowTransferGroupOwner" 
+    :group-id="props.conversation.conversationId" 
     :members="state.members" 
     @onfinish="onFinishTransferGroupOwner"
-    @oncancel="onShowTransferGroupOwner(false)"></ModalTranserGroupOwner>
+    @oncancel="onShowTransferGroupOwner(false)">
+  </AsideGroupTransferOwner>
 
   <ModalTranslator :is-show="state.isShowTranslator" 
     :conversation="props.conversation" 
