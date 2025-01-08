@@ -1200,12 +1200,12 @@
 /* New Login */
 .jg-login-container{
   display: flex;
-  background-color: #f7f9fa;
   background-image: none;
   -webkit-app-region: no-drag;
   align-items: center;
   justify-content: center;
   user-select: none;
+  background-color: transparent;
 }
 .jg-login-container::before,
 .jg-login-container::after{
@@ -1314,8 +1314,7 @@
   font-size: 18px;
 }
 .jg-nlogin-btnbox{
-  width: 390px;
-  margin-top: 20px;
+  width: 300px;
 }
 .jg-nlogin-btnbox .form-group{
   width: 100%;
@@ -2554,4 +2553,12 @@
 .jg-aside-userupdate-body .form-avatar{
   float: left;
   margin: 0.2rem;
+}
+.jg-aside-userlogin-body .jg-login-container{
+  
+}
+.jg-aside-userlogin-body{
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -9,7 +9,7 @@ import { User } from "../services/index";
 import im from "../common/im";
 import ModalServerSetting from "../components/modal-server-setting.vue";
 
-const props = defineProps(["isLogin"]);
+const props = defineProps(["isLogin", "isAdd", "isShow"]);
 
 let juggle = im.getCurrent();
 let context = getCurrentInstance();
@@ -188,6 +188,13 @@ function onShowServerSetting(isShow){
 watch(() => state.isQRLogin, (isQR) => {
   if(isQR){
     startPolling();
+  }else{
+    stopPolling();
+  }
+})
+watch(() => props.isShow, () => {
+  if(props.isShow){
+    getLoginQR();
   }else{
     stopPolling();
   }

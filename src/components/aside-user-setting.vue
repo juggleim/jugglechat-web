@@ -7,6 +7,7 @@ import Asider from "./aside.vue";
 
 import AsiderUserUpdate from "./aside-user-update.vue";
 import AsiderUserConfig from "./aside-user-config.vue";
+import AsiderUserAccount from "./aside-user-account.vue";
 
 import { User } from "../services/index";
 import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME } from "../common/enum";
@@ -28,7 +29,7 @@ let state = reactive({
     },
     { tag: 2, 
       menus: [ 
-      { name: '添加账号', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
+      { name: '账号管理', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
       ] 
     },
     { tag: 3, 
@@ -108,4 +109,5 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   </Asider>
   <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
   <AsiderUserConfig :is-show="state.isShowUserSettingAsider" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
+  <AsiderUserAccount :is-show="state.isShowAccountAsider" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
 </template>
