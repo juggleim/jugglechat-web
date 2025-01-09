@@ -4449,11 +4449,14 @@ button {
 }
 
 .modal-dialog {
-  position: absolute;
+  /* position: absolute; */
   /* width: auto; */
   /* margin: var(--bs-modal-margin); */
   pointer-events: none;
-  left: 50%;
+  /* left: 50%; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .modal.fade .modal-dialog {
   transition: transform 0.3s ease-out;

@@ -37,10 +37,8 @@ watch(() => props.message, (msg) => {
   <div class="modal tyn-modal" :class="[props.isShow ? 'fade show' : '']">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 modal-merge-content">
-        <div class="modal-body">
+        <div class="modal-body tyn-chat-body js-scroll-to-end" ref="mergemessages">
           <h4 class="pb-2">消息记录</h4>
-        </div>
-        <div class="tyn-chat-body js-scroll-to-end" ref="mergemessages">
           <div class="tyn-reply">
             <div v-for="message in state.messages">
               <div class="tny-conent-msg">
