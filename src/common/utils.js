@@ -382,6 +382,12 @@ function isMobile() {
     return userAgent.includes(i)
   })
 }
+function isUniapp(){
+  let userAgent = navigator.userAgent, Agents = ["uni-app"];
+  return Agents.some((i) => {
+    return userAgent.includes(i)
+  })
+}
 function formatTime(time, fmt = 'yyyy-MM-dd hh:mm:ss') {
   let date = new Date(time);
   var o = {
@@ -536,4 +542,5 @@ export default {
   isMacBrowser,
   formatTimetoHM,
   isHighInclude,
+  isUniapp,
 }

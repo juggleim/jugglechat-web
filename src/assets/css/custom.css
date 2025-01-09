@@ -2423,13 +2423,25 @@
 .jg-h5header{
   display: none;
   justify-content: space-between;
-  background: #FAFAFA;
   height: 66px;
   min-height: 66px;
   align-items: center;
   color: #000;
   padding: 0 .5rem;
-  padding-top: 1.5rem;
+  border-bottom: 1px solid #FAFAFA;
+}
+.jg-h5header-left{
+  width: 2rem;
+}
+.jg-uni-browser{
+  display: block;
+  height: 70px;
+  min-height: 70px;
+  background: #FAFAFA;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1.8rem;
+  width: 100%;
 }
 .jg-h5footer{
   display: block;
@@ -2579,4 +2591,9 @@
 }
 .jg-aside-translator-body .tyn-media-list li{
   margin-bottom: 1rem;
+}
+.tyn-perch-h5{
+  height: 3rem;
+  min-height: 3rem;
+  width: 100%;
 }

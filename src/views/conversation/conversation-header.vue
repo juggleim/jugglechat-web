@@ -6,6 +6,7 @@ import utils from "../../common/utils";
 import AsiderFriendAdd from "../../components/aside-friend-add.vue";
 import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
 import { useRouter } from "vue-router";
+import Perch from "../../components/perch.vue";
 
 const router = useRouter();
 const props = defineProps(["isShow"]);
@@ -43,6 +44,7 @@ function onShowCreateGroup(isShow){
 </script>
 
 <template>
+  <Perch></Perch>
   <ul class="jg-h5header">
     <li class="jg-h5header-left"></li>
     <li class="jg-h5header-title">JuggleChat</li>

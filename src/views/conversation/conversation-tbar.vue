@@ -25,7 +25,7 @@ function onClick(item){
 </script>
 
 <template>
-  <ul class="jg-h5footer" v-if="utils.isMobile()">
+  <ul class="jg-h5footer" v-if="utils.isMobile()" :class="{ 'jg-uni-browser': utils.isUniapp() }">
     <li class="jg-h5footer-item" v-for="tbar in state.tbars" :class="{'jg-h5footer-active': tbar.isActive}" @click="onClick(tbar)">
       <div class="icon wr" :class="['wr-' + tbar.icon]"></div>
       <div class="name">{{ tbar.title }}</div>

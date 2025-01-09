@@ -50,7 +50,6 @@ let state = reactive({
   conversationMap: {},
   currentTag: { id: CONVERATION_TAG_ID.ALL },
 });
-
 emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   let { type, id, avatar, name} = friend;
   let conversation = {
