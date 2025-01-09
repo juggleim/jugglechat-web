@@ -9,7 +9,7 @@ import { User } from "../services/index";
 import { RESPONSE, STORAGE, EVENT_NAME } from "../common/enum";
 import Storage from "../common/storage";
 import AsiderUserLogin from "../components/aside-user-login.vue";
-const props = defineProps(["isShow"]);
+const props = defineProps(["isShow", "right"]);
 const emit = defineEmits(["oncancel"]);
 const context = getCurrentInstance();
 
@@ -64,7 +64,7 @@ watch(() => props.isShow, () => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'账号管理'" @oncancel="onCancel">
+  <Asider :is-show="props.isShow" :title="'账号管理'" :right="props.right" @oncancel="onCancel">
     <div class="jg-aside-useraccount-body">
       <ul class="jg-ul jg-acount-ul">
         <li class="jg-li jg-acount-li" @click="onShowLogin(true)">
@@ -84,5 +84,5 @@ watch(() => props.isShow, () => {
       </ul>
     </div>
   </Asider>
-  <AsiderUserLogin :is-show="state.isShowLogin" @oncancel="onShowLogin(false)"></AsiderUserLogin>
+  <AsiderUserLogin :is-show="state.isShowLogin" @oncancel="onShowLogin(false)" :right="props.right"></AsiderUserLogin>
 </template>

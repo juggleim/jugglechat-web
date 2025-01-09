@@ -10,7 +10,7 @@ import { RESPONSE, STORAGE, EVENT_NAME } from "../common/enum";
 import Storage from "../common/storage";
 import JSelect from "./jselect.vue";
 
-const props = defineProps(["isShow"]);
+const props = defineProps(["isShow", "right"]);
 const emit = defineEmits(["oncancel"]);
 const context = getCurrentInstance();
 
@@ -128,7 +128,7 @@ watch(() => props.isShow, () => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'用户设置'" @oncancel="onCancel">
+  <Asider :is-show="props.isShow" :title="'用户设置'" :right="props.right" @oncancel="onCancel">
     <div class="jg-aside-userconfig-body">
       <ul class="jg-ul jg-setting-ul">
         <li class="jg-li" v-for="setting in state.settings">

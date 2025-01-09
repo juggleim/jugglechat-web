@@ -88,7 +88,7 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
       <H5TBar></H5TBar>
     </div>
   </div>
-  <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
-  <AsiderUserConfig :is-show="state.isShowUserSettingAsider" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
-  <AsiderUserAccount :is-show="state.isShowAccountAsider" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
+  <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" :right="1" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
+  <AsiderUserConfig :is-show="state.isShowUserSettingAsider" :right="1" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
+  <AsiderUserAccount :is-show="state.isShowAccountAsider" :right="1" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
 </template>
