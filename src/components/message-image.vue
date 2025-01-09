@@ -99,7 +99,7 @@ function onChoiceEmoji(item){
         <div class="tyn-img-loading" :mid="'img_msg_' +props.message.messageId" v-if="!props.message.localUrl">
           <div class="jg-img-loader"></div>
         </div>
-        <a class="glightbox" data-gallery="media-photo" @click.stop="onPreview" :style="{'height': (calc().height) + 'px', 'width': (calc().width) + 'px'}">
+        <a class="glightbox" data-gallery="media-photo" @click.stop="onPreview" :style="{'height': (calc().height) + 'px', 'width': 'auto'}">
           <img v-if="props.message.localUrl" :src="props.message.localUrl" class="tyn-image" >
           <img v-else :src="props.message.content.thumbnail" class="tyn-image fadein-o" :id="'img_msg_' +props.message.messageId" alt/>
           <div class="jg-progress" v-if="props.message.percent < 99.9">
