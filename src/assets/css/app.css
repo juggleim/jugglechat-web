@@ -1885,4 +1885,5 @@ dl {
 }
 .tyn-common-body{
   padding: 0 1rem;
+  overflow-y: auto;
 }
