@@ -18,6 +18,10 @@
   }
   .jg-server-settings{
     right: 4%;
+    top: 6%;
+  }
+  .jg-serversetting-modal .modal-content{
+    width: 360px;
   }
   .tyn-aside-footer,
   .tyn-footer,
@@ -103,7 +107,7 @@
     width: 300px;
   }
   .tyn-emoji-pn.show-aside{
-    top: -15rem;
+    top: -16rem;
   }
   .emojis__grid{
     justify-content: center;
