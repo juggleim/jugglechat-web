@@ -966,11 +966,6 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@nanogiants/vue3-longpress@^1.0.8":
-  version "1.0.8"
-  resolved "https://registry.npmmirror.com/@nanogiants/vue3-longpress/-/vue3-longpress-1.0.8.tgz#619dcc700554a4201620c8fb7cceed42db14f6ef"
-  integrity sha512-yrqqhrjMKJ/18A+Iq+68E1C1ZrzJeA2ya2y16Zba2kr8ktBgIeQpthIBeXl5wG5B8T5LrDnSy0DjsL1VxC0uCA==
-
 "@vitejs/plugin-legacy@^6.0.0":
   version "6.0.0"
   resolved "https://registry.npmmirror.com/@vitejs/plugin-legacy/-/plugin-legacy-6.0.0.tgz#c42d728e6c3aee11e0119596960529ce6cb2279d"

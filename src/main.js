@@ -9,15 +9,24 @@ import './assets/css/custom.css';
 import './assets/css/h5.css';
 import Toast from './components/toast';
 import Modal from './components/modal-confirm';
-import { vLongpress } from '@nanogiants/vue3-longpress';
 
 // if(location.search == '?debug'){
 //   var vConsole = new window.VConsole();
 // }
 
+let LONG_PRESS_DEFAULT_DELAY = 750;
+
 async function init() {
   const app = createApp(App);
-  app.directive('use-longpress', vLongpress);
+  app.directive("longpress", {
+    mounted: (el, binding) => {
+      el.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        binding.value(event);
+      });
+    }
+  });
   Toast.install(app);
   Modal.install(app);
   await setupRouter(app);

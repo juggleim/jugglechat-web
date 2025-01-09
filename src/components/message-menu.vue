@@ -59,6 +59,6 @@ watch(() => props.isShow, (value) => {
         </a>
       </li>
     </ul>
-    <div class="fade-bg" v-if="!state.isShow" @click="emit('onhide')"></div>
+    <div class="fade-bg" v-if="!state.isShow" @click.stop="emit('onhide')"></div>
   </div>
 </template>
