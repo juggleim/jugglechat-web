@@ -881,7 +881,10 @@ watch(() => state.content, (val) => {
       <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
       <div class="jg-group-ban" v-if="state.isShowGroupMute">群组已禁言</div>
     </div>
-    <ConversationAsider :is-show="state.isShowAside" :conversation="props.conversation" :members="state.members" :group="state.group" 
+    <ConversationAsider :is-show="state.isShowAside" 
+      :conversation="props.conversation" 
+      :members="state.members" 
+      :group="state.group" 
       @ontop="onSetConversationTop" 
       @ondisturb="onConversationDisturb"
       @onclearmsg="onClearMessages" 

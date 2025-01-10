@@ -316,7 +316,7 @@ watch(() => props.isShow, () => {
 
   updateSwitchValue(ASIDER_SETTING_SWITCH.MUTE, utils.isEqual(props.conversation.undisturbType, UndisturbType.DISTURB), { isShow: true });
   updateSwitchValue(ASIDER_SETTING_SWITCH.TOP, props.conversation.isTop, { isShow: true });
-
+  
   if(props.isShow && isGroup){
     let { group_management: { group_his_msg_visible, group_mute } } = props.group;
     utils.extend(state, { members: props.members, group: props.group, groupDisplayName: props.group.grp_display_name || '' });
@@ -336,6 +336,9 @@ watch(() => props.isShow, () => {
   }else{
     updateSwitchValue(ASIDER_SETTING_SWITCH.HISTORY, false, { isShow: false });
     updateSwitchValue(ASIDER_SETTING_SWITCH.BAN, false, { isShow: false });
+  }
+  if(props.isShow && !isGroup){
+    state.members.push(props.members[0]);
   }
 });
 </script>
