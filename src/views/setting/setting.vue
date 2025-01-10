@@ -85,7 +85,7 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
           </li>
         </ul>
       </div>
-      <H5TBar></H5TBar>
+      <!-- <H5TBar></H5TBar> -->
     </div>
   </div>
   <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" :right="1" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>

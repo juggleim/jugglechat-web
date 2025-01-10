@@ -286,7 +286,7 @@ getFriends();
           </div>
         </div>
       </div>
-      <H5TBar></H5TBar>
+      <!-- <H5TBar></H5TBar> -->
     </div>
     <ContactDetail v-if="state.isShowDetail && !utils.isMobile()" :current="state.current" @onadded="onAddFriend" @onremoved="onRemoveFriend"></ContactDetail>
   </div>

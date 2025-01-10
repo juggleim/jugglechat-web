@@ -109,7 +109,7 @@ async function clearUnreadCount(item, index) {
 </script>
 
 <template>
- <div class="tyn-aside-body" ref="conversations" :tag="props.tag">
+ <div class="tyn-aside-body" ref="conversations" :tag="props.tag" :class="{'tyn-h5-aside-body': !utils.isUniapp()}">
     <ul class="tyn-aside-list">
       <li
         class="tyn-aside-item js-toggle-main"

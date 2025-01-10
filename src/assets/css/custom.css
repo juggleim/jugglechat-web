@@ -2431,7 +2431,6 @@
   border-bottom: 1px solid #FAFAFA;
 }
 .jg-h5header-left{
-  width: 2rem;
 }
 .jg-uni-browser{
   display: block;
@@ -2472,6 +2471,9 @@
   font-weight: 700;
   margin-top: -4px;
 }
+.jg-h5header-right .jg-asider-footer-item{
+  transform: scale(1.2);
+}
 .jg-h5footer-active{
   color: #3030f5e8;
 }
@@ -2479,6 +2481,14 @@
   left: -5.5rem;
   z-index: 1210;
 }
+.tyn-h5header-nav-list .jg-footer-dropdownmenu{
+  left: 0.5rem;
+  z-index: 1210;
+}
+.tyn-h5header-nav-list .tyn-list-links li a{
+  padding: 0.1rem 1rem;
+}
+
 .jg-aside-friend-body .form-check-algin{
   padding: 0 1rem;
 }

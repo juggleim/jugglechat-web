@@ -16,15 +16,28 @@ let state = reactive({
     { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
     { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
   ],
+  tbars: [
+    { name: '消息', url: 'ConversationList', icon: 'hmsg', event: ASIDE_MENU_TYPE.MESSAGE },
+    { type: 'line' },
+    { name: '通讯录', url: 'Contacts', icon: 'hcontact', event: ASIDE_MENU_TYPE.CONTACT },
+    { type: 'line' },
+    { name: '设置', url: 'Setting', icon: 'hsetting', event: ASIDE_MENU_TYPE.SETTING },
+  ],
   isShowAddMenu: false,
   isShowAddFriend: false,
   isShowCreateGroup: false,
-  isShowAddButton: true
+  isShowAddButton: true,
+  isShowNavBar: false,
 });
 
 function onShowAddMenu(isShow){
   state.isShowAddMenu = isShow;
 }
+function onShowNavBar(isShow){
+  state.isShowNavBar = isShow;
+}
+
+let { currentRoute: { _value: { name } } } = router;
 function onDropMenuClick(menu){
   let { event } = menu;
   onShowAddMenu();
@@ -33,6 +46,9 @@ function onDropMenuClick(menu){
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.ADD_GROUP)){
     onShowCreateGroup(true)
+  }
+  if(menu.url && menu.url != name){
+    router.push({ name: menu.url });
   }
 }
 function onShowAddFriend(isShow){
@@ -47,11 +63,17 @@ function onShowCreateGroup(isShow){
   <div class="jg-h5header-box">
     <Perch></Perch>
     <ul class="jg-h5header">
-      <li class="jg-h5header-left"></li>
+      <li class="jg-h5header-left">
+        <div class="jg-asider-footer-item" @click="onShowNavBar(true)">
+          <div class="icon wr wr-more-list"></div>
+          <div class="name"></div>
+        </div>
+        <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowNavBar" :menus="state.tbars" :class="'tyn-h5header-nav-list'" @onhide="onShowNavBar(false)"></HeaderDropMenu>
+      </li>
       <li class="jg-h5header-title">JuggleChat</li>
       <li class="jg-h5header-right" v-if="state.isShowAddButton">
         <div class="jg-asider-footer-item" @click="onShowAddMenu(true)">
-          <div class="icon wr wr-plus"></div>
+          <div class="icon wr wr-plus-w600"></div>
           <div class="name"></div>
         </div>
         <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-h5header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
