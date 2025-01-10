@@ -41,6 +41,10 @@
 .tyn-aside-member-name{
   font-size: 10px;
   margin-top: 2px;
+  width: 2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; 
 }
 .tyn-group-avatars{
   display: flex;
