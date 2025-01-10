@@ -11,7 +11,7 @@ import Storage from "../common/storage";
 
 let { ConversationType } = im.getCurrent();
 const router = useRouter();
-const props = defineProps(["isShow","current"]);
+const props = defineProps(["isShow","current", "isNew"]);
 const emit = defineEmits(["onadded", "onremoved", "oncancel"]);
 const context = getCurrentInstance();
 
@@ -30,6 +30,27 @@ function onConversation(){
 }
 function onAddFriend(isAgree){
   let user = props.current.user;
+
+  if(props.isNew){
+    let friend = { friendId: user.user_id };
+    return Friend.add(friend).then((result) => {
+      let { code } = result;
+      if(!utils.isEqual(code, RESPONSE.SUCCESS)){
+        return context.proxy.$toast({
+          text: `添加好友失败：${code}`,
+          icon: 'error'
+        });
+      }
+      context.proxy.$toast({
+        text: `已发送好友添加请求`,
+        icon: 'success'
+      });
+      setTimeout(() => {
+        emit('oncancel', {});
+      }, 200);
+    });
+  }
+
   Friend.confirm({ sponsor_id: user.user_id, is_agree: isAgree }).then((result) => {
     let { code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){

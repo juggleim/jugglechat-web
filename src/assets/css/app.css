@@ -1826,7 +1826,7 @@ dl {
 }
 
 .tyn-common-aside {
-  position: absolute;
+  position: fixed;
   left: -400%;
   background: #FFF;
   height: 100%;
