@@ -2442,6 +2442,10 @@
   align-items: center;
   padding: 0 1.8rem;
   width: 100%;
+  margin-bottom: 4.5rem;
+}
+.jg-uni-browser{
+  margin-bottom: 0;
 }
 .jg-h5footer{
   display: block;

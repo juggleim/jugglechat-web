@@ -44,18 +44,22 @@ function onShowCreateGroup(isShow){
 </script>
 
 <template>
-  <Perch></Perch>
-  <ul class="jg-h5header">
-    <li class="jg-h5header-left"></li>
-    <li class="jg-h5header-title">JuggleChat</li>
-    <li class="jg-h5header-right" v-if="state.isShowAddButton">
-      <div class="jg-asider-footer-item" @click="onShowAddMenu(true)">
-        <div class="icon wr wr-plus"></div>
-        <div class="name"></div>
-      </div>
-      <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-h5header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
-    </li>
-  </ul>
+  <div class="jg-h5header-box">
+    <Perch></Perch>
+    <ul class="jg-h5header">
+      <li class="jg-h5header-left"></li>
+      <li class="jg-h5header-title">JuggleChat</li>
+      <li class="jg-h5header-right" v-if="state.isShowAddButton">
+        <div class="jg-asider-footer-item" @click="onShowAddMenu(true)">
+          <div class="icon wr wr-plus"></div>
+          <div class="name"></div>
+        </div>
+        <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-h5header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
+      </li>
+    </ul>
+  </div>
+  
+  
   <AsiderFriendAdd :is-show="state.isShowAddFriend" @oncancel="onShowAddFriend(false)"></AsiderFriendAdd>
   <AsiderGroupAddMember :is-show="state.isShowCreateGroup" :conversation="{}" :members="[]" @oncancel="onShowCreateGroup(false)"></AsiderGroupAddMember>
 </template>

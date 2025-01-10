@@ -34,8 +34,7 @@
     position: absolute;
   }
   .tyn-chat-head{
-    height: 100px;
-    padding-top: 2.5rem;
+    height: 86px;
   }
   .tyn-chat-content {
     flex-direction: column;

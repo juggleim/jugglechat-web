@@ -348,7 +348,6 @@ function onTagConversationChanged({ removes, adds, tag }){
   <div class="tyn-content" :class="{'tyn-content-active': !utils.isEmpty(state.currentConversation)}">
     <div class="tyn-aside">
       <H5Header></H5Header>
-      <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)" @onconfirm="onTagConversationChanged" :tag="state.currentTag"></ModalGroupMember>
       <div class="jg-conversation-body">
         <ConversationGroup :is-show="state.isShowConversationGroup" @onchange="onGroupChange"></ConversationGroup>
         <div class="jg-conver-list" :class="[state.isShowConversationGroup ? 'show-group-conver' : '']" >
@@ -405,6 +404,7 @@ function onTagConversationChanged({ removes, adds, tag }){
       </div>
       <H5TBar></H5TBar>
     </div>
+    <ModalGroupMember :is-show="state.isShowGroupMemberManager" @oncancel="onShowGroupMemberManager(false)" @onconfirm="onTagConversationChanged" :tag="state.currentTag"></ModalGroupMember>
     <None v-if="utils.isEmpty(state.currentConversation)"></None>
     <Conversation :conversation="state.currentConversation" v-if="!utils.isEmpty(state.currentConversation) || utils.isMobile()" 
       @ondraft="onDraft" 
