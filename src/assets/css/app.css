@@ -1877,6 +1877,7 @@ dl {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  font-weight: 700;
 }
 .tyn-common-header .tool{
   user-select: none;

@@ -27,10 +27,11 @@ watch(() => props.isShow, () => {
   <div class="tyn-common-aside" :class="[props.isShow ? 'show-caside' : '', props.cls, props.right ? 'tyn-common-aside-right' : '']">
     <Perch></Perch>
     <div class="tyn-common-header">
-      <div class="title">{{ props.title }}</div>
       <ul class="tools">
-        <li class="tool close wr wr-close" @click.prevent="onCancel()" v-if="!props.disabledClose"></li>
+        <li class="tool close wr wr-left" @click.prevent="onCancel()" v-if="!props.disabledClose"></li>
       </ul>
+      <div class="title">{{ props.title }}</div>
+      <div class="title-none"></div>
     </div>
     <div class="tyn-common-body">
       <slot></slot>

@@ -794,7 +794,7 @@ watch(() => state.content, (val) => {
   <div class="tyn-main tyn-chat-content aside-collapsed"
     :class="{ 'main-shown': state.isShowMobileBack && utils.isMobile() }">
     <div class="tyn-chat-head">
-      <ul class="tyn-list-inline d-md-none ms-n1">
+      <ul class="tyn-list-inline d-md-none ms-n1 h5-list">
         <li>
           <button class="btn btn-icon btn-md btn-pill btn-transparent js-toggle-main wr wr-left"
             @click="onHideBack"></button>

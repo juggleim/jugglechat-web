@@ -36,6 +36,9 @@
   .tyn-chat-head{
     height: 86px;
   }
+  .tyn-chat-head > .h5-list{
+    display: flex;
+  }
   .tyn-chat-content {
     flex-direction: column;
     display: flex;
@@ -161,5 +164,16 @@
     position: fixed;
     width: 100%;
     bottom: 0;
+  }
+  .tyn-common-body{
+    transform: scale(1.1);
+  }
+  .tyn-h5-root{}
+
+  .tyn-h5-root .tyn-common-body{
+    padding-bottom: 6rem;
+  }
+  .tyn-reply-bubble > *:first-child:not(:only-child){
+    max-width: 80%;
   }
 }
