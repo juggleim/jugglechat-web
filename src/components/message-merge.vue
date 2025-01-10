@@ -7,7 +7,7 @@ import Dropdownmenu from "./message-menu.vue";
 import { MESSAGE_OP_TYPE } from "../common/enum";
 
 const props = defineProps(["message", "isRead"]);
-const emit = defineEmits(["onrecall", "ondetail", "ontransfer", "onreply"]);
+const emit = defineEmits(["onrecall", "ondetail", "ontransfer", "onreply", "onreaction"]);
 
 let state = reactive({
   isShowDrop: false,

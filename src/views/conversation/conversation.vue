@@ -25,6 +25,7 @@ import RecallMessage from '../../components/message-recall.vue';
 import GroupNtfMessage from '../../components/message-group-notify.vue';
 import FriendNtfMessage from '../../components/message-friend-notify.vue';
 import Call1v1FinishedMessage from '../../components/message-1v1-finished.vue';
+import ContactCard from '../../components/message-contact-card.vue';
 
 import utils from "../../common/utils";
 import conversationTools from "./conversation";
@@ -847,6 +848,7 @@ watch(() => state.content, (val) => {
                 @onrecall="onRecall" @ondetail="onMergeDetail" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Merge>
               <Call1v1FinishedMessage v-else-if="utils.isEqual(message.name, MessageType.CALL_1V1_FINISHED)" :message="message"></Call1v1FinishedMessage>
               <StreamText v-else-if="utils.isEqual(message.name, MessageType.STREAM_TEXT)" :message="message"></StreamText>
+              <ContactCard v-else-if="utils.isEqual(message.name, MSG_NAME.CONTACT_CARD)" :message="message"></ContactCard>
               <Known v-else :message="message"></Known>
             </div>
           </div>

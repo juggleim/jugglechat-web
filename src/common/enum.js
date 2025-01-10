@@ -54,6 +54,7 @@ let MSG_NAME = {
   GROUP_NTF: 'jgd:grpntf',
   FRIEND_NTF: 'jgd:friendntf',
   FRIEND_APPLY: 'jgd:friendapply',
+  CONTACT_CARD: 'jgd:contactcard',
 };
 let REG_EXP = {
   LINK: /(([^:]+:)\/\/(([^:\/\?#]+)(:\d+)?))(\/[^?#]*)?(\?[^#]*)?(#.*)?/g,

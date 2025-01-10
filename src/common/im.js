@@ -15,6 +15,7 @@ juggle.registerMessage([
   { name: MSG_NAME.GROUP_NTF,  isCount: true, isStorage: true },
   { name: MSG_NAME.FRIEND_NTF,  isCount: true, isStorage: true },
   { name: MSG_NAME.FRIEND_APPLY,  isCount: true, isStorage: true },
+  { name: MSG_NAME.CONTACT_CARD,  isCount: true, isStorage: true },
 ])
 
 let zg = new ZegoExpressEngine(CONFIG.rtcAppId);
@@ -86,6 +87,9 @@ function msgShortFormat(message){
   }
   if(utils.isEqual(name, MSG_NAME.FRIEND_NTF)){
     shortName = `[添加好友通知]`;
+  }
+  if(utils.isEqual(name, MSG_NAME.CONTACT_CARD)){
+    shortName = `[名片消息]`;
   }
   if(utils.isEqual(name, MessageType.CALL_1V1_FINISHED)){
     shortName = `[音视频通话]`;
