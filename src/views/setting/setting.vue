@@ -10,6 +10,7 @@ import H5Header from "../conversation/conversation-header.vue";
 import AsiderUserUpdate from "../../components/aside-user-update.vue";
 import AsiderUserConfig from "../../components/aside-user-config.vue";
 import AsiderUserAccount from "../../components/aside-user-account.vue";
+import AsiderQrCode from "../../components/aside-qrcode.vue";
 
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -23,6 +24,7 @@ let state = reactive({
   isShowUserUpdateAsider: false,
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,
+  isShowUserQrcode: false,
 });
 
 function onLogout(){
@@ -40,11 +42,16 @@ function onClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_ACCOUNT)){
     onShowAccountAsider(true);
   }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_QRCODE)){
+    onShowUserQrCode(true);
+  }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
   }
 }
-
+function onShowUserQrCode(isShow){
+  state.isShowUserQrcode = isShow;
+}
 function onShowUserUpdateAsider(isShow){
   state.isShowUserUpdateAsider = isShow;
 }
@@ -91,4 +98,13 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" :right="1" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
   <AsiderUserConfig :is-show="state.isShowUserSettingAsider" :right="1" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
   <AsiderUserAccount :is-show="state.isShowAccountAsider" :right="1" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
+  <AsiderQrCode 
+    :is-show="state.isShowUserQrcode"
+    :right="1"
+    :title="'我的二维码'"
+    :desc="'扫一扫二维码，加我为好友'"
+    :isGroup="0"
+    :uid="state.user.id"
+    @oncancel="onShowUserQrCode(false)">
+  </AsiderQrCode>
 </template>

@@ -176,7 +176,8 @@ let ASIDE_MENU_TYPE = {
   USER_UPDATE: 7,
   USER_LOGOUT: 8,
   USER_ACCOUNT: 9,
-  SETTING: 10
+  SETTING: 10,
+  USER_QRCODE: 11,
 };
 
 let SETTING_CARDS = [
@@ -184,6 +185,7 @@ let SETTING_CARDS = [
     menus: [ 
     { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
     { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
+    { name: '我的二维码', icon: 'qrcode', event: ASIDE_MENU_TYPE.USER_QRCODE },
     ] 
   },
   { tag: 2, 

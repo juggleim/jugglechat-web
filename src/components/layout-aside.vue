@@ -25,6 +25,7 @@ let juggle = im.getCurrent();
 let { ConversationType, Event, ConnectionState } = juggle;
 
 let { _value: { path } } = router.currentRoute;
+let user = Storage.get(STORAGE.USER_TOKEN);
 
 let state = reactive({
   settingMenus: [
@@ -86,7 +87,6 @@ function onConversationChanged({ conversations }){
 juggle.on(Event.CONVERSATION_CHANGED, onConversationChanged);
 juggle.on(Event.CONVERSATION_ADDED, onConversationChanged);
 
-let user = Storage.get(STORAGE.USER_TOKEN);
 utils.extend(state, { user });
 
 emitter.$on(EVENT_NAME.UN_UNATHORIZED, () => {
