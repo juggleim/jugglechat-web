@@ -731,6 +731,10 @@ nextTick(() => {
   if(!utils.isMobile()){
     inputFocus()
   }
+  let { messageInput } = context.refs;
+  messageInput.addEventListener("focusout", function(){
+    window.scrollTo(0,0)
+  }); 
 })
 
 function inputFocus(){
@@ -817,7 +821,7 @@ watch(() => state.content, (val) => {
         <li><button class="btn btn-icon btn-light wr wr-more-dot" @click="onShowAside"></button></li>
       </ul>
     </div>
-    <div class="tyn-chat-body js-scroll-to-end" ref="messages">
+    <div class="tyn-chat-body js-scroll-to-end" ref="messages" :class="{'tyn-h5-chat-body': !utils.isUniapp()}">
       <WithoutMessage v-if="state.isFinished"></WithoutMessage>
       <div class="tyn-reply">
         <div v-for="message in state.messages" :key="message.messageId">
@@ -847,7 +851,7 @@ watch(() => state.content, (val) => {
         </div>
       </div>
     </div>
-    <div class="tyn-chat-form">
+    <div class="tyn-chat-form" :class="{'tyn-h5-chat-form': !utils.isUniapp()}">
       <Mention :is-show="state.isShowMention" :members="state.mentionMembers" @onselected="onMentionSelected" :index="state.selectMentionIndex"/>
       <Reply :is-show="state.isShowReply" @oncancel="onCancelReply" :message="state.currentReplyMessage"></Reply>
       <Emoji :is-show="state.isShowEmoji" @onhide="onShowEmoji(false)" @onemit="onChoiceEmoji"></Emoji>

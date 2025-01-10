@@ -151,4 +151,12 @@
   .jg-setting-aside .jg-li a::before{
     font-size: 1rem;
   }
+  .tyn-h5-chat-body{
+    padding-bottom: 8rem;
+  }
+  .tyn-h5-chat-form{
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+  }
 }
