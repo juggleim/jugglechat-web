@@ -10,6 +10,7 @@ let SERVER_PATH = {
   USER_GET: 'users/info',
   USER_LOGIN_QRCODE: 'login/qrcode',
   USER_LOGIN_POLLING: 'login/qrcode/check',
+  USER_CURRENT_QRCODE: '/users/qrcode',
 
   FRIEND_ADD: 'friends/apply',
   FRIEND_REMOVE: 'friends/del',
@@ -31,6 +32,7 @@ let SERVER_PATH = {
   GROUP_SET_HIS_VERIFY_TYPE: 'groups/management/sethismsgvisible',
   GROUP_SET_MUTE: 'groups/management/setmute',
   GROUP_TRANSFER_OWNER: 'groups/management/chgowner',
+  GROUP_QRCODE: 'groups/qrcode',
 };
 utils.forEach(SERVER_PATH, (url, name) => {
   let protoclName = location.protocol;

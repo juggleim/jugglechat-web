@@ -2651,3 +2651,23 @@
   color: #797878;
   padding: 0.4rem 0 0 0;
 }
+.jg-aside-qrcode-body{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.jg-aside-qrcode-img{
+  height: 12rem;
+  width: 12rem;
+  background-repeat: no-repeat;
+  background-size: 100%;
+  position: relative;
+}
+.jg-boxshadow{
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+}
+.jg-aside-qrcode-desc{
+  font-size: 12px;
+  margin-top: 1rem;
+  color: #797878;
+}

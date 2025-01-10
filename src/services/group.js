@@ -118,6 +118,13 @@ function transfer({ group_id, memberId }){
     body: utils.toJSON({ group_id, owner_id: memberId })
   });
 }
+
+function getQrCode({ group_id }){
+  let url = `${SERVER_PATH.GROUP_QRCODE}?group_id=${group_id}`;
+  return request(url, {
+    method: 'GET'
+  });
+}
 export default {
   create,
   quit,
@@ -133,4 +140,5 @@ export default {
   setGroupHisVerify,
   setMute,
   transfer,
+  getQrCode,
 }

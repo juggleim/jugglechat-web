@@ -58,6 +58,10 @@ function startPolling({ id }){
     body: utils.toJSON({ id })
   });
 }
+
+function getCurrentQRCode(data){
+  return request(SERVER_PATH.USER_CURRENT_QRCODE, { method: 'GET'});
+}
 export default {
   sendCode,
   verifyCode,
@@ -68,4 +72,5 @@ export default {
   get,
   startPolling,
   getQRCode,
+  getCurrentQRCode,
 }

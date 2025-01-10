@@ -11,6 +11,7 @@ import AsiderGroupRemoveMember from "../../components/aside-group-remove-member.
 import AsiderGroupNotice from "../../components/aside-group-notice.vue";
 import AsideGroupTransferOwner from "../../components/aside-group-transfer-owner.vue";
 import AsiderTranslator from "../../components/aside-translator.vue";
+import AsiderQrCode from "../../components/aside-qrcode.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -32,6 +33,7 @@ let state = reactive({
   isShowGroupNotice: false,
   isShowTransferGroupOwner: false,
   isShowTranslator: false,
+  isShowGroupQrcode: false,
   isCreateGroupLoading: false,
   isGroupRemoveMemberLoading: false,
   currentGroupId: '',
@@ -301,6 +303,9 @@ function onFinishTranslator(){
 function onShowTranslator(isShow){
   state.isShowTranslator = isShow;
 }
+function onShowGroupQrCode(isShow){
+  state.isShowGroupQrcode = isShow;
+}
 watch(() => props.conversation, (conversation) => {
   state.groupName = conversation.conversationTitle;
 });
@@ -389,6 +394,10 @@ watch(() => props.isShow, () => {
             <div class="tyn-aside-title">接收消息自动翻译</div>
             <span class="tyn-aside-icon wr wr-right"></span>
           </li>
+          <li class="jg-aside-li jg-aside-bli" @click="onShowGroupQrCode(true)">
+            <div class="tyn-aside-title">群组二维码</div>
+            <span class="tyn-aside-icon wr wr-right"></span>
+          </li>
           <li class="jg-bottom-line"></li>
         </ul>
         <ul class="jg-aside-ul">
@@ -455,4 +464,14 @@ watch(() => props.isShow, () => {
     @onconfirm="onUpdateNotice" 
     @oncancel="onShowGroupNotice(false)">
   </AsiderGroupNotice>
+
+  <AsiderQrCode 
+    :is-show="state.isShowGroupQrcode"
+    :right="1"
+    :title="'群组二维码'"
+    :desc="'扫一扫群二维码，立刻加入群组'"
+    :isGroup="1"
+    :uid="props.conversation.conversationId"
+    @oncancel="onShowGroupQrCode(false)">
+    </AsiderQrCode>
 </template>
