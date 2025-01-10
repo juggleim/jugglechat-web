@@ -11,6 +11,7 @@ import { reactive, shallowRef, watch, nextTick, getCurrentInstance } from "vue";
 import { preview } from 'vue3-image-preview';
 import im from "../../common/im";
 
+import Perch from "../../components/perch.vue";
 import Text from '../../components/message-text.vue';
 import StreamText from '../../components/message-stream-text.vue';
 import File from '../../components/message-file.vue';
@@ -793,6 +794,7 @@ watch(() => state.content, (val) => {
 <template>
   <div class="tyn-main tyn-chat-content aside-collapsed"
     :class="{ 'main-shown': state.isShowMobileBack && utils.isMobile() }">
+    <Perch></Perch>
     <div class="tyn-chat-head">
       <ul class="tyn-list-inline d-md-none ms-n1 h5-list">
         <li>

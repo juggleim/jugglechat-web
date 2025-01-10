@@ -1828,7 +1828,7 @@ dl {
 .tyn-common-aside {
   position: absolute;
   left: -400%;
-  background: #FAFAFA;
+  background: #FFF;
   height: 100%;
   display: flex;
   flex-direction: column;

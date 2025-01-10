@@ -35,6 +35,7 @@
   }
   .tyn-chat-head{
     height: 86px;
+    min-height: 86px;
   }
   .tyn-chat-head > .h5-list{
     display: flex;

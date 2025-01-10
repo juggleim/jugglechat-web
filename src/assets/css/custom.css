@@ -2610,6 +2610,7 @@
   height: 3rem;
   min-height: 3rem;
   width: 100%;
+  background-color: #FFF;
 }
 .title-none{
   width: 2rem;
