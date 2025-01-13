@@ -2,7 +2,7 @@
 import utils from "../../common/utils";
 import { useRouter } from "vue-router";
 import { reactive, getCurrentInstance, watch } from "vue";
-import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE, SETTING_CARDS }  from "../../common/enum";
+import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE, SETTING_CARDS, USER_AGREEMENT }  from "../../common/enum";
 
 import H5TBar from "../conversation/conversation-tbar.vue";
 import H5Header from "../conversation/conversation-header.vue";
@@ -12,6 +12,7 @@ import AsiderUserConfig from "../../components/aside-user-config.vue";
 import AsiderUserAccount from "../../components/aside-user-account.vue";
 import AsiderQrCode from "../../components/aside-qrcode.vue";
 import AsideFavoriteMsg from "../../components/aside-msg-favorite.vue";
+import AsideUserAgreement from "../../components/aside-user-agreement.vue";
 
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -31,6 +32,9 @@ let state = reactive({
   isShowAccountAsider: false,
   isShowUserQrcode: false,
   isShowFavoriteMsg: false,
+  isShowUserAgreement: false,
+  userAgreentUrl: '',
+  userAgreentTitle: '',
 });
 
 function onLogout(){
@@ -54,6 +58,12 @@ function onClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_FAV)){
     onShowFavoriteMsg(true);
   }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_AGREENMENT)){
+    onShowUserAgreement(true, USER_AGREEMENT.USER, '用户协议');
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_PRIVACY)){
+    onShowUserAgreement(true, USER_AGREEMENT.PRIVACY, '隐私协议');
+  }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
   }
@@ -65,7 +75,9 @@ function connect(callback){
   error: () => {}
   });
 }
-
+function onShowUserAgreement(isShow, url, title){
+  utils.extend(state, { isShowUserAgreement: isShow, userAgreentUrl: url, userAgreentTitle: title });
+}
 function onShowUserQrCode(isShow){
   state.isShowUserQrcode = isShow;
 }
@@ -125,6 +137,12 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <AsiderUserConfig :is-show="state.isShowUserSettingAsider" :right="1" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
   <AsiderUserAccount :is-show="state.isShowAccountAsider" :right="1" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
   <AsideFavoriteMsg :is-show="state.isShowFavoriteMsg" @oncancel="onShowFavoriteMsg(false)"></AsideFavoriteMsg>
+  <AsideUserAgreement 
+    :is-show="state.isShowUserAgreement" 
+    :right="1" 
+    :url="state.userAgreentUrl" 
+    :title="state.userAgreentTitle" 
+    @oncancel="onShowUserAgreement(false)"></AsideUserAgreement>
   <AsiderQrCode 
     :is-show="state.isShowUserQrcode"
     :right="1"

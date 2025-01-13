@@ -10,9 +10,10 @@ import AsiderUserConfig from "./aside-user-config.vue";
 import AsiderUserAccount from "./aside-user-account.vue";
 import AsiderQrCode from "./aside-qrcode.vue";
 import AsideFavoriteMsg from "./aside-msg-favorite.vue";
+import AsideUserAgreement from "./aside-user-agreement.vue";
 
 import { User } from "../services/index";
-import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME, SETTING_CARDS } from "../common/enum";
+import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME, SETTING_CARDS, USER_AGREEMENT } from "../common/enum";
 import Storage from "../common/storage";
 
 const context = getCurrentInstance();
@@ -28,6 +29,9 @@ let state = reactive({
   isShowAccountAsider: false,
   isShowUserQrcode: false,
   isShowFavoriteMsg: false,
+  isShowUserAgreement: false,
+  userAgreentUrl: '',
+  userAgreentTitle: '',
 });
 
 function onLogout(){
@@ -51,12 +55,21 @@ function onClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_FAV)){
     onShowFavoriteMsg(true);
   }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_AGREENMENT)){
+    onShowUserAgreement(true, USER_AGREEMENT.USER, '用户协议');
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_PRIVACY)){
+    onShowUserAgreement(true, USER_AGREEMENT.PRIVACY, '隐私协议');
+  }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
   }
 }
 function onShowFavoriteMsg(isShow){
   state.isShowFavoriteMsg = isShow;
+}
+function onShowUserAgreement(isShow, url, title){
+  utils.extend(state, { isShowUserAgreement: isShow, userAgreentUrl: url, userAgreentTitle: title });
 }
 function onShowUserQrCode(isShow){
   state.isShowUserQrcode = isShow;
@@ -109,6 +122,13 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <AsiderUserConfig :is-show="state.isShowUserSettingAsider" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
   <AsiderUserAccount :is-show="state.isShowAccountAsider" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
   <AsideFavoriteMsg :is-show="state.isShowFavoriteMsg" @oncancel="onShowFavoriteMsg(false)"></AsideFavoriteMsg>
+  
+  <AsideUserAgreement 
+    :is-show="state.isShowUserAgreement" 
+    :right="0" 
+    :url="state.userAgreentUrl" 
+    :title="state.userAgreentTitle" 
+    @oncancel="onShowUserAgreement(false)"></AsideUserAgreement>
 
   <AsiderQrCode 
     :is-show="state.isShowUserQrcode"

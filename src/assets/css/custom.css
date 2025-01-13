@@ -2780,3 +2780,7 @@
 .jg-fav-msg .tyn-image{
   max-width: 60%;
 }
+.jg-aside-uagreement-body .content{
+  height: 90vh;
+  width: 100%;
+}
