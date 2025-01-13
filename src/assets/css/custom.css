@@ -2720,6 +2720,58 @@
   overflow: hidden;
   text-overflow: ellipsis
 }
+.jg-ellipsis{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis
+}
 .jg-pinned-item .name{
   color: #0000ffc7;
+}
+.jg-aside-favorite-body{
+  box-sizing: border-box;
+}
+.jg-fav-item{
+  border-bottom: 1px solid #e1dede;
+  padding-bottom: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+.jg-fav-info{
+  display: flex;
+  justify-content: space-between;
+}
+.jg-fav-title{
+  display: flex;
+  align-items: center;
+  color: #979798;
+}
+.jg-fav-label{
+  font-size: 12px;
+}
+.jg-fav-time{
+  font-size: 12px;
+  color: #979798;
+}
+.jg-fav-avatar{
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background-size: 100%;
+  margin-right: 8px;
+}
+.jg-fav-msg{
+  margin: 10px 0;
+  color: #2e2e2f;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+.jg-fav-msg-text{
+  word-break: break-all;
+}
+.jg-fav-tools{
+  margin-left: 4px;
+}
+.jg-fav-msg .tyn-image{
+  max-width: 60%;
 }

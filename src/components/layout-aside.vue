@@ -16,6 +16,7 @@ import AsiderFriendAdd from "./aside-friend-add.vue";
 import AsiderGroupAddMember from "./aside-group-add-member.vue";
 import AsiderUserSetting from "./aside-user-setting.vue";
 import AsideUserUpdate from "./aside-user-update.vue";
+import AsideFavoriteMsg from "./aside-msg-favorite.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -53,6 +54,7 @@ let state = reactive({
   isShowUser: false,
   isShowUserSetting: false,
   isShowAddAccount: false,
+  isShowFavoriteMsg: false,
 });
 
 function onShowAddMenu(isShow){
@@ -61,6 +63,10 @@ function onShowAddMenu(isShow){
 
 function onShowSearchModal(isShow){
   state.isShowSearchModal = isShow;
+}
+
+function onShowFavoriteMsg(isShow){
+  state.isShowFavoriteMsg = isShow;
 }
 
 function onShowSettingMenu(isShow){
@@ -224,6 +230,13 @@ watch(useRouterCurrent, (value) => {
           <div class="name">{{ menu.title }}</div>
         </div>
       </li>
+
+      <li class="jg-footer-tool">
+        <div class="jg-asider-footer-item" @click="onShowFavoriteMsg(true)">
+          <div class="icon wr wr-fav"></div>
+          <div class="name">收藏</div>
+        </div>
+      </li>
     </ul>
     <!-- <ul class="jg-footer-tools jg-footer-bottom-box">
       <li class="jg-footer-tool">
@@ -246,4 +259,6 @@ watch(useRouterCurrent, (value) => {
   <AsiderUserSetting :is-show="state.isShowSettingMenu" @oncancel="onShowSettingMenu(false)"></AsiderUserSetting>
 
   <AsideUserUpdate :is-show="state.isShowUser" :disabled-close="state.disableClose" @oncancel="onUserCanncel"></AsideUserUpdate>
+  
+  <AsideFavoriteMsg :is-show="state.isShowFavoriteMsg" @oncancel="onShowFavoriteMsg(false)"></AsideFavoriteMsg>
 </template>

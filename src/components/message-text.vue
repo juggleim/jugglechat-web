@@ -1,6 +1,6 @@
 <script setup>
 const props = defineProps(['message', 'isRead']);
-const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction', 'onresend', 'onpinned']);
+const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction', 'onresend', 'onpinned', 'onfav']);
 
 import { reactive, watch, getCurrentInstance } from "vue";
 import GroupReads from "./group-reads.vue";
@@ -76,6 +76,10 @@ function onReply(){
 function onPinned(){
   onShowDrop(false);
   emit('onpinned', { message: props.message });
+}
+function onFav(){
+  onShowDrop(false);
+  emit('onfav', { message: props.message });
 }
 function onCancelModify() {
   state.isModify = false;
@@ -174,7 +178,16 @@ function onResend(){
       </div>
       <ul class="tyn-reply-tools">
         <li>
-          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @oncopy="onCopy" @onmodify="onShowModify()" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" @onreply="onReply()" @onpinned="onPinned()" @onhide="onShowDrop(false)"></Dropdownmenu>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" 
+            @oncopy="onCopy" 
+            @onmodify="onShowModify()" 
+            @onrecall="onRecall()" 
+            @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" 
+            @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" 
+            @onreply="onReply()" 
+            @onpinned="onPinned()" 
+            @onfav="onFav()" 
+            @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
     </div>

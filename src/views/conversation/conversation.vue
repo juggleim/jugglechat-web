@@ -771,6 +771,14 @@ function onResendMessage({ message }){
 function onPinned({ message }){
   conversationTools.setTopMessage(state, true, message);
 }
+function onFav({ message }){
+  conversationTools.addFavoriteMsg(message, (error) => {
+    if(error){
+      return context.proxy.$toast({ text: `收藏失败: ${error.code}`, icon: 'error' });
+    }
+    return context.proxy.$toast({ text: `收藏成功`, icon: 'success' });
+  })
+}
 function onUnpinned(){
   let { pinnedMessage } = state;
   if(utils.isEmpty(pinnedMessage)){
@@ -872,6 +880,7 @@ watch(() => state.content, (val) => {
                 @onreply="onReply" 
                 @onreaction="onReaction" 
                 @onresend="onResendMessage"
+                @onfav="onFav"
                 @onpinned="onPinned">
               </Text>
 
@@ -881,6 +890,7 @@ watch(() => state.content, (val) => {
                 @ontransfer="onShowTransfer" 
                 @onreply="onReply" 
                 @onreaction="onReaction"
+                @onfav="onFav"
                 @onpinned="onPinned">
               </ImageMessage>
               
@@ -889,7 +899,8 @@ watch(() => state.content, (val) => {
                   @ontransfer="onShowTransfer" 
                   @onreply="onReply" 
                   @onreaction="onReaction"
-                @onpinned="onPinned">
+                  @onfav="onFav"
+                  @onpinned="onPinned">
               </File>
               
               <Video v-else-if="utils.isEqual(message.name, MessageType.VIDEO)" :message="message"
@@ -897,6 +908,7 @@ watch(() => state.content, (val) => {
                 @ontransfer="onShowTransfer" 
                 @onreply="onReply" 
                 @onreaction="onReaction"
+                @onfav="onFav"
                 @onpinned="onPinned">
               </Video>
 
@@ -906,6 +918,7 @@ watch(() => state.content, (val) => {
                 @ontransfer="onShowTransfer" 
                 @onreply="onReply" 
                 @onreaction="onReaction"
+                @onfav="onFav"
                 @onpinned="onPinned">
               </Merge>
 

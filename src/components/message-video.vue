@@ -10,7 +10,7 @@ import ReactionEmoji from "../components/emoji-reaction.vue"
 import Reaction from "./message-reaction.vue";
 
 const props = defineProps(["message", "isRead"]);
-const emit = defineEmits(["onrecall", "ontransfer", "onreply", "onreaction", "onpinned"]);
+const emit = defineEmits(["onrecall", "ontransfer", "onreply", "onreaction", "onpinned", "onfav"]);
 
 let state = reactive({
   isShowDrop: false,
@@ -32,6 +32,10 @@ function onTransfer(type){
 function onPinned(){
   onShowDrop(false);
   emit('onpinned', { message: props.message });
+}
+function onFav(){
+  onShowDrop(false);
+  emit('onfav', { message: props.message });
 }
 function onShowDrop(isShow) {
   state.isShowDrop = isShow;
@@ -122,6 +126,7 @@ function onChoiceEmoji(item){
           @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" 
           @onreply="onReply()" 
           @onpinned="onPinned()"
+          @onfav="onFav()"
           @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>

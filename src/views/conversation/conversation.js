@@ -496,6 +496,20 @@ function getTopMessage(state, message){
     }
   });
 }
+function addFavoriteMsg(message, callback){
+  let { conversationType, conversationId, messageId, sender } = message;
+  let messages = [{ 
+    conversationType,
+    conversationId,
+    messageId,
+    senderId: sender.id,
+  }];
+  return juggle.addFavoriteMessages({ messages }).then((result) =>{
+    callback(null);
+  }, (error) => {
+    callback(error);
+  });
+}
 export default {
   isScrollTop,
   readMessage,
@@ -519,4 +533,5 @@ export default {
   translate,
   setTopMessage,
   getTopMessage,
+  addFavoriteMsg,
 }

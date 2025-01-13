@@ -5,7 +5,7 @@ import utils from "../common/utils";
 import common from "../common/common";
 
 const props = defineProps(['isShow', 'message']);
-const emit = defineEmits(["onrecall", "onmodify", "ontransfer", "onreply", "onhide", "onremove", "oncopy", "onpinned"]);
+const emit = defineEmits(["onrecall", "onmodify", "ontransfer", "onreply", "onhide", "onremove", "oncopy", "onpinned", "onfav"]);
 
 let juggle = im.getCurrent();
 let { MessageType } = juggle;
@@ -25,6 +25,14 @@ watch(() => props.isShow, (value) => {
 <template>
   <div class="dropdown-menu dropdown-menu-xxs fadein-o4" :class="{ 'show': props.isShow, 'dropdown-menu-xxs-bottom': !state.isTop }">
     <ul class="tyn-list-links">
+      <li class="tyn-list-link">
+        <a href="#" class="wr wr-copy" @click.stop="emit('oncopy')" v-if="utils.isEqual(props.message.name, MessageType.TEXT)">
+          <span>复制消息</span>
+        </a>
+      </li>
+      <li class="tyn-list-link">
+        <div class="jg-bottom-line"></div>
+      </li>
       <li class="tyn-list-link">
         <a href="#" class="wr wr-recall" @click.stop="emit('onrecall')" v-if="props.message.isSender">
           <span>消息撤回</span>
@@ -49,9 +57,12 @@ watch(() => props.isShow, (value) => {
         <div class="jg-bottom-line"></div>
       </li>
       <li class="tyn-list-link">
-        <a href="#" class="wr wr-copy" @click.stop="emit('oncopy')" v-if="utils.isEqual(props.message.name, MessageType.TEXT)">
-          <span>复制消息</span>
+        <a href="#" class="wr wr-fav" @click.stop="emit('onfav')">
+          <span>消息收藏</span>
         </a>
+      </li>
+      <li class="tyn-list-link">
+        <div class="jg-bottom-line"></div>
       </li>
       <li class="tyn-list-link">
         <a href="#" class="wr wr-modify" @click.stop="emit('onmodify')" v-if="props.message.isSender && utils.isEqual(props.message.name, MessageType.TEXT)">

@@ -7,7 +7,7 @@ import Dropdownmenu from "./message-menu.vue";
 import { MESSAGE_OP_TYPE } from "../common/enum";
 
 const props = defineProps(["message", "isRead"]);
-const emit = defineEmits(["onrecall", "ondetail", "ontransfer", "onreply", "onreaction", "onpinned"]);
+const emit = defineEmits(["onrecall", "ondetail", "ontransfer", "onreply", "onreaction", "onpinned", "onfav"]);
 
 let state = reactive({
   isShowDrop: false,
@@ -32,6 +32,10 @@ function onRecall() {
   let message = props.message;
   emit('onrecall', message);
   onShowDrop(false);
+}
+function onFav(){
+  onShowDrop(false);
+  emit('onfav', { message: props.message });
 }
 function onPinned(){
   onShowDrop(false);
@@ -93,6 +97,7 @@ function onClickRight(e){
           @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" 
           @onreply="onReply()"  
           @onpinned="onPinned()"
+          @onfav="onFav()"
           @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>

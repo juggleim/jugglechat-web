@@ -10,7 +10,7 @@ import ReactionEmoji from "../components/emoji-reaction.vue"
 import Reaction from "./message-reaction.vue";
 
 const props = defineProps(["message", "isRead"]);
-const emit = defineEmits(["onpreview", "onrecall", "ontransfer", "onreply", "onreaction", "onpinned"]);
+const emit = defineEmits(["onpreview", "onrecall", "ontransfer", "onreply", "onreaction", "onpinned", "onfav"]);
 
 function onPreview() {
   let { content: { url } } = props.message;
@@ -36,6 +36,10 @@ function onReply(){
 function onPinned(){
   onShowDrop(false);
   emit('onpinned', { message: props.message });
+}
+function onFav(){
+  onShowDrop(false);
+  emit('onfav', { message: props.message });
 }
 function onRecall() {
   let message = props.message;
@@ -135,6 +139,7 @@ function onChoiceEmoji(item){
           @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" 
           @onreply="onReply()"  
           @onpinned="onPinned()"
+          @onfav="onFav()"
           @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
