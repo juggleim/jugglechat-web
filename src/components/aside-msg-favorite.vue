@@ -23,8 +23,8 @@ let { MessageType } = juggle;
 
 let state = reactive({
   list: [],
-  page: 1,
-  count: 20,
+  offset: '',
+  limit: 20,
   hasMore: true,
   isPlaying: false
 });
@@ -34,19 +34,24 @@ function onCancel(){
 }
 
 let isFetching = false;
+let canscroll = true;
 function getMessages(params){
   if(isFetching){
     return;
   }
+  if(!state.hasMore){
+    return context.proxy.$toast({ text: `没有更多啦`, icon: 'warn' });
+  }
   isFetching = true;
-  let { count, page } = params;
+  let { limit, offset } = params;
   let { list } = state;
   juggle.getFavoriteMessages(params).then((result) => {
     let _list = result.list;
-    let hasMore = count > _list.length;
+    let hasMore = _list.length >= limit;
     state.list = list.concat(_list);
-    utils.extend(state, { page: page + 1, hasMore });
+    utils.extend(state, { offset:result.offset, hasMore });
     isFetching = false;
+    canscroll = true;
   }, () => {
     isFetching = false;
   })
@@ -77,7 +82,7 @@ function onPlay() {
   }
   utils.extend(state, { isPlaying: !isPlaying });
 }
-let canscroll = true;
+
 nextTick(() => {
   let { favmsgs } = context.refs;
   favmsgs.addEventListener("scroll", () => {
@@ -86,19 +91,19 @@ nextTick(() => {
     let rectHeight = favmsgs.getBoundingClientRect().height;
     let isNeedLoad = scrollHeight - scrollTop - rectHeight < 100;
     if (isNeedLoad && canscroll) {
-      let isFirst = false;
-      let { page, count } = state;
-      getMessages({ page, count });
+      canscroll = false;
+      let { offset, limit } = state;
+      getMessages({ offset, limit });
     }
   });
 });
 
 watch(() => props.isShow, () => {
   if(props.isShow){
-    let { page, count } = state;
-    getMessages({ page, count });
+    let { offset, limit } = state;
+    getMessages({ offset, limit });
   }else{
-    utils.extend(state, { list: [], page: 1 });
+    utils.extend(state, { list: [], offset: '', hasMore: true });
   }
 })
 

@@ -9,6 +9,7 @@ import AsiderUserUpdate from "./aside-user-update.vue";
 import AsiderUserConfig from "./aside-user-config.vue";
 import AsiderUserAccount from "./aside-user-account.vue";
 import AsiderQrCode from "./aside-qrcode.vue";
+import AsideFavoriteMsg from "./aside-msg-favorite.vue";
 
 import { User } from "../services/index";
 import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME, SETTING_CARDS } from "../common/enum";
@@ -26,6 +27,7 @@ let state = reactive({
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,
   isShowUserQrcode: false,
+  isShowFavoriteMsg: false,
 });
 
 function onLogout(){
@@ -46,9 +48,15 @@ function onClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_QRCODE)){
     onShowUserQrCode(true);
   }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_FAV)){
+    onShowFavoriteMsg(true);
+  }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
   }
+}
+function onShowFavoriteMsg(isShow){
+  state.isShowFavoriteMsg = isShow;
 }
 function onShowUserQrCode(isShow){
   state.isShowUserQrcode = isShow;
@@ -100,6 +108,7 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
   <AsiderUserConfig :is-show="state.isShowUserSettingAsider" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
   <AsiderUserAccount :is-show="state.isShowAccountAsider" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
+  <AsideFavoriteMsg :is-show="state.isShowFavoriteMsg" @oncancel="onShowFavoriteMsg(false)"></AsideFavoriteMsg>
 
   <AsiderQrCode 
     :is-show="state.isShowUserQrcode"

@@ -8547,14 +8547,14 @@ function getQueryBody({
   }
   if (utils.isEqual(COMMAND_TOPICS.MSG_QRY_FAVORITE, topic)) {
     let {
-      count,
-      page,
+      limit,
+      offset,
       userId
     } = data;
     let codec = $root.lookup('codec.QryFavoriteMsgsReq');
     let message = codec.create({
-      limit: count,
-      offset: page
+      limit,
+      offset
     });
     targetId = userId;
     buffer = codec.encode(message).finish();
@@ -9500,7 +9500,8 @@ function getFavtoriteMsgs(index, data, {
   let payload = $root.lookup('codec.FavoriteMsgs');
   let result = payload.decode(data);
   let {
-    items
+    items,
+    offset
   } = result;
   if (!items) {
     items = [];
@@ -9520,7 +9521,8 @@ function getFavtoriteMsgs(index, data, {
   });
   return {
     index,
-    list
+    list,
+    offset
   };
 }
 function getTopMessage(index, data, {
@@ -14999,28 +15001,29 @@ function Message$1 (io, emitter, logger) {
   let getFavoriteMessages = params => {
     return utils.deferred((resolve, reject) => {
       let _params = {
-        count: 20,
-        page: 1
+        limit: 20,
+        offset: ''
       };
       if (!utils.isObject(params)) {
         params = _params;
       }
       let {
-        count = 20,
-        page = 1
+        limit = 20,
+        offset = ''
       } = params;
       let user = io.getCurrentUser();
       let data = {
         topic: COMMAND_TOPICS.MSG_QRY_FAVORITE,
-        count,
-        page,
+        limit,
+        offset,
         userId: user.id
       };
       io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
         let {
           code,
           msg,
-          list
+          list,
+          offset
         } = result;
         if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
           return reject({
@@ -15029,7 +15032,8 @@ function Message$1 (io, emitter, logger) {
           });
         }
         resolve({
-          list
+          list,
+          offset
         });
       });
     });

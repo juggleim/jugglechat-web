@@ -65,6 +65,7 @@ nextTick(() => {
     let isNeedLoad = scrollHeight - scrollTop - rectHeight < 100;
     if (isNeedLoad && canscroll) {
       let isFirst = false;
+      canscroll = false;
       emit('onloadmore', { tag: props.tag, callback: () => {
         canscroll = true;
       }});
