@@ -9,7 +9,7 @@ import ReactionEmoji from "../components/emoji-reaction.vue"
 import Reaction from "./message-reaction.vue";
 
 const props = defineProps(["message", "isRead"]);
-const emit = defineEmits(["onrecall", "ontransfer", "onreply"]);
+const emit = defineEmits(["onrecall", "ontransfer", "onreply", "onpinned"]);
 
 let state = reactive({
   isShowDrop: false,
@@ -31,6 +31,10 @@ function onRecall() {
   let message = props.message;
   emit('onrecall', message);
   onShowDrop(false);
+}
+function onPinned(){
+  onShowDrop(false);
+  emit('onpinned', { message: props.message });
 }
 function onShowReadDetail(isShow) {
   let message = props.message;
@@ -106,12 +110,19 @@ function onChoiceEmoji(item){
 
       <ul class="tyn-reply-tools">
         <li>
-          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" 
+          @onrecall="onRecall()" 
+          @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" 
+          @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" 
+          @onreply="onReply()"
+          @onpinned="onPinned()"
+          @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
     </div>
 
-    <div class="dropmenu-backdrop" :class="{'show-menu-back': state.isShowDrop}" @click="onShowDrop(false)"></div>  
+    <div class="dropmenu-backdrop" :class="{'show-menu-back': state.isShowDrop}" 
+    @click="onShowDrop(false)"></div>  
   </div>
 </template>
  

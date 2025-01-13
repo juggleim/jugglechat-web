@@ -78,6 +78,8 @@ let state = reactive({
   imgSender: {},
 
   group: {},
+
+  pinnedMessage: {},
 });
 
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
@@ -283,7 +285,10 @@ watch(() => props.conversation, (newConversation, oldConversation) => {
   conversationTools.getMessages(isFirst, () => {
     scrollBottom();
   }, state, props);
+  conversationTools.getTopMessage(state, props.conversation);
 })
+
+conversationTools.getTopMessage(state, props.conversation);
 
 conversationTools.getMessages(true, () => {
   scrollBottom();
@@ -763,6 +768,17 @@ function onResendMessage({ message }){
     context.proxy.$toast({ text: `消息发送失败: ${error.code}`, icon: 'error' });
   });
 }
+function onPinned({ message }){
+  conversationTools.setTopMessage(state, true, message);
+}
+function onUnpinned(){
+  let { pinnedMessage } = state;
+  if(utils.isEmpty(pinnedMessage)){
+    return;
+  }
+  let { message } = pinnedMessage;
+  conversationTools.setTopMessage(state, false, message);
+}
 function onClearMessages(){
   emit('onclearmsg', props.conversation);
 }
@@ -823,6 +839,19 @@ watch(() => state.content, (val) => {
         <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li>
         <li><button class="btn btn-icon btn-light wr wr-more-dot" @click="onShowAside"></button></li>
       </ul>
+      <div class="jg-pinned-box" v-if="!utils.isEmpty(state.pinnedMessage)">
+        <div class="jg-pinned-info">
+          <div class="jg-pinned-icon wr wr-top-s"></div>
+          <ul class="jg-pinned-content">
+            <li class="jg-pinned-item content">
+              {{ state.pinnedMessage.message.sender.name }}：{{ state.pinnedMessage.shortName }}</li>
+            <li class="jg-pinned-item operator">由 <span class="name">{{ state.pinnedMessage.operator.name }}</span> 置顶</li>
+          </ul>
+        </div>
+        <ul class="jg-pinned-tools">
+          <li class="jg-pinned-item wr wr-close" @click.stop="onUnpinned"></li>
+        </ul>
+      </div>
     </div>
     <div class="tyn-chat-body js-scroll-to-end" ref="messages" :class="{'tyn-h5-chat-body': !utils.isUniapp()}">
       <WithoutMessage v-if="state.isFinished"></WithoutMessage>
@@ -835,17 +864,51 @@ watch(() => state.content, (val) => {
           <div class="tny-conent-msg" v-else>
             <span class="tyn-transfer wr" v-if="state.isShowTransfer" :class="{'wr-success-square': message.isSelected, 'wr-square': !message.isSelected}" @click="onSelected(message)"></span>
             <div class="tyn-reply-item" :class="[message.isSender ? 'outgoing' : 'ingoing', state.isShowTransfer ? 'tny-message' : '']"  @click="onSelected(message)">
-              <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" @onrecall="onRecall"
-                @onmodify="onModifyText" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction" @onresend="onResendMessage"></Text>
+              
+              <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" 
+                @onrecall="onRecall"
+                @onmodify="onModifyText" 
+                @ontransfer="onShowTransfer" 
+                @onreply="onReply" 
+                @onreaction="onReaction" 
+                @onresend="onResendMessage"
+                @onpinned="onPinned">
+              </Text>
+
               <ImageMessage v-else-if="utils.isEqual(message.name, MessageType.IMAGE)" :message="message"
-                @onrecall="onRecall" @onpreview="onPreviewImage" @ontransfer="onShowTransfer" @onreply="onReply"  @onreaction="onReaction"></ImageMessage>
+                @onrecall="onRecall" 
+                @onpreview="onPreviewImage" 
+                @ontransfer="onShowTransfer" 
+                @onreply="onReply" 
+                @onreaction="onReaction"
+                @onpinned="onPinned">
+              </ImageMessage>
+              
               <File v-else-if="utils.isEqual(message.name, MessageType.FILE)" :message="message" 
-                    @onrecall="onRecall" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction">
+                  @onrecall="onRecall" 
+                  @ontransfer="onShowTransfer" 
+                  @onreply="onReply" 
+                  @onreaction="onReaction"
+                @onpinned="onPinned">
               </File>
+              
               <Video v-else-if="utils.isEqual(message.name, MessageType.VIDEO)" :message="message"
-                @onrecall="onRecall" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Video>
+                @onrecall="onRecall" 
+                @ontransfer="onShowTransfer" 
+                @onreply="onReply" 
+                @onreaction="onReaction"
+                @onpinned="onPinned">
+              </Video>
+
               <Merge v-else-if="utils.isEqual(message.name, MessageType.MERGE)" :message="message"
-                @onrecall="onRecall" @ondetail="onMergeDetail" @ontransfer="onShowTransfer" @onreply="onReply" @onreaction="onReaction"></Merge>
+                @onrecall="onRecall" 
+                @ondetail="onMergeDetail" 
+                @ontransfer="onShowTransfer" 
+                @onreply="onReply" 
+                @onreaction="onReaction"
+                @onpinned="onPinned">
+              </Merge>
+
               <Call1v1FinishedMessage v-else-if="utils.isEqual(message.name, MessageType.CALL_1V1_FINISHED)" :message="message"></Call1v1FinishedMessage>
               <StreamText v-else-if="utils.isEqual(message.name, MessageType.STREAM_TEXT)" :message="message"></StreamText>
               <ContactCard v-else-if="utils.isEqual(message.name, MSG_NAME.CONTACT_CARD)" :message="message"></ContactCard>

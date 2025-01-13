@@ -2675,3 +2675,51 @@
   height: 40px;
   width: 40px;
 }
+.jg-pinned-box{
+  position: absolute;
+  bottom: -50px;
+  left: 1rem;
+  right: 1rem;
+  padding: 4px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  background: #FAFAFA;
+  border-radius: 0.5rem;
+}
+.jg-pinned-icon{
+  margin-right: 2rem;
+  position: relative;
+}
+.jg-pinned-icon::before{
+  color: #FF6700;
+  font-size: 18px;
+  position: absolute;
+  top: -4px;
+}
+.jg-pinned-info{
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+.jg-pinned-content{
+  width: 100%;
+}
+.jg-pinned-item{
+  font-size: 12px;
+  color: #3B4450;
+}
+.jg-pinned-item.operator{
+  font-size: 10px;
+  color: #c0bfc1;
+}
+.jg-pinned-item.content{
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis
+}
+.jg-pinned-item .name{
+  color: #0000ffc7;
+}

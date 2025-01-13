@@ -1,6 +1,6 @@
 /*
 * JuggleIM.js v1.7.24
-* (c) 2022-2024 JuggleIM
+* (c) 2022-2025 JuggleIM
 * Released under the MIT License.
 */
 const noop = () => {};
@@ -1020,6 +1020,31 @@ let FUNC_PARAM_CHECKER = {
     name: 'content',
     type: 'Object'
   }],
+  SET_TOP_MESSAGE: [{
+    name: 'conversationType'
+  }, {
+    name: 'conversationId'
+  }, {
+    name: 'messageId'
+  }],
+  GET_TOP_MESSAGE: [{
+    name: 'conversationType'
+  }, {
+    name: 'conversationId'
+  }],
+  ADD_FAVORITE_MESSAGE: [{
+    name: 'messages',
+    type: 'Array',
+    children: [{
+      name: 'conversationType'
+    }, {
+      name: 'conversationId'
+    }, {
+      name: 'senderId'
+    }, {
+      name: 'messageId'
+    }]
+  }],
   CREATE_CONVERSATION_TAG: [{
     name: 'id',
     type: 'String'
@@ -1072,6 +1097,12 @@ let COMMAND_TOPICS = {
   SEND_PRIVATE: 'p_msg',
   SEND_CHATROOM: 'c_msg',
   GET_MERGE_MSGS: 'qry_merged_msgs',
+  GET_TOP_MSG: 'get_top_msg',
+  SET_TOP_MSG: 'set_top_msg',
+  DEL_TOP_MSG: 'del_top_msg',
+  MSG_ADD_FAVORITE: 'add_favorite_msgs',
+  MSG_REMOVE_FAVORITE: 'del_favorite_msgs',
+  MSG_QRY_FAVORITE: 'qry_favorite_msgs',
   GET_FIRST_UNREAD_MSG: 'qry_first_unread_msg',
   CLEAR_UNREAD: 'clear_unread',
   REMOVE_CONVERSATION: 'del_convers',
@@ -1211,6 +1242,7 @@ let EVENT = {
   MESSAGE_RECEIVED: 'message_received',
   MESSAGE_RECALLED: 'message_recalled',
   MESSAGE_UPDATED: 'message_updated',
+  MESSAGE_SET_TOP: 'message_set_top',
   MESSAGE_READ: 'message_read',
   MESSAGE_REMOVED: 'message_removed',
   MESSAGE_CLEAN: 'message_clean',
@@ -1541,6 +1573,7 @@ let MESSAGE_TYPE = {
   COMMAND_MARK_UNREAD: 'jg:markunread',
   COMMAND_LOG_REPORT: 'jg:logcmd',
   COMMAND_MSG_EXSET: 'jg:msgexset',
+  COMMAND_MSG_SET_TOP: 'jg:topmsg',
   COMMAND_CONVERSATION_TAG_ADD: 'jg:tagaddconvers',
   COMMAND_RTC_1V1_FINISHED: 'jg:callfinishntf',
   // 删除 TAG 下会话
@@ -6371,6 +6404,116 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             id: 2
           }
         }
+      },
+      SetTopMsgReq: {
+        fields: {
+          targetId: {
+            type: "string",
+            id: 1
+          },
+          channelType: {
+            type: "ChannelType",
+            id: 2
+          },
+          msgId: {
+            type: "string",
+            id: 3
+          }
+        }
+      },
+      GetTopMsgReq: {
+        fields: {
+          targetId: {
+            type: "string",
+            id: 1
+          },
+          channelType: {
+            type: "ChannelType",
+            id: 2
+          }
+        }
+      },
+      TopMsg: {
+        fields: {
+          msg: {
+            type: "DownMsg",
+            id: 1
+          },
+          operator: {
+            type: "UserInfo",
+            id: 2
+          },
+          createdTime: {
+            type: "int64",
+            id: 3
+          }
+        }
+      },
+      FavoriteMsgIds: {
+        fields: {
+          items: {
+            rule: "repeated",
+            type: "FavoriteMsgIdItem",
+            id: 1
+          }
+        }
+      },
+      FavoriteMsgIdItem: {
+        fields: {
+          senderId: {
+            type: "string",
+            id: 1
+          },
+          receiverId: {
+            type: "string",
+            id: 2
+          },
+          channelType: {
+            type: "ChannelType",
+            id: 3
+          },
+          msgId: {
+            type: "string",
+            id: 4
+          }
+        }
+      },
+      QryFavoriteMsgsReq: {
+        fields: {
+          limit: {
+            type: "int64",
+            id: 1
+          },
+          offset: {
+            type: "string",
+            id: 2
+          }
+        }
+      },
+      FavoriteMsgs: {
+        fields: {
+          items: {
+            rule: "repeated",
+            type: "FavoriteMsg",
+            id: 1
+          },
+          offset: {
+            type: "string",
+            id: 2
+          }
+        }
+      },
+      FavoriteMsg: {
+        fields: {
+          msg: {
+            type: "DownMsg",
+            id: 1
+          },
+          createdTime: {
+            type: "int64",
+            id: 2
+          }
+        }
       }
     }
   }
@@ -8346,6 +8489,76 @@ function getQueryBody({
     targetId = roomId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isInclude([COMMAND_TOPICS.SET_TOP_MSG, COMMAND_TOPICS.DEL_TOP_MSG], topic)) {
+    let {
+      conversationId,
+      conversationType,
+      messageId,
+      isTop,
+      userId
+    } = data;
+    let codec = $root.lookup('codec.SetTopMsgReq');
+    let message = codec.create({
+      channelType: conversationType,
+      targetId: conversationId,
+      msgId: messageId
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.GET_TOP_MSG, topic)) {
+    let {
+      conversationId,
+      conversationType
+    } = data;
+    let codec = $root.lookup('codec.GetTopMsgReq');
+    let message = codec.create({
+      channelType: conversationType,
+      targetId: conversationId
+    });
+    targetId = conversationId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isInclude([COMMAND_TOPICS.MSG_ADD_FAVORITE, COMMAND_TOPICS.MSG_REMOVE_FAVORITE], topic)) {
+    let {
+      messages,
+      userId
+    } = data;
+    let codec = $root.lookup('codec.FavoriteMsgIds');
+    let items = utils.map(messages, message => {
+      let {
+        conversationId,
+        conversationType,
+        senderId,
+        messageId
+      } = message;
+      return {
+        channelType: conversationType,
+        receiverId: conversationId,
+        senderId: senderId,
+        msgId: messageId
+      };
+    });
+    let message = codec.create({
+      items
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.MSG_QRY_FAVORITE, topic)) {
+    let {
+      count,
+      page,
+      userId
+    } = data;
+    let codec = $root.lookup('codec.QryFavoriteMsgsReq');
+    let message = codec.create({
+      limit: count,
+      offset: page
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
   if (utils.isEqual(COMMAND_TOPICS.BATCH_TRANSLATE, topic)) {
     let {
       userId,
@@ -9258,6 +9471,16 @@ function getQueryAckBody(stream, {
   if (utils.isEqual(topic, COMMAND_TOPICS.BATCH_TRANSLATE)) {
     result = getBatchTranslate(index, data);
   }
+  if (utils.isEqual(topic, COMMAND_TOPICS.GET_TOP_MSG)) {
+    result = getTopMessage(index, data, {
+      currentUser
+    });
+  }
+  if (utils.isEqual(topic, COMMAND_TOPICS.MSG_QRY_FAVORITE)) {
+    result = getFavtoriteMsgs(index, data, {
+      currentUser
+    });
+  }
   if (utils.isInclude([COMMAND_TOPICS.RTC_ACCEPT, COMMAND_TOPICS.RTC_INVITE], topic)) {
     result = getRTCAuth(index, data);
   }
@@ -9270,6 +9493,59 @@ function getQueryAckBody(stream, {
     index
   });
   return result;
+}
+function getFavtoriteMsgs(index, data, {
+  currentUser
+}) {
+  let payload = $root.lookup('codec.FavoriteMsgs');
+  let result = payload.decode(data);
+  let {
+    items
+  } = result;
+  if (!items) {
+    items = [];
+  }
+  let list = utils.map(items, item => {
+    let {
+      createdTime,
+      msg
+    } = item;
+    let message = tools$1.msgFormat(msg, {
+      currentUser
+    });
+    return {
+      createdTime,
+      message
+    };
+  });
+  return {
+    index,
+    list
+  };
+}
+function getTopMessage(index, data, {
+  currentUser
+}) {
+  let payload = $root.lookup('codec.TopMsg');
+  let result = payload.decode(data);
+  let {
+    msg,
+    operator,
+    createdTime = 0
+  } = result;
+  let message = {};
+  if (msg) {
+    message = tools$1.msgFormat(result.msg, {
+      currentUser
+    });
+    operator = common.formatUser(result.operator);
+  }
+  return {
+    index,
+    message,
+    operator,
+    createdTime
+  };
 }
 function getBatchTranslate(index, data) {
   let payload = $root.lookup('codec.TransReq');
@@ -12975,6 +13251,29 @@ function Message$1 (io, emitter, logger) {
         content: newContent
       });
     }
+    if (utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_MSG_SET_TOP)) {
+      let {
+        conversationType,
+        conversationId,
+        content: {
+          msg_id
+        }
+      } = message;
+      return getMessagesByIds({
+        conversationType,
+        conversationId,
+        messageIds: [msg_id]
+      }).then(({
+        messages = []
+      }) => {
+        let message = messages[0];
+        return message && emitter.emit(EVENT.MESSAGE_SET_TOP, {
+          conversationType,
+          conversationId,
+          messageId: msg_id
+        });
+      });
+    }
 
     // if(utils.isEqual(message.name, MESSAGE_TYPE.COMMAND_RTC_1V1_FINISHED)){
     //   return emitter.emit(EVENT.RTC_FINISHED_1V1_EVENT, message);
@@ -14543,6 +14842,198 @@ function Message$1 (io, emitter, logger) {
       resolve();
     });
   };
+
+  /* 
+    let message = {
+      conversationType: 1,
+      conversationId: '',
+      messageId: '',
+      isTop: true,
+    }
+  */
+  let setTopMessage = message => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, message, FUNC_PARAM_CHECKER.SET_TOP_MESSAGE);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        isTop,
+        conversationType,
+        conversationId,
+        messageId
+      } = message;
+      let user = io.getCurrentUser();
+      let topic = isTop ? COMMAND_TOPICS.SET_TOP_MSG : COMMAND_TOPICS.DEL_TOP_MSG;
+      let data = {
+        topic: topic,
+        conversationType,
+        conversationId,
+        messageId,
+        userId: user.id,
+        isTop: !!isTop
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        resolve();
+      });
+    });
+  };
+
+  /* 
+    let conversation = {
+      conversationType: 1,
+      conversationId: '',
+    }
+  */
+  let getTopMessage = conversation => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, conversation, FUNC_PARAM_CHECKER.GET_TOP_MESSAGE);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        conversationType,
+        conversationId
+      } = conversation;
+      let data = {
+        topic: COMMAND_TOPICS.GET_TOP_MSG,
+        conversationType,
+        conversationId
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg,
+          message,
+          operator,
+          createdTime
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        let _result = {};
+        if (message) {
+          _result = {
+            message,
+            operator,
+            createdTime
+          };
+        }
+        resolve(_result);
+      });
+    });
+  };
+  let addFavoriteMessages = params => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, params, FUNC_PARAM_CHECKER.ADD_FAVORITE_MESSAGE);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        messages
+      } = params;
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.MSG_ADD_FAVORITE,
+        messages,
+        userId: user.id
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        resolve();
+      });
+    });
+  };
+  let removeFavoriteMessages = params => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, params, FUNC_PARAM_CHECKER.ADD_FAVORITE_MESSAGE);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        messages
+      } = params;
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.MSG_REMOVE_FAVORITE,
+        messages,
+        userId: user.id
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        resolve();
+      });
+    });
+  };
+  let getFavoriteMessages = params => {
+    return utils.deferred((resolve, reject) => {
+      let _params = {
+        count: 20,
+        page: 1
+      };
+      if (!utils.isObject(params)) {
+        params = _params;
+      }
+      let {
+        count = 20,
+        page = 1
+      } = params;
+      let user = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.MSG_QRY_FAVORITE,
+        count,
+        page,
+        userId: user.id
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg,
+          list
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        resolve({
+          list
+        });
+      });
+    });
+  };
   return {
     sendMessage,
     sendMassMessage,
@@ -14572,6 +15063,11 @@ function Message$1 (io, emitter, logger) {
     subscribeMessage,
     unsubscribeMessage,
     translate,
+    setTopMessage,
+    getTopMessage,
+    addFavoriteMessages,
+    removeFavoriteMessages,
+    getFavoriteMessages,
     _uploadFile
   };
 }
@@ -15264,6 +15760,21 @@ function Message ($message, {
   };
   invokes.translate = params => {
     return webAgent.translate(params);
+  };
+  invokes.setTopMessage = params => {
+    return webAgent.setTopMessage(params);
+  };
+  invokes.getTopMessage = params => {
+    return webAgent.getTopMessage(params);
+  };
+  invokes.addFavoriteMessages = params => {
+    return webAgent.addFavoriteMessages(params);
+  };
+  invokes.removeFavoriteMessages = params => {
+    return webAgent.removeFavoriteMessages(params);
+  };
+  invokes.getFavoriteMessages = params => {
+    return webAgent.getFavoriteMessages(params);
   };
   invokes.getMessages = conversation => {
     return utils.deferred((resolve, reject) => {

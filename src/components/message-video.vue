@@ -10,7 +10,7 @@ import ReactionEmoji from "../components/emoji-reaction.vue"
 import Reaction from "./message-reaction.vue";
 
 const props = defineProps(["message", "isRead"]);
-const emit = defineEmits(["onrecall", "ontransfer", "onreply", "onreaction"]);
+const emit = defineEmits(["onrecall", "ontransfer", "onreply", "onreaction", "onpinned"]);
 
 let state = reactive({
   isShowDrop: false,
@@ -28,6 +28,10 @@ function onReply(){
 function onTransfer(type){
   onShowDrop(false);
   emit('ontransfer', { type })
+}
+function onPinned(){
+  onShowDrop(false);
+  emit('onpinned', { message: props.message });
 }
 function onShowDrop(isShow) {
   state.isShowDrop = isShow;
@@ -112,7 +116,13 @@ function onChoiceEmoji(item){
       </div>
       <ul class="tyn-reply-tools">
         <li>
-          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" @onrecall="onRecall()" @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" @onreply="onReply()"  @onhide="onShowDrop(false)"></Dropdownmenu>
+          <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" 
+          @onrecall="onRecall()" 
+          @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" 
+          @onremove="onTransfer(MESSAGE_OP_TYPE.REMOVE)" 
+          @onreply="onReply()" 
+          @onpinned="onPinned()"
+          @onhide="onShowDrop(false)"></Dropdownmenu>
         </li>
       </ul>
       <!-- .tyn-reply-tools -->

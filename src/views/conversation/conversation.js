@@ -460,6 +460,42 @@ function getTops(state) {
     state.tops = conversations;
   });
 }
+function setTopMessage(state, isTop, message){
+  juggle.setTopMessage({
+    conversationType: message.conversationType,
+    conversationId: message.conversationId,
+    messageId: message.messageId,
+    isTop: isTop,
+  }).then(() =>{
+    let shortName = im.msgShortFormat(message);
+    let user = Storage.get(STORAGE.USER_TOKEN);
+    if(!isTop){
+      return state.pinnedMessage = {};  
+    }
+    state.pinnedMessage = { 
+      createdTime: Date.now(), 
+      message: message, 
+      shortName: shortName,
+      operator: user,
+    }
+  });
+}
+function getTopMessage(state, message){
+  let { conversationType, conversationId } = message;
+  if(!conversationId){
+    return;
+  }
+  juggle.getTopMessage({ conversationType, conversationId }).then((result) =>{
+    if(utils.isEmpty(result.message)){
+      return state.pinnedMessage = {};
+    }
+    let shortName = im.msgShortFormat(result.message);
+    state.pinnedMessage = { 
+      ...result,
+      shortName: shortName
+    }
+  });
+}
 export default {
   isScrollTop,
   readMessage,
@@ -481,4 +517,6 @@ export default {
   isSame,
   getTops,
   translate,
+  setTopMessage,
+  getTopMessage,
 }
