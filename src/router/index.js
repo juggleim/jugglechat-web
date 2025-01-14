@@ -50,7 +50,7 @@ const router = createRouter({
 router.beforeEach((to, from, next)=> {
   let user = Storage.get(STORAGE.USER_TOKEN);
   if(utils.isEqual(to.name, 'Root')){
-    return router.push({ name: 'ConversationList' })
+    return next({ name: 'ConversationList' });
   }
   if (user.id || utils.isEqual(to.name, 'Login')) {
     next();
