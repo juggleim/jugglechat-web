@@ -2696,7 +2696,7 @@
   color: #FF6700;
   font-size: 18px;
   position: absolute;
-  top: -4px;
+  top: -6px;
 }
 .jg-pinned-info{
   display: flex;
@@ -2716,9 +2716,12 @@
 }
 .jg-pinned-item.content{
   max-width: 80%;
-  white-space: nowrap;
+  /* white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis
+  text-overflow: ellipsis; */
+  display: flex;
+  max-height: 100px;
+  overflow-y: auto;
 }
 .jg-ellipsis{
   white-space: nowrap;
@@ -2757,12 +2760,18 @@
   font-size: 12px;
   color: #979798;
 }
+.jg-top-avatar,
 .jg-fav-avatar{
+  min-height: 16px;
+  min-width: 16px;
   height: 16px;
   width: 16px;
   border-radius: 50%;
   background-size: 100%;
   margin-right: 8px;
+}
+.jg-top-avatar{
+  border-radius: 4px;
 }
 .jg-fav-msg{
   margin: 10px 0;

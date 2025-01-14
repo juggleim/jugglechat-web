@@ -460,6 +460,18 @@ function getTops(state) {
     state.tops = conversations;
   });
 }
+function updateLocalTopMsg(isTop, message, operator){
+  let shortName = im.msgShortFormat(message);
+  if(!isTop){
+    return {};  
+  }
+  return { 
+    createdTime: Date.now(), 
+    message: message, 
+    shortName: shortName,
+    operator: operator,
+  }
+}
 function setTopMessage(state, isTop, message){
   juggle.setTopMessage({
     conversationType: message.conversationType,
@@ -467,17 +479,9 @@ function setTopMessage(state, isTop, message){
     messageId: message.messageId,
     isTop: isTop,
   }).then(() =>{
-    let shortName = im.msgShortFormat(message);
     let user = Storage.get(STORAGE.USER_TOKEN);
-    if(!isTop){
-      return state.pinnedMessage = {};  
-    }
-    state.pinnedMessage = { 
-      createdTime: Date.now(), 
-      message: message, 
-      shortName: shortName,
-      operator: user,
-    }
+    let result = updateLocalTopMsg(isTop, message, user);
+    state.pinnedMessage = result;
   });
 }
 function getTopMessage(state, message){
@@ -532,6 +536,7 @@ export default {
   getTops,
   translate,
   setTopMessage,
+  updateLocalTopMsg,
   getTopMessage,
   addFavoriteMsg,
 }

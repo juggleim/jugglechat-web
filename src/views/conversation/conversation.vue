@@ -194,6 +194,13 @@ juggle.once(Event.MESSAGE_RECALLED, (notify) => {
   }
 });
 
+juggle.once(Event.MESSAGE_SET_TOP, ({ message, isTop, operator }) => {
+  if (conversationTools.isSameConversation(message, state)) {
+    let result = conversationTools.updateLocalTopMsg(isTop, message, operator);
+    state.pinnedMessage = result;
+  }
+});
+
 juggle.once(Event.MESSAGE_READ, (notify) => {
   if (conversationTools.isSameConversation(notify, state)) {
     let { messages } = notify;
@@ -852,7 +859,9 @@ watch(() => state.content, (val) => {
           <div class="jg-pinned-icon wr wr-top-s"></div>
           <ul class="jg-pinned-content">
             <li class="jg-pinned-item content">
-              {{ state.pinnedMessage.message.sender.name }}：{{ state.pinnedMessage.shortName }}</li>
+              <div class="tyn-avatar tyn-s-avatar jg-top-avatar" :style="{ 'background-image': 'url(' + state.pinnedMessage.message.sender.portrait + ')' }"></div>
+              <div>{{ state.pinnedMessage.message.sender.name }}：{{ state.pinnedMessage.shortName }}</div>
+            </li>
             <li class="jg-pinned-item operator">由 <span class="name">{{ state.pinnedMessage.operator.name }}</span> 置顶</li>
           </ul>
         </div>

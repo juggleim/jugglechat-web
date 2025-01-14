@@ -665,6 +665,10 @@ let PLATFORM = {
   WEB: 'Web',
   DESKTOP: 'PC'
 };
+let MSG_TOP_ACTION_TYPE = {
+  ADD: 0,
+  REMOVE: 1
+};
 let SIGNAL_CMD = {
   CONNECT: 0,
   CONNECT_ACK: 1,
@@ -1690,6 +1694,7 @@ var ENUM = /*#__PURE__*/Object.freeze({
   PONG_INDEX: PONG_INDEX,
   SIGNAL_NAME: SIGNAL_NAME,
   PLATFORM: PLATFORM,
+  MSG_TOP_ACTION_TYPE: MSG_TOP_ACTION_TYPE,
   SIGNAL_CMD: SIGNAL_CMD,
   QOS: QOS,
   FUNC_PARAM_CHECKER: FUNC_PARAM_CHECKER,
@@ -13258,8 +13263,11 @@ function Message$1 (io, emitter, logger) {
         conversationType,
         conversationId,
         content: {
-          msg_id
-        }
+          msg_id,
+          action = 0
+        },
+        sender,
+        sentTime
       } = message;
       return getMessagesByIds({
         conversationType,
@@ -13269,10 +13277,12 @@ function Message$1 (io, emitter, logger) {
         messages = []
       }) => {
         let message = messages[0];
+        let isTop = utils.isEqual(MSG_TOP_ACTION_TYPE.ADD, action);
         return message && emitter.emit(EVENT.MESSAGE_SET_TOP, {
-          conversationType,
-          conversationId,
-          messageId: msg_id
+          isTop,
+          message,
+          operator: sender,
+          createdTime: sentTime
         });
       });
     }
