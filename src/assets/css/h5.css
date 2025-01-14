@@ -187,4 +187,7 @@
   .tyn-h5header-nav-list .dropdown-menu{
     transition: opacity .2s ease-in,transform .2s ease-in;
   }
+  .jg-pinned-box{
+    top: 90px;
+  }
 }

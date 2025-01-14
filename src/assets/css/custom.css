@@ -2677,7 +2677,7 @@
 }
 .jg-pinned-box{
   position: absolute;
-  bottom: -50px;
+  top: 56px;
   left: 1rem;
   right: 1rem;
   padding: 4px 20px;
