@@ -907,7 +907,6 @@ watch(() => state.content, (val) => {
                   @onrecall="onRecall" 
                   @ontransfer="onShowTransfer" 
                   @onreply="onReply" 
-                  @onreaction="onReaction"
                   @onfav="onFav"
                   @onpinned="onPinned">
               </File>
