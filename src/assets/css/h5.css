@@ -151,6 +151,9 @@
   .nav-link::before{
     font-size: 1rem !important;
   }
+  .jg-setting-aside .jg-cards{
+    padding-bottom: 8rem;
+  }
   .jg-setting-aside .jg-li,
   .jg-setting-aside .jg-li a::before{
     font-size: 1rem;
@@ -176,5 +179,12 @@
   }
   .tyn-reply-bubble > *:first-child:not(:only-child){
     max-width: 80%;
+  }
+  .jg-asider-footer-item .icon::before{
+    font-size: 1.2rem;
+  }
+  .tyn-h5header-create-list .dropdown-menu,
+  .tyn-h5header-nav-list .dropdown-menu{
+    transition: opacity .2s ease-in,transform .2s ease-in;
   }
 }
