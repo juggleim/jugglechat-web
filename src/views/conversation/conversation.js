@@ -478,10 +478,6 @@ function setTopMessage(state, isTop, message){
     conversationId: message.conversationId,
     messageId: message.messageId,
     isTop: isTop,
-  }).then(() =>{
-    let user = Storage.get(STORAGE.USER_TOKEN);
-    let result = updateLocalTopMsg(isTop, message, user);
-    state.pinnedMessage = result;
   });
 }
 function getTopMessage(state, message){
