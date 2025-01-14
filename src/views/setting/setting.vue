@@ -136,7 +136,7 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <AsiderUserUpdate :is-show="state.isShowUserUpdateAsider" :right="1" @oncancel="onShowUserUpdateAsider(false)"></AsiderUserUpdate>
   <AsiderUserConfig :is-show="state.isShowUserSettingAsider" :right="1" @oncancel="onShowUserSettingAsider(false)"></AsiderUserConfig>
   <AsiderUserAccount :is-show="state.isShowAccountAsider" :right="1" @oncancel="onShowAccountAsider(false)"></AsiderUserAccount>
-  <AsideFavoriteMsg :is-show="state.isShowFavoriteMsg" @oncancel="onShowFavoriteMsg(false)"></AsideFavoriteMsg>
+  <AsideFavoriteMsg :is-show="state.isShowFavoriteMsg" :right="1" @oncancel="onShowFavoriteMsg(false)"></AsideFavoriteMsg>
   <AsideUserAgreement 
     :is-show="state.isShowUserAgreement" 
     :right="1" 
