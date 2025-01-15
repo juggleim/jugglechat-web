@@ -14896,6 +14896,18 @@ function Message$1 (io, emitter, logger) {
             msg
           });
         }
+        let _msg = {
+          conversationType,
+          conversationId,
+          content: {
+            msg_id: messageId,
+            action: isTop ? MSG_TOP_ACTION_TYPE.ADD : MSG_TOP_ACTION_TYPE.REMOVE
+          },
+          sender: user,
+          name: MESSAGE_TYPE.COMMAND_MSG_SET_TOP,
+          sentTime: Date.now()
+        };
+        commandNotify(_msg);
         resolve();
       });
     });
