@@ -59,7 +59,7 @@ function onShowDetail(isShow){
             <div class="tyn-media tyn-size-md">
               <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.content.portrait + ')' }"></div>
             </div>
-            <div class="jg-contact-card-title">{{ props.message.content.name }}</div>
+            <div class="jg-contact-card-title jg-ellipsis">{{ props.message.content.name }}</div>
           </div>
           <div class="jg-contact-memo">[个人名片]</div>
         </div>
