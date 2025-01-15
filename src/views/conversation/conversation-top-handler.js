@@ -17,8 +17,10 @@ export default function(conversations, state){
       tops.splice(index, 1)
     }
     if(index == -1 && isTop){
+      tops.push(conversation);
+      let i = tops.length - 1;
       let item = await juggle.getConversation(conversation);
-      tops.push(item.conversation);
+      utils.extend(tops[i], item.conversation);
     }
   });
 }
