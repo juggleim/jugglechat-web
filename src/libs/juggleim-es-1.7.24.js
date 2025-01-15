@@ -13269,21 +13269,16 @@ function Message$1 (io, emitter, logger) {
         sender,
         sentTime
       } = message;
-      return getMessagesByIds({
-        conversationType,
-        conversationId,
-        messageIds: [msg_id]
-      }).then(({
-        messages = []
-      }) => {
-        let message = messages[0];
-        let isTop = utils.isEqual(MSG_TOP_ACTION_TYPE.ADD, action);
-        return message && emitter.emit(EVENT.MESSAGE_SET_TOP, {
-          isTop,
-          message,
-          operator: sender,
-          createdTime: sentTime
-        });
+      let isTop = utils.isEqual(MSG_TOP_ACTION_TYPE.ADD, action);
+      return emitter.emit(EVENT.MESSAGE_SET_TOP, {
+        isTop,
+        message: {
+          conversationType,
+          conversationId,
+          messageId: msg_id
+        },
+        operator: sender,
+        createdTime: sentTime
       });
     }
 

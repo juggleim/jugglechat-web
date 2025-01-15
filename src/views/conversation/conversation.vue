@@ -194,10 +194,14 @@ juggle.once(Event.MESSAGE_RECALLED, (notify) => {
   }
 });
 
-juggle.once(Event.MESSAGE_SET_TOP, ({ message, isTop, operator }) => {
+juggle.once(Event.MESSAGE_SET_TOP, async ({ message, isTop, operator }) => {
   if (conversationTools.isSameConversation(message, state)) {
-    let result = conversationTools.updateLocalTopMsg(isTop, message, operator);
-    state.pinnedMessage = result;
+    let { conversationId, conversationType, messageId } = message;
+    juggle.getMessagesByIds({ conversationType, conversationId, messageIds: [messageId] }).then(({ messages = [] }) => {
+      let msg = messages[0];
+      let result = conversationTools.updateLocalTopMsg(isTop, msg, operator);
+      state.pinnedMessage = result;
+    });
   }
 });
 

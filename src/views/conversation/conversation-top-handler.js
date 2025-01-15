@@ -18,9 +18,12 @@ export default function(conversations, state){
     }
     if(index == -1 && isTop){
       tops.push(conversation);
-      let i = tops.length - 1;
-      let item = await juggle.getConversation(conversation);
-      utils.extend(tops[i], item.conversation);
+      juggle.getConversation(conversation).then((item) =>{
+        let i = utils.find(tops, (top) => { return utils.isEqual(top.conversationId, conversation.conversationId); });
+        if(i > -1){
+          utils.extend(tops[i], item.conversation);
+        }
+      });
     }
   });
 }
