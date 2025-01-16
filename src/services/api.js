@@ -33,6 +33,8 @@ let SERVER_PATH = {
   GROUP_SET_MUTE: 'groups/management/setmute',
   GROUP_TRANSFER_OWNER: 'groups/management/chgowner',
   GROUP_QRCODE: 'groups/qrcode',
+
+  AI_ANSWER: 'assistants/answer',
 };
 utils.forEach(SERVER_PATH, (url, name) => {
   let protoclName = location.protocol;

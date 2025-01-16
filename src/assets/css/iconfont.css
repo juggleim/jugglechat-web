@@ -1,8 +1,8 @@
 @font-face {
   font-family: 'wr';  /* Project id 4376445 */
-  src: url('https://at.alicdn.com/t/c/font_4376445_nqknh1dy1ob.woff2?t=1736765497246') format('woff2'),
-  url('https://at.alicdn.com/t/c/font_4376445_nqknh1dy1ob.woff?t=1736765497246') format('woff'),
-  url('https://at.alicdn.com/t/c/font_4376445_nqknh1dy1ob.ttf?t=1736765497246') format('truetype');
+  src: url('https://at.alicdn.com/t/c/font_4376445_dsjstxe3yus.woff2?t=1737036393450') format('woff2'),
+  url('https://at.alicdn.com/t/c/font_4376445_dsjstxe3yus.woff?t=1737036393450') format('woff'),
+  url('https://at.alicdn.com/t/c/font_4376445_dsjstxe3yus.ttf?t=1737036393450') format('truetype');
 }
 
 .wr::before,
@@ -383,4 +383,29 @@
 }
 .wr-fav::before{
   content: '\e660';
+}
+.wr-gpt::before{
+  content: '\e68c';
+  background: -webkit-linear-gradient(135deg,
+  #0eaf6d,
+  #ff6ac6 15%,
+  #33d724 50%,
+  #e6d205 55%,
+  #6119f0 60%,
+  #8b2ce0 80%,
+  #ff6384 95%,
+  #15efc3);
+ -webkit-text-fill-color: transparent;
+ -webkit-background-clip: text;
+ -webkit-background-size: 200% 100%;
+ -webkit-animation: flowCss 3s infinite linear;
+  text-align: center;
+}
+@-webkit-keyframes flowCss {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -400% 0;
+  }
 }

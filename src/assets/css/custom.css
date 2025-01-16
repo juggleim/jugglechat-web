@@ -2233,6 +2233,7 @@
 .jg-switch input:checked +.jg-switch-slider:before {
   transform: translateX(18px);
 }
+.jg-askai-ban,
 .jg-group-ban{
   position: absolute;
   left: 0;
@@ -2246,6 +2247,24 @@
   font-size: 12px;
   color: #fefefe;
 }
+.jg-askai-ban{
+  background-color: #00000054;
+  display: flex;
+}
+.jg-askai-loading {
+  margin-right: 1rem;
+  width: 20px;
+  aspect-ratio: 1;
+  --_c:no-repeat radial-gradient(farthest-side,#e0e0e0 92%,#0000);
+  background: 
+    var(--_c) top,
+    var(--_c) left,
+    var(--_c) right,
+    var(--_c) bottom;
+  background-size: 6px 6px;
+  animation: ail7 1s infinite;
+}
+@keyframes ail7 {to{transform: rotate(.5turn)}}
 .stream-loader {
   width: 6px;
   aspect-ratio: 1;
