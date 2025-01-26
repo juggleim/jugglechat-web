@@ -13,6 +13,7 @@ import messageUtils from "./message-utils";
 import { REG_EXP, MESSAGE_OP_TYPE } from "../common/enum";
 import ReactionEmoji from "../components/emoji-reaction.vue"
 import Clipboard from 'clipboard.js';
+import common from "../common/common";
 
 let state = reactive({
   isShowDrop: false,
@@ -88,10 +89,10 @@ function onInput() {
   state.errorMsg = '';
 }
 function getContent(content){
-  content = content.replace(REG_EXP.LINK, (current, match) => {
-    return `<a href="${match}" target="_blank" >${match}</a>`;
-  });
-  return content;
+  // content = content.replace(REG_EXP.LINK, (current, match) => {
+  //   return `<a href="${match}" target="_blank" >${match}</a>`;
+  // });
+  return common.formatMarkdown(content);
 }
 function onShowReadDetail(isShow) {
   if (!messageUtils.isGroup(props.message)) {
