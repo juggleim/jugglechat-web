@@ -345,7 +345,7 @@ function mentionShortFormat(message){
 	}
 	let memberMap = {};
 	utils.forEach(members, (member) => {
-		memberMap[member.id] = `<span class="jg-mention-msg-name">@${member.name}</span>`;
+		memberMap[member.id] = `<span class="jg-mention-msg-name">@${member.name || member.id}</span>`;
 	});
 	content = utils.templateFormat(content, memberMap);
 	return content;
