@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, nextTick } from "vue";
 import GroupReads from "./group-reads.vue";
+import Avatar from "./avatar.vue";
 import utils from "../common/utils";
 import messageUtils from "./message-utils";
 import Dropdownmenu from "./message-menu.vue";
@@ -95,8 +96,12 @@ function onChoiceEmoji(item){
 
 <template>
   <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md">
-      <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
+    <div class="tyn-media">
+      <Avatar 
+        :cls="'tyn-size-md jg-size-md '"
+        :avatar="props.message.sender.portrait"
+        :name="props.message.sender.name">
+      </Avatar>
     </div>
   </div>
   <ReactionEmoji :is-show="state.isShowReaction" @onhide="onShowEmojiReaction(false)" @onemit="onChoiceEmoji" :message="props.message"></ReactionEmoji>

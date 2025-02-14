@@ -26,6 +26,7 @@ import GroupNtfMessage from '../../components/message-group-notify.vue';
 import FriendNtfMessage from '../../components/message-friend-notify.vue';
 import Call1v1FinishedMessage from '../../components/message-1v1-finished.vue';
 import ContactCard from '../../components/message-contact-card.vue';
+import Avatar from "../../components/avatar.vue";
 
 import utils from "../../common/utils";
 import conversationTools from "./conversation";
@@ -712,9 +713,6 @@ function getMembers() {
     members = utils.map(members, (member) => {
       let { user_id: id, nickname: name, avatar: portrait } = member;
       let item = { id, name, portrait };
-      if(!portrait){
-        item.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
-      }
       mentionMembers.push(item);
       return item;
     });
@@ -874,8 +872,12 @@ watch(() => state.content, (val) => {
         </li>
       </ul>
       <div class="tyn-media-group">
-        <div class="tyn-media tyn-size-md tyn-conver-avatar" :style="{ 'background-image': 'url(' + props.conversation.conversationPortrait + ')' }">
-        </div>
+        <Avatar 
+          :cls="'tyn-size-md jg-size-md tyn-conver-avatar'"
+          :avatar="conversationTools.isGroup(props.conversation) ? '' :props.conversation.conversationPortrait"
+          :name="props.conversation.conversationTitle">
+        </Avatar>
+
         
         <div class="tyn-media-col">
           <div class="tyn-media-row">
@@ -899,7 +901,11 @@ watch(() => state.content, (val) => {
           <div class="jg-pinned-icon wr wr-top-s"></div>
           <ul class="jg-pinned-content">
             <li class="jg-pinned-item content">
-              <div class="tyn-avatar tyn-s-avatar jg-top-avatar" :style="{ 'background-image': 'url(' + state.pinnedMessage.message.sender.portrait + ')' }"></div>
+              <Avatar 
+                :cls="'jg-top-avatar'"
+                :avatar="state.pinnedMessage.message.sender.portrait"
+                :name="state.pinnedMessage.message.sender.name"
+              ></Avatar>
               <div>{{ state.pinnedMessage.message.sender.name }}：{{ state.pinnedMessage.shortName }}</div>
             </li>
             <li class="jg-pinned-item operator">由 <span class="name">{{ state.pinnedMessage.operator.name }}</span> 置顶</li>

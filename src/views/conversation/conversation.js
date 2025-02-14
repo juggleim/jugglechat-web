@@ -63,9 +63,8 @@ function getMessages(isFirst, callback, state, props) {
         })
       }
       let { sender } = message;
-      if(!sender.portrait){
-        let name = sender.name || '默认';
-        sender.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
+      if(!sender.name){
+        sender.name = sender.id;
       }
 
       utils.extend(message, { isSelected: false, sender, streamMsg: { isEnd: false, streams: []} })
@@ -433,7 +432,7 @@ function insertTempConversation(query, state) {
         conversationId,
         conversationType,
         conversationTitle: nickname,
-        conversationPortrait: avatar || common.getTextAvatar(nickname),
+        conversationPortrait: avatar || '',
         shortName: im.msgShortFormat(message),
         latestMessage: message,
         isActive: true
@@ -451,12 +450,6 @@ function insertTempConversation(query, state) {
 function getTops(state) {
   juggle.getTopConversations().then(result => {
     let { conversations, isFinished } = result;
-    conversations = utils.map(conversations, item => {
-      let { conversationPortrait, conversationTitle } = item;
-      item.conversationPortrait =
-        conversationPortrait || common.getTextAvatar(conversationTitle);
-      return item;
-    });
     state.tops = conversations;
   });
 }

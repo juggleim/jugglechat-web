@@ -35,12 +35,7 @@ function onSearch() {
       return;
     }
     let { items } = data;
-    let users = utils.map(items, (item) => {
-      let { avatar, nickname } = item;
-      item.avatar = avatar || common.getTextAvatar(nickname);
-      return item;
-    });
-    utils.extend(state, { users });
+    utils.extend(state, { users: items });
   });
 }
 function onAdd(_user){

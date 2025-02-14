@@ -189,7 +189,6 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
     utils.forEach(_list, conversation => {
       let {
         latestMessage,
-        conversationPortrait,
         conversationTitle = ""
       } = conversation;
       let { sentTime } = latestMessage;
@@ -199,14 +198,12 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
       }
       conversation = common.formatMention(conversation);
       let shortName = im.msgShortFormat(latestMessage);
-      conversationPortrait =
-        conversationPortrait || common.getTextAvatar(conversationTitle);
+
       utils.extend(conversation, {
         f_time,
         isShowDrop: false,
         isActive: false,
         shortName,
-        conversationPortrait
       });
       if(!state.conversationMap[tag]){
         state.conversationMap[tag] = [];

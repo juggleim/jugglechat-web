@@ -1,7 +1,7 @@
 @media (max-width: 768px) {  
   .tyn-root::after,
   .tyn-root::before{
-    position: fixed;
+    /* position: fixed; */
   }
   .tyn-web-root{
     --footer-height: 0;

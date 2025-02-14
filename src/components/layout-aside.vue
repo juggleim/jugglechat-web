@@ -17,6 +17,7 @@ import AsiderGroupAddMember from "./aside-group-add-member.vue";
 import AsiderUserSetting from "./aside-user-setting.vue";
 import AsideUserUpdate from "./aside-user-update.vue";
 import AsideFavoriteMsg from "./aside-msg-favorite.vue";
+import Avatar from "./avatar.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -179,11 +180,6 @@ function onNavChat(item) {
   });
 }
 
-// 强制修改头像
-let portrait = user.portrait || '';
-let isShowUser = utils.isBase64(portrait.replace('data:image/jpeg;base64,', ''));
-utils.extend(state, { user, isShowUser, disableClose: isShowUser });
-
 let useRouterCurrent = reactive(router);
 watch(useRouterCurrent, (value) => {
   let { currentRoute: { name } } = value;
@@ -203,7 +199,7 @@ watch(useRouterCurrent, (value) => {
     <ul class="jg-footer-tools jg-footer-top-box">
       <li class="jg-footer-tool"  @click.prevent="onShowSettingMenu(true)">
         <div class="jg-header-user">
-          <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
+          <Avatar :cls="'jg-header-user-avatar'" :avatar="state.user.portrait" :name="state.user.name || state.user.id"></Avatar>
           <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
         </div>
       </li>

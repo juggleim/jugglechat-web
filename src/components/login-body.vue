@@ -37,14 +37,11 @@ let state = reactive({
 
 function onVerifySuccess(result){
   let { data } = result;
-  let { user_id, authorization, nickname, avatar, im_token } = data;
-  if(!avatar){
-    avatar = common.getTextAvatar(nickname);
-  }
+  let { user_id, authorization, nickname, im_token } = data;
   if(!im_token){
     return state.errorMsg.code = '登录失败，IM Token 为空'
   }
-  let user = { id: user_id, token: im_token, authorization: authorization, name: nickname, portrait: avatar, isUsed: true };
+  let user = { id: user_id, token: im_token, authorization: authorization, name: nickname, isUsed: true };
   Storage.set(STORAGE.USER_TOKEN,  user);
 
   let accounts = Storage.get(STORAGE.USERS);

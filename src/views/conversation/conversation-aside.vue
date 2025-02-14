@@ -12,6 +12,7 @@ import AsiderGroupNotice from "../../components/aside-group-notice.vue";
 import AsideGroupTransferOwner from "../../components/aside-group-transfer-owner.vue";
 import AsiderTranslator from "../../components/aside-translator.vue";
 import AsiderQrCode from "../../components/aside-qrcode.vue";
+import Avatar from "../../components/avatar.vue";
 
 import { Group } from "../../services/index";
 import messageUtils from "../../components/message-utils";
@@ -341,15 +342,16 @@ watch(() => props.isShow, () => {
     state.members.push(props.members[0]);
   }
 });
-</script>
+</script> 
 
 <template>
   <Asider :is-show="props.isShow" :title="'会话详情'" @oncancel="onCancel" :right="1">
     <div class="tyn-media-group tyn-media-vr tyn-media-center">
       <div class="tyn-aside-members">
         <div class="tyn-aside-member" v-for="member in state.members">
-          <div class="tyn-media tyn-size-md tyn-chat-aside-avatar"
-            :style="{ 'background-image': 'url(' + member.portrait + ')' }"></div>
+          <Avatar :cls="'tyn-size-md jg-size-md'" :avatar="member.portrait" :name="member.name || member.id"></Avatar>
+
+
           <div class="tyn-aside-member-name">{{ member.name }}</div>
         </div>
         <div class="tyn-aside-member" @click="onShowFriendAdd(true)">

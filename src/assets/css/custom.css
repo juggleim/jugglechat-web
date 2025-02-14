@@ -47,7 +47,7 @@
   width: 100%;
   background-repeat: no-repeat;
   background-size: cover;
-  border-radius: 14%;
+  border-radius: 50%;
   background-color: #f0f0f1;
 }
 .tyn-mention-all{
@@ -76,7 +76,6 @@
   padding: 1px 5px;
   border-radius: 6px;
   width: fit-content;
-  line-height: 16px;
   height: 16px;
 }
 .jg-stream-completed,
@@ -359,7 +358,7 @@
   z-index: 1201;
 }
 .tyn-emoji-pn.show-aside{
-  top: -144px;
+  top: -152px;
   height: auto;
 }
 
@@ -2785,12 +2784,7 @@
   min-width: 16px;
   height: 16px;
   width: 16px;
-  border-radius: 50%;
-  background-size: 100%;
   margin-right: 8px;
-}
-.jg-top-avatar{
-  border-radius: 4px;
 }
 .jg-fav-msg{
   margin: 10px 0;

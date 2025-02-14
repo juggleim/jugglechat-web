@@ -3,6 +3,7 @@ const props = defineProps(['message']);
 const emit = defineEmits(['']);
 
 import { reactive, watch } from "vue";
+import Avatar from "./avatar.vue";
 import utils from "../common/utils";
 import im from "../common/im";
 import messageUtils from "./message-utils";
@@ -55,8 +56,12 @@ function getContent(content){
 
 <template>
   <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md">
-      <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
+ <div class="tyn-media">
+      <Avatar 
+        :cls="'tyn-size-md jg-size-md '"
+        :avatar="props.message.sender.portrait"
+        :name="props.message.sender.name">
+      </Avatar>
     </div>
   </div>
   <div class="tyn-reply-group">

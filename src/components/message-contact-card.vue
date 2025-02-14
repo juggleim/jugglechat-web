@@ -1,6 +1,7 @@
 <script setup>
 import messageUtils from "./message-utils";
 import AsiderContactDetail from "./aside-contact-detail.vue";
+import Avatar from "./avatar.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
 import { User } from "../services/index";
 import utils from "../common/utils";
@@ -46,8 +47,12 @@ function onShowDetail(isShow){
 
 <template>
   <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md">
-      <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
+ <div class="tyn-media">
+      <Avatar 
+        :cls="'tyn-size-md jg-size-md '"
+        :avatar="props.message.sender.portrait"
+        :name="props.message.sender.name">
+      </Avatar>
     </div>
   </div>
   <div class="tyn-reply-group">

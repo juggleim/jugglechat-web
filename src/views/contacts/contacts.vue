@@ -124,7 +124,7 @@ function getBots(){
         id: bot_id,
         type: CONTACT_TYPE.BOT, 
         name: nickname, 
-        avatar: avatar || common.getTextAvatar(nickname), 
+        avatar: avatar || '', 
         isSelected: false
       };
     });
@@ -145,7 +145,7 @@ function getNewFriends(start = 0){
       let { id, target_user, is_sponsor = false, status = FRIEND_APPLY_STATUS.APPLYING } = item;
       
       let _user = target_user;
-      let avatar = target_user.avatar || common.getTextAvatar(target_user.nickname || target_user.user_id);
+      let avatar = target_user.avatar || '';
       let content = `${target_user.nickname || target_user.user_id} 添加你为好友`;
       if(is_sponsor){
         content = `你添加 ${target_user.nickname || target_user.user_id} 为好友`;
@@ -211,7 +211,7 @@ function getFriends(startUserId = ''){
         id: user_id,
         type: CONTACT_TYPE.FRIEND, 
         name: nickname, 
-        avatar: avatar || common.getTextAvatar(nickname), 
+        avatar: avatar, 
         isSelected: false
       };
     });

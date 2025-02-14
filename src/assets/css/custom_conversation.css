@@ -64,3 +64,51 @@
   background-repeat: no-repeat;
   margin: 2px;
 }
+.tyn-avatar{
+  position: relative;
+}
+.tyn-avatar > .inner {
+  overflow: hidden;
+  border-radius: var(--radius);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  background-image: linear-gradient(#ffffff -300%, var(--color-user));
+  color: #FFF;
+  border-radius: 50%;
+  font-weight: 600;
+}
+.jg-peer-color-0{
+  --color-user: #D45246;
+}
+.jg-peer-color-1{
+  --color-user: #F68136;
+}
+.jg-peer-color-2{
+  --color-user: #6C61DF;
+}
+.jg-peer-color-3{
+  --color-user: #46BA43;
+}
+.jg-peer-color-4{
+  --color-user: #5CAFFA;
+}
+.jg-peer-color-5{
+  --color-user: #408ACF;
+}
+.jg-peer-color-6{
+  --color-user: #D95574;
+}
+.tyn-s-avatar .inner{
+  font-size: 1.6rem;
+}
+.jg-size-md{
+  height: var(--tyn-size) !important;
+  width: var(--tyn-size) !important;
+}
