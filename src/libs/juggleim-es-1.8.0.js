@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.7.24
+* JuggleIM.js v1.8.0
 * (c) 2022-2025 JuggleIM
 * Released under the MIT License.
 */
@@ -166,68 +166,6 @@ const Cache$1 = cache => {
     clear
   };
 };
-const request = (url, option) => {
-  return deferred((resolve, reject) => {
-    requestNormal(url, option, {
-      success: resolve,
-      fail: reject
-    });
-  });
-};
-const requestNormal = (url, option, callback) => {
-  option = option || {};
-  callback = callback || {
-    success: noop,
-    fail: noop,
-    progress: noop
-  };
-  let xhr = new XMLHttpRequest();
-  let method = option.method || 'GET';
-  xhr.open(method, url, true);
-  let headers = option.headers || {};
-  forEach(headers, (header, name) => {
-    xhr.setRequestHeader(name, header);
-  });
-  let body = option.body || {};
-  let isSuccess = () => {
-    return /^(200|202)$/.test(xhr.status);
-  };
-  let timeout = option.timeout;
-  if (timeout) {
-    xhr.timeout = timeout;
-  }
-  xhr.onreadystatechange = function () {
-    if (isEqual(xhr.readyState, 4)) {
-      let {
-        responseText
-      } = xhr;
-      responseText = responseText || '{}';
-      let result = parse(responseText);
-      if (isSuccess()) {
-        callback.success(result, xhr);
-      } else {
-        let {
-          status
-        } = xhr;
-        let error = {
-          status,
-          result
-        };
-        callback.fail(error);
-      }
-    }
-  };
-  xhr.upload.onprogress = function (event) {
-    if (event.lengthComputable) {
-      callback.progress(event);
-    }
-  };
-  xhr.onerror = error => {
-    callback.fail(error);
-  };
-  xhr.send(body);
-  return xhr;
-};
 const map = (arrs, callback) => {
   return arrs.map(callback);
 };
@@ -349,6 +287,11 @@ const getUUID = () => {
   });
 };
 const getProtocol = (url = '') => {
+  if (typeof location == 'undefined') {
+    location = {
+      protocol: 'https:'
+    };
+  }
   let http = location.protocol;
   if (isEqual(http, 'file:')) {
     http = 'http:';
@@ -440,6 +383,7 @@ const decodeBase64 = function (input) {
       output += String.fromCharCode(chr3);
     }
   }
+  output = decodeURIComponent(escape(output));
   return output;
 };
 const isContinuous = (numbers, key) => {
@@ -538,7 +482,6 @@ var utils = {
   isContain,
   noop,
   Cache: Cache$1,
-  request,
   map,
   filter,
   uniq,
@@ -553,7 +496,6 @@ var utils = {
   Index,
   getBrowser,
   getUUID,
-  requestNormal,
   getProtocol,
   sort,
   find,
@@ -1684,6 +1626,10 @@ let USER_TYPE = {
   USER: 0,
   BOT: 1
 };
+let CONVERSATION_TOP_TYPE = {
+  BY_TOP_TIME: 0,
+  BY_MESSAGE_TIME: 1
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1730,7 +1676,8 @@ var ENUM = /*#__PURE__*/Object.freeze({
   RTC_INVITE_TYPE: RTC_INVITE_TYPE,
   RTC_CHANNEL: RTC_CHANNEL,
   STREAM_EVENT: STREAM_EVENT,
-  USER_TYPE: USER_TYPE
+  USER_TYPE: USER_TYPE,
+  CONVERSATION_TOP_TYPE: CONVERSATION_TOP_TYPE
 });
 
 function Cache () {
@@ -1759,6 +1706,35 @@ function Cache () {
   };
 }
 
+function WebStorage () {
+  return localStorage;
+}
+
+function UniStorage () {
+  let removeItem = key => {
+    uni.removeStorageSync(key);
+  };
+  let getItem = key => {
+    return uni.getStorageSync(key);
+  };
+  let setItem = (key, value) => {
+    uni.setStorageSync(key, value);
+  };
+  return {
+    removeItem,
+    getItem,
+    setItem
+  };
+}
+
+let JStorage = {};
+if (typeof uni != "undefined") {
+  JStorage = UniStorage();
+} else {
+  JStorage = WebStorage();
+}
+var JStorage$1 = JStorage;
+
 let storageCacher = Cache();
 // 动态设置 storage key 前缀，例如 _appkey_userid_
 let _storage_private_prefix_ = '';
@@ -1771,7 +1747,7 @@ let set = (key, value) => {
     data: value
   };
   storageCacher.set(_key, storage);
-  localStorage.setItem(_key, utils.toJSON(storage));
+  JStorage$1.setItem(_key, utils.toJSON(storage));
 };
 let get = key => {
   let _key = getKey(key);
@@ -1780,7 +1756,7 @@ let get = key => {
   if (!utils.isUndefined(_value)) {
     return _value;
   }
-  let storage = localStorage.getItem(_key);
+  let storage = JStorage$1.getItem(_key);
   storage = utils.parse(storage) || {
     data: {}
   };
@@ -1791,7 +1767,7 @@ let get = key => {
 let remove = key => {
   let _key = getKey(key);
   storageCacher.remove(key);
-  localStorage.removeItem(_key);
+  JStorage$1.removeItem(_key);
 };
 let setPrefix = str => {
   _storage_private_prefix_ = str;
@@ -4606,6 +4582,14 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           memberCount: {
             type: "int32",
             id: 6
+          },
+          clientMsgId: {
+            type: "string",
+            id: 7
+          },
+          modifiedMsg: {
+            type: "DownMsg",
+            id: 8
           }
         }
       },
@@ -4974,6 +4958,31 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             rule: "repeated",
             type: "ConverTag",
             id: 27
+          },
+          searchText: {
+            type: "string",
+            id: 29
+          },
+          grpMemberInfo: {
+            type: "GrpMemberInfo",
+            id: 30
+          }
+        }
+      },
+      GrpMemberInfo: {
+        fields: {
+          grpDisplayName: {
+            type: "string",
+            id: 1
+          },
+          extFields: {
+            rule: "repeated",
+            type: "KvItem",
+            id: 2
+          },
+          updatedTime: {
+            type: "int64",
+            id: 3
           }
         }
       },
@@ -5336,6 +5345,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           msgTime: {
             type: "int64",
             id: 3
+          },
+          mentionType: {
+            type: "MentionType",
+            id: 4
           }
         }
       },
@@ -5695,6 +5708,30 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           url: {
             type: "string",
             id: 1
+          },
+          objKey: {
+            type: "string",
+            id: 2
+          },
+          policy: {
+            type: "string",
+            id: 3
+          },
+          signVersion: {
+            type: "string",
+            id: 4
+          },
+          credential: {
+            type: "string",
+            id: 5
+          },
+          date: {
+            type: "string",
+            id: 6
+          },
+          signature: {
+            type: "string",
+            id: 7
           }
         }
       },
@@ -5840,7 +5877,21 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           startTime: {
             type: "int64",
             id: 1
+          },
+          sortType: {
+            type: "TopConverSortType",
+            id: 2
+          },
+          order: {
+            type: "int32",
+            id: 3
           }
+        }
+      },
+      TopConverSortType: {
+        values: {
+          ByTopTime: 0,
+          BySortTime: 1
         }
       },
       DelHisMsgsReq: {
@@ -6524,6 +6575,240 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
   }
 });
 
+function WebRequest () {
+  let noop = () => {};
+  let forEach = (obj, callback) => {
+    for (var key in obj) {
+      callback(obj[key], key, obj);
+    }
+  };
+  let request = (url, option, callback) => {
+    option = option || {};
+    callback = callback || {
+      success: noop,
+      fail: noop,
+      progress: noop
+    };
+    let xhr = new XMLHttpRequest();
+    let method = option.method || 'GET';
+    xhr.open(method, url, true);
+    let headers = option.headers || {};
+    forEach(headers, (header, name) => {
+      xhr.setRequestHeader(name, header);
+    });
+    let body = option.body || {};
+    let isSuccess = () => {
+      return /^(200|202)$/.test(xhr.status);
+    };
+    let timeout = option.timeout;
+    if (timeout) {
+      xhr.timeout = timeout;
+    }
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState == 4) {
+        let {
+          responseText
+        } = xhr;
+        responseText = responseText || '{}';
+        let result = JSON.parse(responseText);
+        if (isSuccess()) {
+          callback.success(result, xhr);
+        } else {
+          let {
+            status
+          } = xhr;
+          let error = {
+            status,
+            result
+          };
+          callback.fail(error);
+        }
+      }
+    };
+    xhr.upload.onprogress = function (event) {
+      if (event.lengthComputable) {
+        callback.progress(event);
+      }
+    };
+    xhr.onerror = error => {
+      callback.fail(error);
+    };
+    xhr.send(body);
+    return xhr;
+  };
+  return {
+    requestNormal: request,
+    uploadFile: request
+  };
+}
+
+function WebEncoder () {
+  let encoder = str => {
+    return new TextEncoder().encode(str);
+  };
+  let decoder = buffer => {
+    return new TextDecoder().decode(buffer);
+  };
+  return {
+    encoder,
+    decoder
+  };
+}
+
+function UniEncoder () {
+  let encoder = str => {
+    var binstr = unescape(encodeURIComponent(str)),
+      arr = new Uint8Array(binstr.length);
+    binstr.split('').forEach(function (char, i) {
+      arr[i] = char.charCodeAt(0);
+    });
+    return arr;
+  };
+  let decoder = view => {
+    var arr = new Uint8Array(view.buffer, view.byteOffset, view.byteLength),
+      charArr = new Array(arr.length);
+    arr.forEach(function (charcode, i) {
+      charArr[i] = String.fromCharCode(charcode);
+    });
+    return decodeURIComponent(escape(charArr.join('')));
+  };
+  return {
+    encoder,
+    decoder
+  };
+}
+
+let JTextEncoder = {};
+if (typeof uni != "undefined") {
+  JTextEncoder = UniEncoder();
+} else {
+  JTextEncoder = WebEncoder();
+}
+var JTextEncoder$1 = JTextEncoder;
+
+function UniRequest () {
+  let noop = () => {};
+  let requestNormal = (url, option, callback) => {
+    option = option || {};
+    callback = callback || {
+      success: noop,
+      fail: noop,
+      progress: noop
+    };
+    let headers = option.headers || {};
+    let body = option.body || {};
+    let requestTask = uni.request({
+      url: url,
+      data: body,
+      header: headers,
+      method: option.method || 'GET',
+      success: res => {
+        let {
+          data
+        } = res;
+        callback.success(data, {
+          responseURL: url
+        });
+      },
+      fail: error => {
+        callback.fail(error);
+      }
+    });
+    return requestTask;
+  };
+
+  // url: 'https://jugglechat-file.oss-cn-beijing.aliyuncs.com',
+  //   filePath: tempPath,
+  //   header: header,
+  //   name: 'file',
+  //   formData: {
+  //     policy: '',
+  //     Key: '8osQo0sDA38bvZZFmnUri8.png',
+  //     Expires: '1737617884',
+  //     OSSAccessKeyId: 'LTAI5tCtWtVhvRJ741YN2PKW',
+  //     Signature: 'NKVdKWn+RGT9gQjhAXyl/xtEcr0='
+  //   },
+
+  function getProtocolAndDomain(url) {
+    const protocolIndex = url.indexOf("://");
+    if (protocolIndex === -1) {
+      return null;
+    }
+    const protocol = url.slice(0, protocolIndex + 3);
+    const remainingUrl = url.slice(protocolIndex + 3);
+    const pathIndex = remainingUrl.indexOf("/");
+    const domain = pathIndex === -1 ? remainingUrl : remainingUrl.slice(0, pathIndex);
+    return protocol + domain;
+  }
+  let uploadFile = (url, option, callbacks) => {
+    let {
+      tempPath,
+      header,
+      method,
+      isUniWebThumbnail
+    } = option;
+    if (isUniWebThumbnail) {
+      let webUploader = WebRequest();
+      return webUploader.uploadFile(url, option, callbacks);
+    }
+    let {
+      objKey,
+      policy,
+      signVersion,
+      signature,
+      date,
+      credential
+    } = option;
+    let formData = {
+      key: objKey,
+      policy: policy,
+      'x-oss-signature-version': signVersion,
+      'x-oss-credential': credential,
+      'x-oss-date': date,
+      'x-oss-signature': signature
+    };
+    let host = getProtocolAndDomain(url);
+    let uploadTask = uni.uploadFile({
+      url: host,
+      filePath: tempPath,
+      header: header,
+      name: 'file',
+      formData: formData,
+      success: () => {
+        let fileUrl = `${host}/${objKey}`;
+        callbacks.success({
+          url: fileUrl
+        });
+      },
+      fail: error => {
+        callbacks.fail(error);
+      }
+    });
+    uploadTask.onProgressUpdate(res => {
+      let {
+        totalBytesSent: loaded,
+        totalBytesExpectedToSend: total
+      } = res;
+      callbacks.progress({
+        loaded,
+        total
+      });
+    });
+  };
+  return {
+    requestNormal,
+    uploadFile: uploadFile
+  };
+}
+
+let JRequest = {};
+if (typeof uni != "undefined") {
+  JRequest = UniRequest();
+} else {
+  JRequest = WebRequest();
+}
+var jrequest = JRequest;
+
 function Uploder (uploader, {
   type
 }) {
@@ -6577,17 +6862,20 @@ function Uploder (uploader, {
     } = option;
     let {
       file,
-      name
+      name,
+      tempPath
     } = content;
-    utils.requestNormal(url, {
+    jrequest.uploadFile(url, {
+      ...option,
       method: 'PUT',
       headers: {
         'Content-Type': ''
       },
+      tempPath: tempPath,
       body: file
     }, {
-      success: () => {
-        url = url.split('?')[0];
+      success: result => {
+        url = result.url || url.split('?')[0];
         callbacks.oncompleted({
           url
         });
@@ -6609,14 +6897,17 @@ function Uploder (uploader, {
     } = option;
     let {
       file,
-      name
+      name,
+      tempPath
     } = content;
-    utils.requestNormal(url, {
+    jrequest.uploadFile(url, {
+      ...option,
       method: 'PUT',
       headers: {
         'Content-Type': '',
         'x-amz-acl': 'public-read'
       },
+      tempPath: tempPath,
       body: file
     }, {
       success: () => {
@@ -6710,7 +7001,8 @@ function Uploder (uploader, {
         });
         callback(thumbnail, {
           height,
-          width
+          width,
+          type: 'image/png'
         });
       });
     };
@@ -6721,6 +7013,36 @@ function Uploder (uploader, {
     compress
   };
 }
+
+function WebSession () {
+  return sessionStorage;
+}
+
+function UniSession () {
+  let result = {};
+  let removeItem = key => {
+    delete result[key];
+  };
+  let getItem = key => {
+    return result[key];
+  };
+  let setItem = (key, value) => {
+    result[key] = value;
+  };
+  return {
+    removeItem,
+    getItem,
+    setItem
+  };
+}
+
+let JSession = {};
+if (typeof uni != "undefined") {
+  JSession = UniSession();
+} else {
+  JSession = WebSession();
+}
+var JSessionStorage = JSession;
 
 /* 
 let params = { content: 123 }
@@ -7316,6 +7638,50 @@ function formatMediaMessage(message, url) {
   return message;
 }
 function uploadThumbnail(upload, option, callback) {
+  if (typeof uni != 'undefined' && uni.compressImage) {
+    return uploadUniThumbnail(upload, option, callback);
+  }
+  uploadWebThumbnail(upload, option, callback);
+}
+function uploadUniThumbnail(upload, option, callback) {
+  let {
+    type,
+    content
+  } = option;
+  let uploader = Uploder(upload, {
+    type
+  });
+  let {
+    tempPath
+  } = content;
+  uni.compressImage({
+    src: tempPath,
+    quality: 25,
+    success: res => {
+      let callbacks = {
+        onprogress: utils.noop,
+        oncompleted: ({
+          url
+        }) => {
+          let error = null;
+          uni.getImageInfo({
+            src: tempPath,
+            success: function (args) {
+              callback(error, url, args);
+            }
+          });
+        },
+        onerror: error => {
+          callback(error);
+        }
+      };
+      uploader.exec({
+        tempPath: res.tempFilePath
+      }, option, callbacks);
+    }
+  });
+}
+function uploadWebThumbnail(upload, option, callback) {
   let {
     type,
     token,
@@ -7333,7 +7699,9 @@ function uploadThumbnail(upload, option, callback) {
     let opts = {
       token,
       domain,
-      url: uploadUrl
+      url: uploadUrl,
+      ...option,
+      isUniWebThumbnail: true
     };
     let callbacks = {
       onprogress: utils.noop,
@@ -7341,7 +7709,10 @@ function uploadThumbnail(upload, option, callback) {
         url
       }) => {
         let error = null;
-        callback(error, url, args);
+        callback(error, url, {
+          ...args,
+          isUniWebThumbnail: true
+        });
       },
       onerror: error => {
         callback(error);
@@ -7351,6 +7722,19 @@ function uploadThumbnail(upload, option, callback) {
   }, option);
 }
 function uploadFrame(upload, option, callback) {
+  if (isUni()) {
+    return uploadUniFrame(upload, option, callback);
+  }
+  uploadWebFrame(upload, option, callback);
+}
+
+//TODO: UniApp 截图视频首帧需特殊处理
+function uploadUniFrame(upload, option, callback) {
+  let error = null;
+  let url = '';
+  callback(error, url, option.content);
+}
+function uploadWebFrame(upload, option, callback) {
   let {
     type,
     token,
@@ -7368,7 +7752,8 @@ function uploadFrame(upload, option, callback) {
     let opts = {
       token,
       domain,
-      url: uploadUrl
+      url: uploadUrl,
+      ...option
     };
     let callbacks = {
       onprogress: utils.noop,
@@ -7397,6 +7782,19 @@ function formatUser(user) {
     updatedTime: user.updatedTime || 0,
     exts: exts || {},
     type: user.userType || 0
+  };
+}
+function formatGroupMember(member) {
+  if (!member) {
+    member = {
+      extFields: []
+    };
+  }
+  let exts = utils.toObject(member.extFields);
+  return {
+    name: member.grpDisplayName || "",
+    updatedTime: member.updatedTime || 0,
+    exts: exts || {}
   };
 }
 function toKVs(obj) {
@@ -7468,10 +7866,10 @@ function genUId() {
   });
 }
 function getClientSession() {
-  let clientSession = sessionStorage.getItem(STORAGE.CLIENT_SESSION);
+  let clientSession = JSessionStorage.getItem(STORAGE.CLIENT_SESSION);
   if (!clientSession) {
     clientSession = genUId();
-    sessionStorage.setItem(STORAGE.CLIENT_SESSION, clientSession);
+    JSessionStorage.setItem(STORAGE.CLIENT_SESSION, clientSession);
   }
   return clientSession;
 }
@@ -7501,6 +7899,9 @@ function reportLogs({
     ...params
   });
 }
+function isUni() {
+  return typeof uni != 'undefined';
+}
 var common = {
   check,
   getNum,
@@ -7526,7 +7927,9 @@ var common = {
   getClientSession,
   encrypto,
   decrypto,
-  reportLogs
+  reportLogs,
+  isUni,
+  formatGroupMember
 };
 
 function getConnectBody ({
@@ -7617,7 +8020,7 @@ function getPublishBody ({
         msgIndex: messageIndex,
         msgTime: sentTime,
         msgId: messageId,
-        msgContent: new TextEncoder().encode(referContent),
+        msgContent: JTextEncoder$1.encoder(referContent),
         msgType: referMsg.name,
         type: referMsg.conversationType,
         senderId: sender.id
@@ -7632,7 +8035,7 @@ function getPublishBody ({
       referMsg: referMsg,
       mergedMsgs: mergeMsg,
       clientUid: clientMsgId,
-      msgContent: new TextEncoder().encode(content)
+      msgContent: JTextEncoder$1.encoder(content)
     };
     if (push) {
       let {
@@ -7993,11 +8396,13 @@ function getQueryBody({
   if (utils.isEqual(COMMAND_TOPICS.QUERY_TOP_CONVERSATIONS, topic)) {
     let {
       time,
-      userId
+      userId,
+      sortType
     } = data;
     let codec = $root.lookup('codec.QryTopConversReq');
     let message = codec.create({
-      startTime: time
+      startTime: time,
+      sortType
     });
     targetId = userId;
     buffer = codec.encode(message).finish();
@@ -8119,7 +8524,7 @@ function getQueryBody({
     };
     if (!utils.isUndefined(notify)) {
       utils.extend(_msg, {
-        msg: new TextEncoder().encode(notify)
+        msg: JTextEncoder$1.encoder(notify)
       });
     }
     let message = codec.create(_msg);
@@ -8163,7 +8568,7 @@ function getQueryBody({
       targetId: conversationId,
       msgId,
       msgTime,
-      msgContent: new TextEncoder().encode(content)
+      msgContent: JTextEncoder$1.encoder(content)
     });
     targetId = conversationId;
     buffer = codec.encode(message).finish();
@@ -8744,11 +9149,12 @@ function msgFormat(msg, {
     isRead,
     flags,
     targetUserInfo,
-    groupInfo
+    groupInfo,
+    grpMemberInfo
   } = msg;
   let content = '';
   if (msgContent && msgContent.length > 0) {
-    content = new TextDecoder().decode(msgContent);
+    content = JTextEncoder$1.decoder(msgContent);
     content = utils.parse(content);
   }
 
@@ -8798,7 +9204,7 @@ function msgFormat(msg, {
   if (referMsg) {
     let rcontent = referMsg.msgContent || '';
     if (rcontent.length != 0) {
-      rcontent = new TextDecoder().decode(rcontent);
+      rcontent = JTextEncoder$1.decoder(rcontent);
       newRefer.content = utils.parse(rcontent);
     }
     referMsg.targetUserInfo = common.formatUser(referMsg.targetUserInfo || {});
@@ -8837,6 +9243,10 @@ function msgFormat(msg, {
       type
     };
   });
+  let groupMember = {};
+  if (utils.isEqual(CONVERATION_TYPE.GROUP, conversationType)) {
+    groupMember = common.formatGroupMember(grpMemberInfo);
+  }
   let _message = {
     conversationType,
     conversationId,
@@ -8844,6 +9254,7 @@ function msgFormat(msg, {
     conversationPortrait: '',
     conversationExts: {},
     sender: utils.clone(targetUser),
+    groupMember: groupMember,
     messageId: msgId,
     tid: msgId,
     sentTime: msgTime,
@@ -9223,12 +9634,14 @@ function formatConversations$1(conversations, options = {}) {
         let {
           senderId,
           msgId,
-          msgTime
+          msgTime,
+          mentionType
         } = msg;
         return {
           senderId,
           messageId: msgId,
-          sentTime: msgTime
+          sentTime: msgTime,
+          mentionType
         };
       });
       mentions = {
@@ -9383,7 +9796,7 @@ function formatStream(item) {
   } = item;
   let content = '';
   if (partialContent && partialContent.length > 0) {
-    content = new TextDecoder().decode(partialContent);
+    content = JTextEncoder$1.decoder(partialContent);
     content = utils.parse(content);
   }
   return {
@@ -10068,8 +10481,22 @@ function Decoder(cache, io) {
           timestamp: sentTime,
           code,
           msgIndex,
-          memberCount
+          memberCount,
+          modifiedMsg
         } = pubAckMsgBody;
+        if (modifiedMsg) {
+          let {
+            msgContent,
+            msgType
+          } = modifiedMsg;
+          if (msgContent && msgContent.length > 0) {
+            let content = new TextDecoder().decode(msgContent);
+            modifiedMsg = {
+              msgContent: utils.parse(content),
+              msgType
+            };
+          }
+        }
         result = {
           messageId,
           sentTime,
@@ -10077,7 +10504,8 @@ function Decoder(cache, io) {
           isSender: true,
           code,
           msgIndex,
-          memberCount
+          memberCount,
+          modifiedMsg
         };
         break;
       case SIGNAL_CMD.PUBLISH:
@@ -10133,10 +10561,10 @@ let detect = (urls, callback, option = {}) => {
     let {
       http
     } = utils.getProtocol();
-    domain = domain.replaceAll(/http:\/\/|https:\/\/|file:\/\/|wss:\/\/|ws:\/\//g, '');
+    domain = domain.replace(/http:\/\/|https:\/\/|file:\/\/|wss:\/\/|ws:\/\//g, '');
     let url = `${http}//${domain}/health`;
     let options = {};
-    let xhr = utils.requestNormal(url, options, {
+    let xhr = jrequest.requestNormal(url, options, {
       success: function (result, $xhr) {
         if (utils.isEmpty(superior)) {
           let {
@@ -10195,7 +10623,7 @@ let getNavis = (urls, option, callback) => {
     return callback(navi);
   }
   utils.forEach(urls, domain => {
-    let url = domain.replaceAll(/http:\/\/|https:\/\/|file:\/\//g, '');
+    let url = domain.replace(/http:\/\/|https:\/\/|file:\/\//g, '');
     let {
       http
     } = utils.getProtocol(domain);
@@ -10206,7 +10634,7 @@ let getNavis = (urls, option, callback) => {
         'x-token': token
       }
     };
-    let xhr = utils.requestNormal(url, options, {
+    let xhr = jrequest.requestNormal(url, options, {
       success: function (result, $xhr) {
         if (!isResponsed) {
           let {
@@ -10844,7 +11272,59 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.7.24';
+let VERSION = '1.8.0';
+
+var WebWS = WebSocket;
+
+function UniWS (url) {
+  let SOCKET_READY_STATE = {
+    CONNECTING: 0,
+    OPEN: 1,
+    CLOSING: 2,
+    CLOSED: 3
+  };
+  let wsInstance = {
+    readyState: SOCKET_READY_STATE.CONNECTING,
+    onopen: () => {},
+    onclose: () => {},
+    onerror: () => {},
+    onmessage: () => {}
+  };
+  let socketTask = uni.connectSocket({
+    url: url,
+    complete: () => {}
+  });
+  socketTask.onOpen(() => {
+    wsInstance.readyState = SOCKET_READY_STATE.OPEN;
+    wsInstance.onopen();
+  });
+  socketTask.onClose(() => {
+    wsInstance.readyState = SOCKET_READY_STATE.CLOSED;
+    wsInstance.onclose();
+  });
+  socketTask.onError(() => {
+    wsInstance.readyState = SOCKET_READY_STATE.CLOSED;
+    wsInstance.onerror();
+  });
+  socketTask.onMessage(data => {
+    wsInstance.onmessage(data);
+  });
+  wsInstance.send = data => {
+    socketTask.send({
+      data
+    });
+  };
+  wsInstance.close = () => {
+    socketTask.close();
+  };
+  return wsInstance;
+}
+
+let JWebSocket = WebWS;
+if (common.isUni()) {
+  JWebSocket = UniWS;
+}
+var JWebSocket$1 = JWebSocket;
 
 function NetworkWatcher (callbacks) {
   let onlineEvent = () => {
@@ -11013,12 +11493,12 @@ function IO(config) {
             deviceId
           }, callback);
         }
-        domain = domain.replaceAll(/http:\/\/|https:\/\/|file:\/\/|wss:\/\/|ws:\/\//g, '');
+        domain = domain.replace(/http:\/\/|https:\/\/|file:\/\/|wss:\/\/|ws:\/\//g, '');
         let {
           ws: protocol
         } = utils.getProtocol();
         let url = `${protocol}//${domain}/im`;
-        ws = new WebSocket(url);
+        ws = new JWebSocket$1(url);
         logger.info({
           tag: LOG_MODULE.WS_CONNECT
         });
@@ -11050,11 +11530,16 @@ function IO(config) {
         ws.onmessage = function ({
           data
         }) {
-          let reader = new FileReader();
-          reader.onload = function () {
-            bufferHandler(this.result);
-          };
-          reader.readAsArrayBuffer(data);
+          // 需要修改在适配层处理
+          if (common.isUni()) {
+            bufferHandler(data);
+          } else {
+            let reader = new FileReader();
+            reader.onload = function () {
+              bufferHandler(this.result);
+            };
+            reader.readAsArrayBuffer(data);
+          }
         };
       });
     }
@@ -11893,7 +12378,8 @@ let createMentions = (mentions, message, user) => {
     msgs.push({
       senderId: message.sender.id,
       messageId: message.messageId,
-      sentTime: message.sentTime
+      sentTime: message.sentTime,
+      mentionType
     });
     let senderIndex = utils.find(senders, member => {
       return utils.isEqual(message.sender.id, member.id);
@@ -13517,7 +14003,8 @@ function Message$1 (io, emitter, logger) {
         code,
         msg,
         msgIndex,
-        memberCount
+        memberCount,
+        modifiedMsg
       }) => {
         // 不管消息发送成功或失败，清理 tid 发送中的状态
         delete sendingMsgMap[tid];
@@ -13534,7 +14021,16 @@ function Message$1 (io, emitter, logger) {
 
         // 消息发送成功，清理缓存消息
         delete sendMsgMap[tid];
+        modifiedMsg = modifiedMsg || {};
+        let {
+          msgContent,
+          msgType
+        } = modifiedMsg;
+        msgType = msgType || message.name;
+        msgContent = msgContent || message.content;
         utils.extend(message, {
+          name: msgType,
+          content: msgContent,
           sentTime,
           messageId,
           messageIndex: msgIndex,
@@ -14056,19 +14552,7 @@ function Message$1 (io, emitter, logger) {
         code
       }) => {
         cred = cred || {};
-        let {
-          token,
-          domain,
-          type,
-          url
-        } = cred;
-        resolve({
-          token,
-          domain,
-          type,
-          url,
-          code
-        });
+        resolve(cred);
       });
     });
   };
@@ -14095,8 +14579,12 @@ function Message$1 (io, emitter, logger) {
       name,
       content
     } = message;
-    let _file = content.file;
-    let names = _file.name.split('.');
+    let _file = content.file || {
+      name: ''
+    };
+    let fileName = _file.name || content.tempPath;
+    fileName = fileName || '';
+    let names = fileName.split('.');
     let ext = names[names.length - 1];
     getFileToken({
       type: fileType,
@@ -14133,19 +14621,24 @@ function Message$1 (io, emitter, logger) {
           }
           common.uploadThumbnail(upload, {
             ...params,
-            ...cred
+            ...cred,
+            content
           }, (error, thumbnail, args) => {
             let {
               height,
-              width
+              width,
+              isUniWebThumbnail
             } = args;
             utils.extend(message.content, {
               thumbnail,
               height,
               width,
-              type: content.file.type
+              type: args.type
             });
-            uploadFile(auth, message);
+            uploadFile({
+              ...auth,
+              isUniWebThumbnail
+            }, message);
           });
         });
       }
@@ -14166,7 +14659,8 @@ function Message$1 (io, emitter, logger) {
           }
           common.uploadFrame(upload, {
             ...params,
-            ...cred
+            ...cred,
+            content
           }, (error, poster, args) => {
             let {
               height,
@@ -14203,10 +14697,15 @@ function Message$1 (io, emitter, logger) {
         oncompleted: ({
           url
         }) => {
-          let size = content.file.size / 1024;
+          if (!utils.isInclude([MESSAGE_TYPE.VOICE], name)) {
+            let _size = content.size || content.file.size;
+            let size = _size / 1024;
+            utils.extend(message.content, {
+              size: size.toFixed(2)
+            });
+          }
           utils.extend(message.content, {
-            url,
-            size: size.toFixed(2)
+            url
           });
           delete message.content.file;
           _callbacks.oncompleted(message);
@@ -14275,6 +14774,7 @@ function Message$1 (io, emitter, logger) {
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
+          delete message.content.tempPath;
           sendMessage(message).then(resolve, reject);
         },
         onerror: error => {
@@ -14332,6 +14832,7 @@ function Message$1 (io, emitter, logger) {
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
+          delete message.content.tempPath;
           sendMessage(message).then(resolve, reject);
         },
         onerror: error => {
@@ -14388,6 +14889,7 @@ function Message$1 (io, emitter, logger) {
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
+          delete message.content.tempPath;
           sendMessage(message).then(resolve, reject);
         },
         onerror: error => {
@@ -14445,6 +14947,7 @@ function Message$1 (io, emitter, logger) {
       _uploadFile(option, message, {
         onprogress: callbacks.onprogress,
         oncompleted: message => {
+          delete message.content.tempPath;
           sendMessage(message).then(resolve, reject);
         },
         onerror: error => {
@@ -15185,6 +15688,7 @@ function Socket$1 (io, emitter, logger) {
     disconnect,
     setServerUrlProider,
     getDevice: getDevice,
+    isNeedConnect: io.isNeedConnect,
     isConnected: io.isConnected,
     getCurrentUser: io.getCurrentUser
   };
@@ -15955,7 +16459,7 @@ function Message ($message, {
 function Socket ($socket, {
   webAgent
 }) {
-  let funcs = ['connect', 'disconnect', 'getDevice', 'isConnected', 'getCurrentUser'];
+  let funcs = ['connect', 'disconnect', 'getDevice', 'isConnected', 'isNeedConnect', 'getCurrentUser'];
   let invokes = common.formatProvider(funcs, $socket);
   invokes.setServerUrlProider = callback => {
     webAgent.setServerUrlProider(callback);
@@ -16369,7 +16873,7 @@ function RTCSignal ({
     ]
   }
 */
-function DB(option) {
+function DB$3(option) {
   let {
     name,
     version = 1,
@@ -16556,6 +17060,28 @@ function DB(option) {
   return dbTools;
 }
 
+function DB$2(option) {
+  let insert = params => {};
+  let search = (params, callback) => {
+    callback({
+      list: []
+    });
+  };
+  let remove = params => {};
+  let dbTools = {
+    insert,
+    search,
+    remove
+  };
+  return dbTools;
+}
+
+let DB = DB$3;
+if (common.isUni()) {
+  DB = DB$2;
+}
+var DB$1 = DB;
+
 function Logger(option = {}) {
   let TABLE_NAME = 'LOGS';
   let INDEX = {
@@ -16570,7 +17096,7 @@ function Logger(option = {}) {
     getCurrentUser,
     getVersion
   } = option;
-  let $db = DB({
+  let $db = DB$1({
     name: `_IMIIM_${appkey}`,
     tables: [{
       name: TABLE_NAME,
@@ -16616,7 +17142,7 @@ function Logger(option = {}) {
     if (isConsole) {
       let _time = utils.formatTime(time);
       let _content = utils.toJSON(content);
-      console.log(`%cJG:LOG`, `background-color:#1e1ec5;color:#FFF;padding:0 4px;font-size:10px;`, `${_time} ${_content}`);
+      console.log(`%cJG:LOG`, ``, `${_time} ${_content}`);
     }
   };
   let error = content => {
@@ -16653,7 +17179,7 @@ function Logger(option = {}) {
       } = user;
       let api = navi.url || '';
       let url = `${api}/navigator/upload-log-plain`;
-      utils.requestNormal(url, {
+      jrequest.requestNormal(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -16807,7 +17333,8 @@ let init = config => {
     ConversationTagType: CONVERATION_TAG_TYPE,
     MediaType: MEDIA_TYPE,
     UserType: USER_TYPE,
-    StreamEvent: STREAM_EVENT
+    StreamEvent: STREAM_EVENT,
+    ConversationTopType: CONVERSATION_TOP_TYPE
   };
   return _export;
 };
@@ -16829,7 +17356,8 @@ var client = {
   ConversationTagType: CONVERATION_TAG_TYPE,
   MediaType: MEDIA_TYPE,
   UserType: USER_TYPE,
-  StreamEvent: STREAM_EVENT
+  StreamEvent: STREAM_EVENT,
+  ConversationTopType: CONVERSATION_TOP_TYPE
 };
 
 var index = {

@@ -149,7 +149,7 @@ function onResend(){
         <span class="small ms-2 text-warning" v-if="state.errorMsg">{{ state.errorMsg }}</span>
       </div>
       <div class="tyn-reply-text wr" v-else v-longpress="onClickRight" @click.right.prevent="onClickRight" @click.prevent="onShowEmojiReaction(true)">
-        <ReplyMessage :message="props.message.referMsg"></ReplyMessage>
+        <ReplyMessage  :message="props.message.referMsg"></ReplyMessage>
         <span class="tyn-msg-mention tyn-mention-me" v-for="msg in state.mentionMsgs">{{ msg }}</span>
         <span v-html="getContent(props.message.content.content)"></span>
         <div class="jg-translate" v-if="props.message.translation" v-html="getContent(props.message.translation)"></div>

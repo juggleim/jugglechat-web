@@ -46,7 +46,7 @@
   height: 100%;
   width: 100%;
   background-repeat: no-repeat;
-  background-size: 100%;
+  background-size: cover;
   border-radius: 14%;
   background-color: #f0f0f1;
 }

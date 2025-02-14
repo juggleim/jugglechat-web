@@ -32,7 +32,7 @@ function quit(group){
 }
 
 function getList({ startId, count }){
-  let url = `${SERVER_PATH.GROUP_LIST}?count=${count}&start_id=${startId}`;
+  let url = `${SERVER_PATH.GROUP_LIST}?count=${ count }&start_id=${startId}`;
   return request(url, {
     method: 'GET'
   });
