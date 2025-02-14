@@ -28,7 +28,7 @@ export default function(conversations, state){
     }
     
     utils.forEach(tags, (currentTag) => {
-      common.formatMention(conversation);
+      conversation.f_mentionContent = common.formatMention(conversation);
       let conversations = state.conversationMap[currentTag.id];
       if(!conversations){
         conversations = [];

@@ -21,13 +21,13 @@ let state = reactive({
   isModify: false,
   content: '',
   errorMsg: '',
-  mentionMsgs: im.mentionShortFormat(props.message),
+  mentionMsgs: common.mentionShortFormat(props.message),
   isShowGroupDetail: false,
   dropRectX: 0,
   isShowReaction: false,
 });
 watch(() => props.message, (msg) => {
-  state.mentionMsgs = im.mentionShortFormat(msg);
+  state.mentionMsgs = common.mentionShortFormat(msg);
 });
 
 let context = getCurrentInstance();
@@ -93,7 +93,7 @@ function getContent(content){
   // content = content.replace(REG_EXP.LINK, (current, match) => {
   //   return `<a href="${match}" target="_blank" >${match}</a>`;
   // });
-  return common.formatMarkdown(content);
+  return common.mentionShortFormat(props.message);
 }
 function onShowReadDetail(isShow) {
   if (!messageUtils.isGroup(props.message)) {
@@ -155,7 +155,6 @@ function onResend(){
       </div>
       <div class="tyn-reply-text wr" v-else v-longpress="onClickRight" @click.right.prevent="onClickRight" @click.prevent="onShowEmojiReaction(true)">
         <ReplyMessage  :message="props.message.referMsg"></ReplyMessage>
-        <span class="tyn-msg-mention tyn-mention-me" v-for="msg in state.mentionMsgs">{{ msg }}</span>
         <span v-html="getContent(props.message.content.content)"></span>
         <div class="jg-translate" v-if="props.message.translation" v-html="getContent(props.message.translation)"></div>
         <span class="tyn-text-modify" v-if="props.message.isUpdated">（已修改）</span>

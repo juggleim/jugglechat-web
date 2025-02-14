@@ -165,12 +165,8 @@ async function clearUnreadCount(item, index) {
                 {{
                 item.draft }}
               </span>
-              <span class="content" v-else>
-                <span
-                  class="text-danger lastmsg-mention"
-                  v-if="item.f_mentionContent != ''"
-                >{{ item.f_mentionContent }}</span>
-                {{ item.shortName }}
+              <span class="content" v-else v-html="item.shortName">
+              
               </span>
               <span class="meta">{{ item.f_time }}</span>
             </div>

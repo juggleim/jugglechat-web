@@ -300,9 +300,9 @@ function formatMention(conversation) {
   let { mentions = {} } = conversation;
   let f_mentionContent = "";
   if (mentions.isMentioned) {
-    f_mentionContent = "有人@我";
+    f_mentionContent = `<span class="jg-warn">有人@我</span>`;
   }
-  return utils.extend(conversation, { f_mentionContent });
+  return f_mentionContent;
 }
 function formatSeconds(times) {
   var hh = parseInt(times / 60 / 60 );
@@ -324,6 +324,32 @@ let md = MarkdownIt();
 function formatMarkdown(content){
   return md.render(content);
 }
+function purify(content){
+	return content.replace(/</g,'&lt;');
+}
+function mentionShortFormat(message){
+  let juggle = im.getCurrent();
+  let { MentionType } = juggle;
+  
+	let { mentionInfo, content: { content } } = message;
+	content = purify(content);
+	if(!mentionInfo){
+		return content;
+	}
+	
+	let { mentionType, members } = mentionInfo;
+	
+	let isAll = utils.isEqual(MentionType.ALL, mentionType);
+	if(isAll || utils.isEqual(MentionType.ALL_SOMEONE, mentionType)){
+		content = utils.templateFormat(content, { all: `<span class="jg-mention-msg-name">@所有人</span>` });
+	}
+	let memberMap = {};
+	utils.forEach(members, (member) => {
+		memberMap[member.id] = `<span class="jg-mention-msg-name">@${member.name}</span>`;
+	});
+	content = utils.templateFormat(content, memberMap);
+	return content;
+}
 export default {
  isElementTop,
  getAvatar,
@@ -340,4 +366,6 @@ export default {
  formatSeconds,
  filterIgnoreConversations,
  formatMarkdown,
+ purify,
+ mentionShortFormat,
 }

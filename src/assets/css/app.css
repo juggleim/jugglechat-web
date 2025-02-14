@@ -324,6 +324,7 @@ dl {
 .tyn-aside-item.active .wr,
 .tyn-aside-item.active .name,
 .tyn-aside-item.active .content,
+.tyn-aside-item.active .jg-mention-msg-name,
 .tyn-aside-item.active .meta{
   color: #FFF !important;
 }

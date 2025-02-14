@@ -7,6 +7,7 @@ import utils from "./utils";
 import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
 import emitter from "../common/emmit";
 import Storage from "../common/storage";
+import common from "./common";
 
 
 let option = { appkey: CONFIG.appkey, upload: OSS, serverList: CONFIG.serverList };
@@ -65,7 +66,7 @@ function msgShortFormat(message){
   let { name, content, sender, isSender, mentionInfo } = message;
   let shortName = '[Unkown]'
   if(utils.isEqual(name, MessageType.TEXT)){
-    shortName = content.content;
+    shortName = common.mentionShortFormat(message);
   }
   if(utils.isEqual(name, MessageType.FILE)){
     shortName = '[文件]';
@@ -101,7 +102,6 @@ function msgShortFormat(message){
     let label = isSender ? '你' : sender.name;
     shortName = `${label} 撤回了一条消息`;
   }
-  shortName += ` ${mentionShortFormat(message).join(' ')}`;
  
   if(utils.isUndefined(name) || utils.isNull(name)){
     shortName = '';
@@ -109,21 +109,7 @@ function msgShortFormat(message){
 
   return shortName;
 }
-function mentionShortFormat(message){
-  let { MentionType } = juggle;
-  let names = [];
-  let { mentionInfo } = message;
-  if(mentionInfo){
-    let { members, mentionType } = mentionInfo;
-    utils.forEach(members, (member) => {
-      names.push(`@${member.name}`)
-    });
-    if(utils.isEqual(mentionType, MentionType.ALL) || utils.isEqual(mentionType, MentionType.ALL_SOMEONE)){
-      names.push('@所有人');
-    }
-  }
-  return names;
-}
+
 let { UnreadTag } = juggle;
 function isUnreadTag(conversation){
   return conversation.unreadTag == UnreadTag.UNREAD;
@@ -133,7 +119,6 @@ export default {
   isConnected,
   connect,
   msgShortFormat,
-  mentionShortFormat,
   isUnreadTag,
   CallEvent,
   CallFinishedReason,

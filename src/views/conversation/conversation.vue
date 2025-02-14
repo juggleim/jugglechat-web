@@ -377,13 +377,13 @@ function onSend() {
     utils.forEach(mentions, (mention) => {
       let name = `@${mention.name} `;
       if (utils.isInclude(content, name)) {
+        newContent = newContent.replace(name, `{${mention.id}}`);
         if (!mention.isAll) {
           members.push(mention);
         }
-        // 实际发送消息时不携带 @ 文本，各端通过标识拼接
-        newContent = newContent.replace(name, '');
       }
     });
+
     let isMentionSomeone = members.length > 0;
     if (isMentionSomeone) {
       mentionType = MentionType.SOMEONE
@@ -394,6 +394,7 @@ function onSend() {
 
     if (isMentionAll) {
       mentionType = MentionType.ALL;
+      newContent = newContent.replace(`@所有人 `, `{all}`);
     }
     if (isMentionAll && isMentionSomeone) {
       mentionType = MentionType.ALL_SOMEONE;

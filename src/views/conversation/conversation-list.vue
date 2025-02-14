@@ -196,8 +196,10 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
       if (!sentTime) {
         f_time = "";
       }
-      conversation = common.formatMention(conversation);
+     
+      let converMention = common.formatMention(conversation);
       let shortName = im.msgShortFormat(latestMessage);
+      shortName = converMention +  shortName;
 
       utils.extend(conversation, {
         f_time,
@@ -299,8 +301,11 @@ function onTagConversationChanged({ removes, adds, tag }){
 
     adds = utils.map(adds, (item) => {
       let { latestMessage } = item;
-      common.formatMention(item);
+      let  f_content = common.formatMention(item);
+
       let shortName = im.msgShortFormat(latestMessage);
+      shortName = f_content + shortName;
+      
       let { sentTime } = latestMessage;
       let f_time = common.getConversationTime(sentTime);
       if (!sentTime) {

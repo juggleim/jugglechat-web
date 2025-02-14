@@ -112,3 +112,10 @@
   height: var(--tyn-size) !important;
   width: var(--tyn-size) !important;
 }
+.jg-mention-msg-name{
+	color: #3390ec;
+	margin: 0 0.2rem;
+}
+.jg-warn{
+  color: #FF0000;
+}
