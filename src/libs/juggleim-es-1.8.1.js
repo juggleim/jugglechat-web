@@ -1,5 +1,5 @@
 /*
-* JuggleIM.js v1.8.1
+* JuggleIM.js v1.8.7
 * (c) 2022-2025 JuggleIM
 * Released under the MIT License.
 */
@@ -461,6 +461,13 @@ let groupBy = (arrs, keys) => {
   });
   return obj;
 };
+const getDeviceID = () => {
+  return 'xxxxxxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    let r = Math.random() * 16 | 0,
+      v = c == 'x' ? r : r & 0x3 | 0x8;
+    return v.toString(16);
+  });
+};
 var utils = {
   Prosumer,
   Observer,
@@ -509,7 +516,8 @@ var utils = {
   isValidHMTime,
   getRandoms,
   groupBy,
-  isNaN: _isNaN
+  isNaN: _isNaN,
+  getDeviceID
 };
 
 function Emitter () {
@@ -567,9 +575,10 @@ let STORAGE = {
   //PC 端有同样的 KEY，如果修改 VALUE，需要一起修改
   SYNC_CONVERSATION_TIME: 'sync_conversation_time',
   SYNC_RECEIVED_MSG_TIME: 'sync_received_msg_time',
-  SYNC_SENT_MSG_TIME: 'sync_sent_msg_time'
+  SYNC_SENT_MSG_TIME: 'sync_sent_msg_time',
+  APP_DEVICE: 'app_device'
 };
-let HEART_TIMEOUT = 1 * 30 * 1000;
+let HEART_TIMEOUT = 1 * 10 * 1000;
 let SYNC_MESSAGE_TIME = 3 * 60 * 1000;
 let CONNECT_ACK_INDEX = 'c_conn_ack_index';
 let PONG_INDEX = 'c_pong_index';
@@ -753,6 +762,20 @@ let FUNC_PARAM_CHECKER = {
   }, {
     name: 'content',
     type: 'String'
+  }],
+  UPLOAD_PUSH_TOKEN: [{
+    name: 'deviceId'
+  }, {
+    name: 'platform'
+  }, {
+    name: 'pushChannel'
+  }, {
+    name: 'pushToken'
+  }, {
+    name: 'packageName'
+  }],
+  SWITCH_PUSH: [{
+    name: 'isOpen'
   }],
   GET_FILE_TOKEN: [{
     name: 'type'
@@ -1094,7 +1117,9 @@ let COMMAND_TOPICS = {
   RTC_INVITE: 'rtc_invite',
   RTC_UPDATE_STATE: 'rtc_upd_state',
   RTC_INVITE_EVENT: 'rtc_invite_event',
-  RTC_ROOM_EVENT: 'rtc_room_event'
+  RTC_ROOM_EVENT: 'rtc_room_event',
+  UPLOAD_PUSH_TOKEN: 'reg_push_token',
+  SWITCH_PUSH: 'push_switch'
 };
 let NOTIFY_TYPE = {
   DEFAULT: 0,
@@ -1251,7 +1276,8 @@ let UPLOAD_TYPE = {
   NONE: 0,
   QINIU: 1,
   ALI: 4,
-  S3: 2
+  S3: 2,
+  MINIO: 3
 };
 let UNDISTURB_TYPE = {
   DISTURB: 1,
@@ -1630,6 +1656,18 @@ let CONVERSATION_TOP_TYPE = {
   BY_TOP_TIME: 0,
   BY_MESSAGE_TIME: 1
 };
+let PLATFORM_TYPE = {
+  ANDROID: 1,
+  IOS: 2,
+  WEB: 3,
+  PC: 4
+};
+let PUSH_CHANNEL = {
+  NONE: 0,
+  APPLE: 1,
+  HUAWEI: 2,
+  XIAOMI: 3
+};
 
 var ENUM = /*#__PURE__*/Object.freeze({
   __proto__: null,
@@ -1677,7 +1715,9 @@ var ENUM = /*#__PURE__*/Object.freeze({
   RTC_CHANNEL: RTC_CHANNEL,
   STREAM_EVENT: STREAM_EVENT,
   USER_TYPE: USER_TYPE,
-  CONVERSATION_TOP_TYPE: CONVERSATION_TOP_TYPE
+  CONVERSATION_TOP_TYPE: CONVERSATION_TOP_TYPE,
+  PLATFORM_TYPE: PLATFORM_TYPE,
+  PUSH_CHANNEL: PUSH_CHANNEL
 });
 
 function Cache () {
@@ -5539,6 +5579,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           cleanMsgTime: {
             type: "int64",
             id: 3
+          },
+          cleanScope: {
+            type: "int32",
+            id: 4
           }
         }
       },
@@ -5912,6 +5956,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             rule: "repeated",
             type: "SimpleMsg",
             id: 4
+          },
+          delScope: {
+            type: "int32",
+            id: 5
           }
         }
       },
@@ -6574,6 +6622,55 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             id: 2
           }
         }
+      },
+      RegPushTokenReq: {
+        fields: {
+          deviceId: {
+            type: "string",
+            id: 1
+          },
+          platform: {
+            type: "Platform",
+            id: 2
+          },
+          pushChannel: {
+            type: "PushChannel",
+            id: 3
+          },
+          pushToken: {
+            type: "string",
+            id: 4
+          },
+          packageName: {
+            type: "string",
+            id: 5
+          }
+        }
+      },
+      Platform: {
+        values: {
+          DefaultPlatform: 0,
+          Android: 1,
+          iOS: 2,
+          Web: 3,
+          PC: 4
+        }
+      },
+      PushChannel: {
+        values: {
+          DefaultChannel: 0,
+          Apple: 1,
+          Huawei: 2,
+          Xiaomi: 3
+        }
+      },
+      PushSwitch: {
+        fields: {
+          "switch": {
+            type: "int32",
+            id: 1
+          }
+        }
       }
     }
   }
@@ -6939,6 +7036,9 @@ function Uploder (uploader, {
       return aliExec(content, option, callbacks);
     }
     if (utils.isEqual(type, UPLOAD_TYPE.S3)) {
+      return s3Exec(content, option, callbacks);
+    }
+    if (utils.isEqual(type, UPLOAD_TYPE.MINIO)) {
       return s3Exec(content, option, callbacks);
     }
     // ... other upload plugin
@@ -7601,6 +7701,9 @@ function checkUploadType(upload) {
   }
   if (upload && upload.name == 'S3Client') {
     type = UPLOAD_TYPE.S3;
+  }
+  if (upload && upload.name == 'minio') {
+    type = UPLOAD_TYPE.MINIO;
   }
   return type;
 }
@@ -8973,6 +9076,37 @@ function getQueryBody({
     targetId = userId;
     buffer = codec.encode(message).finish();
   }
+  if (utils.isEqual(COMMAND_TOPICS.UPLOAD_PUSH_TOKEN, topic)) {
+    let {
+      deviceId,
+      pushToken,
+      platform,
+      packageName,
+      pushChannel,
+      userId
+    } = data;
+    let codec = $root.lookup('codec.RegPushTokenReq');
+    let message = codec.create({
+      deviceId,
+      pushToken,
+      platform,
+      packageName,
+      pushChannel
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
+  if (utils.isEqual(COMMAND_TOPICS.SWITCH_PUSH, topic)) {
+    let {
+      isOpen
+    } = data;
+    let codec = $root.lookup('codec.PushSwitch');
+    let message = codec.create({
+      switch: isOpen
+    });
+    targetId = userId;
+    buffer = codec.encode(message).finish();
+  }
   if (utils.isEqual(COMMAND_TOPICS.BATCH_TRANSLATE, topic)) {
     let {
       userId,
@@ -10078,7 +10212,7 @@ function getFileToken(index, data) {
     } = result;
     utils.extend(cred, preSignResp);
   }
-  if (utils.isEqual(ossType, UPLOAD_TYPE.S3)) {
+  if (utils.isEqual(ossType, UPLOAD_TYPE.S3) || utils.isEqual(ossType, UPLOAD_TYPE.MINIO)) {
     let {
       preSignResp
     } = result;
@@ -10361,12 +10495,14 @@ function getPublishMsgBody(stream, {
     let {
       chatId,
       eventTime,
-      eventType
+      eventType,
+      userId
     } = message;
     _msg = {
       chatroomId: chatId,
       time: eventTime,
-      type: eventType
+      type: eventType,
+      userId
     };
     _name = SIGNAL_NAME.S_CHATROOM_USER_NTF;
   } else if (utils.isEqual(topic, COMMAND_TOPICS.RTC_INVITE_EVENT)) {
@@ -10788,7 +10924,7 @@ function MessageSyncer(send, emitter, io, {
         ...msg,
         io
       });
-      if (isNewMsg) {
+      if (isNewMsg || utils.isEqual(msg.name, MESSAGE_TYPE.STREAM_TEXT)) {
         let {
           msgIndex,
           ackIndex
@@ -11004,10 +11140,6 @@ function ChatroomSyncer(send, emitter, io, {
       }
     });
     function query(item, next) {
-      logger.info({
-        tag: LOG_MODULE.MSG_SYNC,
-        ...item
-      });
       let {
         msg
       } = item;
@@ -11015,11 +11147,20 @@ function ChatroomSyncer(send, emitter, io, {
       let {
         isJoined
       } = _chatroomResult;
-      if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM)) {
-        isJoined && queryChatroom(item, next);
-      }
-      if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_DESTORY)) {
-        isJoined && broadcastChatroomDestory(item, next);
+      logger.info({
+        tag: LOG_MODULE.MSG_SYNC,
+        ...item,
+        isJoined
+      });
+      if (isJoined) {
+        if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM)) {
+          queryChatroom(item, next);
+        }
+        if (utils.isEqual(msg.type, NOTIFY_TYPE.CHATROOM_DESTORY)) {
+          broadcastChatroomDestory(item, next);
+        }
+      } else {
+        next();
       }
     }
     function broadcastChatroomDestory(item, next) {
@@ -11066,6 +11207,7 @@ function ChatroomSyncer(send, emitter, io, {
         messages,
         code
       }) => {
+        messages = messages || [];
         logger.info({
           tag: LOG_MODULE.MSG_SYNC,
           data,
@@ -11167,6 +11309,7 @@ function ChatroomAttSyncer(send, emitter, io, {
           attrs,
           chatroomId: _chatroomId
         } = result;
+        attrs = attrs || [];
         logger.info({
           tag: LOG_MODULE.MSG_SYNC,
           data,
@@ -11272,7 +11415,7 @@ function Timer (_config = {}) {
 
 function Counter (_config = {}) {
   let config = {
-    timeout: 1 * 10 * 1000
+    timeout: 1 * 9 * 1000
   };
   utils.extend(config, _config);
   let {
@@ -11293,7 +11436,7 @@ function Counter (_config = {}) {
   };
 }
 
-let VERSION = '1.8.1';
+let VERSION = '1.8.7';
 
 var WebWS = WebSocket;
 
@@ -11380,6 +11523,12 @@ function IO(config) {
   if (!utils.isArray(navList)) {
     navList = ['https://nav.fake.com'];
   }
+
+  /* 
+    pool = {
+     }
+  */
+  let wsPools = [];
   let ws = {};
   let io = {};
   let serverProviderCallback = utils.noop;
@@ -11409,7 +11558,14 @@ function IO(config) {
     let user = getCurrentUser({
       ignores: []
     });
-    clearHeart();
+    let index = utils.find(wsPools, _ws => {
+      return _ws === ws;
+    });
+    let currentWs = wsPools[index] || {};
+    disconnect();
+    currentWs.onmessage = utils.noop;
+    currentWs.onclose = utils.noop;
+    currentWs.onerror = utils.noop;
     cache.remove(CONNECT_TOOL.RECONNECT_COUNT);
     cache.remove(CONNECT_TOOL.RECONNECT_FREQUENCY);
     return reconnect(user, ({
@@ -11421,11 +11577,12 @@ function IO(config) {
   }
   let networkWatcher = NetworkWatcher({
     ononline: () => {
-      if (ws.readyState == 3) {
-        forceReconnect();
-      }
+      // if(ws.readyState == 3){
+      forceReconnect();
+      // }
     }
   });
+
   networkWatcher.watch();
   let isUserDisconnected = false;
   let onDisconnect = (result = {}) => {
@@ -11520,6 +11677,7 @@ function IO(config) {
         } = utils.getProtocol();
         let url = `${protocol}//${domain}/im`;
         ws = new JWebSocket$1(url);
+        wsPools.push(ws);
         logger.info({
           tag: LOG_MODULE.WS_CONNECT
         });
@@ -11535,7 +11693,10 @@ function IO(config) {
             deviceId,
             platform,
             clientSession,
-            sdkVerion: VERSION
+            sdkVersion: VERSION
+          });
+          wsPools = utils.filter(wsPools, _ws => {
+            return _ws.readyState != 3;
           });
         };
         ws.onclose = e => {
@@ -11756,12 +11917,14 @@ function IO(config) {
       let {
         chatroomId,
         time,
-        type
+        type,
+        userId
       } = result;
       emitter.emit(SIGNAL_NAME.CMD_CHATROOM_EVENT, {
         chatroomId,
         time,
-        type
+        type,
+        userId
       });
     }
     if (utils.isEqual(name, SIGNAL_NAME.S_STREAM_EVENT)) {
@@ -13906,7 +14069,7 @@ function Message$1 (io, emitter, logger) {
       };
       return emitter.emit(EVENT.MESSAGE_READ, notify);
     }
-    if (!messageCacher.isInclude(message)) {
+    if (!messageCacher.isInclude(message) || utils.isEqual(message.name, MESSAGE_TYPE.STREAM_TEXT)) {
       emitter.emit(EVENT.MESSAGE_RECEIVED, [message, isPullFinished]);
       let {
         conversationId,
@@ -15104,6 +15267,62 @@ function Message$1 (io, emitter, logger) {
       });
     });
   };
+
+  /* 
+    let conversation = {
+      conversationType: 1,
+      conversationId: '',
+      time: 19482938392,
+      count: 10,
+    };
+  */
+  function getContextMessages(conversation) {
+    return utils.deferred(async (resolve, reject) => {
+      let error = common.check(io, conversation, FUNC_PARAM_CHECKER.GETMSGS);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        time,
+        conversationId,
+        conversationType,
+        count
+      } = conversation;
+      count = count || 10;
+      // 默认从当前会话第一条未读消息开始获取
+      if (utils.isUndefined(time)) {
+        let {
+          message
+        } = await getFirstUnreadMessage(conversation);
+        time = message.sentTime || 0;
+      }
+      let frontResult = await getMessages({
+        conversationType,
+        conversationId,
+        time: time,
+        count
+      });
+      let backResult = {
+        messages: [],
+        isFinished: true
+      };
+      if (time > 0) {
+        backResult = await getMessages({
+          conversationType,
+          conversationId,
+          time: time - 1,
+          count,
+          order: MESSAGE_ORDER.FORWARD
+        });
+      }
+      resolve({
+        frontMessages: frontResult.messages,
+        isFrontFinished: frontResult.isFinished,
+        isBackFinished: backResult.isFinished,
+        backMessages: backResult.messages
+      });
+    });
+  }
   let searchMessages = params => {
     return utils.deferred((resolve, reject) => {
       let error = common.check(io, params, FUNC_PARAM_CHECKER.SEARCH_MESSAGES);
@@ -15603,6 +15822,7 @@ function Message$1 (io, emitter, logger) {
     addFavoriteMessages,
     removeFavoriteMessages,
     getFavoriteMessages,
+    getContextMessages,
     _uploadFile
   };
 }
@@ -15685,7 +15905,17 @@ function Socket$1 (io, emitter, logger) {
   };
   let getDevice = () => {
     return utils.deferred((resolve, reject) => {
-      return reject(ErrorType.SDK_FUNC_NOT_DEFINED);
+      let device = Storage.get(STORAGE.APP_DEVICE);
+      let id = device.id || '';
+      if (utils.isEmpty(id)) {
+        id = utils.getDeviceID();
+        Storage.set(STORAGE.APP_DEVICE, {
+          id
+        });
+      }
+      return resolve({
+        id
+      });
     });
   };
   let setServerUrlProider = callback => {
@@ -15694,6 +15924,64 @@ function Socket$1 (io, emitter, logger) {
     }
     io.setServerUrlProider(callback);
   };
+  let uploadPushToken = params => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, params, FUNC_PARAM_CHECKER.UPLOAD_PUSH_TOKEN);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.UPLOAD_PUSH_TOKEN,
+        ...params,
+        userId
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        resolve();
+      });
+    });
+  };
+  let switchPush = params => {
+    return utils.deferred((resolve, reject) => {
+      let error = common.check(io, params, FUNC_PARAM_CHECKER.SWITCH_PUSH);
+      if (!utils.isEmpty(error)) {
+        return reject(error);
+      }
+      let {
+        id: userId
+      } = io.getCurrentUser();
+      let data = {
+        topic: COMMAND_TOPICS.SWITCH_PUSH,
+        ...params,
+        userId
+      };
+      io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
+        let {
+          code,
+          msg
+        } = result;
+        if (!utils.isEqual(ErrorType.COMMAND_SUCCESS.code, code)) {
+          return reject({
+            code,
+            msg
+          });
+        }
+        resolve();
+      });
+    });
+  };
   return {
     connect,
     disconnect,
@@ -15701,7 +15989,9 @@ function Socket$1 (io, emitter, logger) {
     getDevice: getDevice,
     isNeedConnect: io.isNeedConnect,
     isConnected: io.isConnected,
-    getCurrentUser: io.getCurrentUser
+    getCurrentUser: io.getCurrentUser,
+    uploadPushToken: uploadPushToken,
+    switchPush: switchPush
   };
 }
 
@@ -15966,6 +16256,9 @@ function Chatroom$1 (io, emitter, logger) {
     if (utils.isUndefined(count)) {
       count = 50;
     }
+    chatroomCacher$1.set(chatroom.id, {
+      isJoined: true
+    });
     io.sendCommand(SIGNAL_CMD.QUERY, data, result => {
       let {
         code,
@@ -15984,6 +16277,11 @@ function Chatroom$1 (io, emitter, logger) {
         if (isNotSync && utils.isEqual(syncMsgTime, 0)) {
           _time = timestamp;
         }
+
+        // 模拟通知事件时间戳 +1 ，比本地时间戳大
+        if (_time > 0) {
+          _time += 1;
+        }
         let syncers = [{
           name: SIGNAL_NAME.S_NTF,
           msg: {
@@ -16001,9 +16299,6 @@ function Chatroom$1 (io, emitter, logger) {
             targetId: id
           }
         }];
-        chatroomCacher$1.set(chatroom.id, {
-          isJoined: true
-        });
         io.sync(syncers);
         return callbacks.success();
       }
@@ -16316,6 +16611,9 @@ function Message ($message, {
   };
   invokes.getFavoriteMessages = params => {
     return webAgent.getFavoriteMessages(params);
+  };
+  invokes.getContextMessages = params => {
+    return webAgent.getContextMessages(params);
   };
   invokes.getMessages = conversation => {
     return utils.deferred((resolve, reject) => {
@@ -17110,7 +17408,8 @@ function Logger(option = {}) {
     appkey,
     sessionId,
     getCurrentUser,
-    getVersion
+    getVersion,
+    serverList
   } = option;
   let $db = DB$1({
     name: `_IMIIM_${appkey}`,
@@ -17187,14 +17486,18 @@ function Logger(option = {}) {
       }
     };
     let key = common.getNaviStorageKey();
-    let navi = Storage.get(key);
+    Storage.get(key);
     $db.search(params, result => {
       let user = getCurrentUser();
       let {
         token
       } = user;
-      let api = navi.url || '';
-      let url = `${api}/navigator/upload-log-plain`;
+      let api = serverList[0];
+      let {
+        http
+      } = utils.getProtocol(api);
+      let domain = api.replace(/http:\/\/|https:\/\/|file:\/\/|wss:\/\/|ws:\/\//g, '');
+      let url = `${http}//${domain}/navigator/upload-log-plain`;
       jrequest.requestNormal(url, {
         method: 'POST',
         headers: {
@@ -17225,7 +17528,8 @@ let init = config => {
   let {
     upload,
     appkey = '',
-    log = {}
+    log = {},
+    serverList = []
   } = config;
   let uploadType = common.checkUploadType(upload);
   let sessionId = common.getSessionId();
@@ -17234,7 +17538,8 @@ let init = config => {
     appkey,
     sessionId,
     getCurrentUser: getCurrentUser,
-    getVersion: getVersion
+    getVersion: getVersion,
+    serverList
   });
 
   // 移除 AppKey 前后空格
@@ -17350,7 +17655,9 @@ let init = config => {
     MediaType: MEDIA_TYPE,
     UserType: USER_TYPE,
     StreamEvent: STREAM_EVENT,
-    ConversationTopType: CONVERSATION_TOP_TYPE
+    ConversationTopType: CONVERSATION_TOP_TYPE,
+    PlatformType: PLATFORM_TYPE,
+    PushChannel: PUSH_CHANNEL
   };
   return _export;
 };
@@ -17373,7 +17680,9 @@ var client = {
   MediaType: MEDIA_TYPE,
   UserType: USER_TYPE,
   StreamEvent: STREAM_EVENT,
-  ConversationTopType: CONVERSATION_TOP_TYPE
+  ConversationTopType: CONVERSATION_TOP_TYPE,
+  PlatformType: PLATFORM_TYPE,
+  PushChannel: PUSH_CHANNEL
 };
 
 var index = {
