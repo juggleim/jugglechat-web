@@ -969,8 +969,8 @@ function getPinOrigin(){
       </div>
       <ul class="tyn-list-inline gap gap-3 ms-auto">
         <li><button class="btn btn-icon btn-light wr wr-gpt" @click="onAskAI()"></button></li>
-        <!-- <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-mic jg-op-icon" @click="onShowCall(true, MediaType.AUDIO)"></button></li>
-        <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li> -->
+        <!-- <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-mic jg-op-icon" @click="onShowCall(true, MediaType.AUDIO)"></button></li> -->
+        <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li>
         <li><button class="btn btn-icon btn-light wr wr-more-dot" @click="onShowAside"></button></li>
       </ul>
       <div class="jg-pinned-box" v-if="!utils.isEmpty(state.pinnedMessage)">
