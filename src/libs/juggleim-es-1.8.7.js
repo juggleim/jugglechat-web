@@ -6344,6 +6344,18 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             type: "UserInfo",
             id: 3
           },
+          rtcChannel: {
+            type: "RtcChannel",
+            id: 4
+          },
+          rtcMediaType: {
+            type: "RtcMediaType",
+            id: 5
+          },
+          ext: {
+            type: "string",
+            id: 6
+          },
           members: {
             rule: "repeated",
             type: "RtcMember",
@@ -6373,6 +6385,10 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
           rtcMediaType: {
             type: "RtcMediaType",
             id: 5
+          },
+          ext: {
+            type: "string",
+            id: 6
           }
         }
       },
@@ -8967,7 +8983,8 @@ function getQueryBody({
       memberIds,
       channel,
       user,
-      mediaType
+      mediaType,
+      ext
     } = data;
     let codec = $root.lookup('codec.RtcInviteReq');
     let message = codec.create({
@@ -8975,7 +8992,8 @@ function getQueryBody({
       roomType: roomType,
       targetIds: memberIds,
       rtcChannel: channel,
-      rtcMediaType: mediaType
+      rtcMediaType: mediaType,
+      ext: ext || ''
     });
     targetId = roomId;
     buffer = codec.encode(message).finish();
@@ -10521,7 +10539,8 @@ function getPublishMsgBody(stream, {
     let {
       roomId,
       roomType,
-      members: existsMembers
+      members: existsMembers,
+      ext
     } = room;
     existsMembers = existsMembers || [];
     existsMembers = utils.map(existsMembers, ({
@@ -10540,7 +10559,8 @@ function getPublishMsgBody(stream, {
       eventType: inviteType,
       user,
       members,
-      existsMembers
+      existsMembers,
+      ext: ext || ''
     };
     _name = SIGNAL_NAME.S_RTC_INVITE_NTF;
   } else if (utils.isEqual(topic, COMMAND_TOPICS.RTC_ROOM_EVENT)) {
@@ -17109,7 +17129,8 @@ function RTCSignal ({
     roomType: roomType,
     memberIds: memberIds,
     channel: 0,
-    rtcMediaType: 1
+    rtcMediaType: 1,
+    ext: ''
   */
   let inviteRTC = options => {
     return utils.deferred((resolve, reject) => {

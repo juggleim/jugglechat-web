@@ -20,7 +20,7 @@ let context = getCurrentInstance();
 let juggle = im.getCurrent();
 let juggleCall = im.getRTCEngine();
 let { CallEvent } = im;
-let { MediaType } = juggle;
+let { MediaType, ConversationType } = juggle;
 
 let state = reactive({
   isShowCall: false,
@@ -57,9 +57,9 @@ emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall, isMulti,
       let memberIds = utils.map(members, (member) => {
         return member.id;
       });
-      session.startMultiCall({ memberIds, isEnableCamera });
+      session.startMultiCall({ memberIds, isEnableCamera, ext: utils.toJSON({ conversationType: ConversationType.GROUP }) });
     }else{
-      session.startSingleCall({ memberId: members[1].id, isEnableCamera });
+      session.startSingleCall({ memberId: members[1].id, isEnableCamera, ext: utils.toJSON({ conversationType: ConversationType.PRIVATE }) });
     }
   }
   state.isShowCall = isShow;

@@ -1,6 +1,6 @@
 /*
 * JuggleCall.js v1.0.0
-* (c) 2022-2024 JuggleCall
+* (c) 2022-2025 JuggleCall
 * Released under the MIT License.
 */
 const noop = () => {};
@@ -1044,7 +1044,8 @@ function CallSession(_info, {
     inviter: {},
     // { id: '', status: '连接中|已连接', alarm: Alarm }
     members: [],
-    isNew: isNew
+    isNew: isNew,
+    ext: ''
   };
   callInfo = utils.extend(callInfo, _info);
   let timer = Timer();
@@ -1110,7 +1111,8 @@ function CallSession(_info, {
           options: {
             memberIds,
             roomType,
-            isEnableCamera
+            isEnableCamera,
+            ext
           }
         } = target;
         let isMultiCall = utils.isEqual(ROOM_TYPE.ONE_MORE, roomType);
@@ -1145,7 +1147,8 @@ function CallSession(_info, {
           roomId: callInfo.callId,
           roomType: roomType,
           mediaType: isEnableCamera ? MEDIA_TYPE.VIDEO : MEDIA_TYPE.AUDIO,
-          memberIds: memberIds
+          memberIds: memberIds,
+          ext: ext || ''
         }).then(async result => {
           sessionEmitter.emit(SIGNAL_NAME.RTC_MEMBER_JOINED, {
             target: {
@@ -1540,6 +1543,7 @@ function CallSession(_info, {
       memberId: '呼叫的对方 Id',
       isEnableCamera: false,
       isMuteMicrophone: false,
+      ext: ''
     };
   */
   let startSingleCall = options => {
@@ -1922,8 +1926,7 @@ function Zego ({
         userUpdate: true
       }).then(async isJoined => {
         if (isJoined) {
-          let uid = utils.getUUID();
-          let streamID = `${uid}+++${userId}`;
+          let streamID = `${roomId}+++${userId}`;
           localStream = await zg.createZegoStream({
             camera: {
               video: isEnableCamera,
@@ -2040,7 +2043,8 @@ function Factory ({
       eventType,
       user: member,
       members,
-      existsMembers
+      existsMembers,
+      ext
     } = event;
 
     // 被其他人邀请通话时触发
@@ -2064,13 +2068,15 @@ function Factory ({
         }
         session = create({
           callId,
-          isMultiCall: utils.isEqual(ROOM_TYPE.ONE_MORE, roomType)
+          isMultiCall: utils.isEqual(ROOM_TYPE.ONE_MORE, roomType),
+          ext
         });
         session._machine.callee({
           callId,
           inviter: member,
           members,
-          existsMembers
+          existsMembers,
+          ext
         });
       }
       if (isInviteOneself) {
