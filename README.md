@@ -2,7 +2,7 @@
 
 基于开源 IM SDK [JuggleIM](https://github.com/juggleim) 集成的 Web Chat IM  示例，包含聊天、好友、群组等核心功能
 
-本项目支持 PC 客户端，如需 PC 端 Demo 请移步：[JuggleChat-Desktop](https://github.com/juggleim/jugglechat-desktop)
+本项目支持 PC 客户端，如需 PC 端 Demo 请加入社区申请。
 
 ### 社区讨论
 
