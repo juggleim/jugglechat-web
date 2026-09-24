@@ -15,7 +15,9 @@ let EVENT_NAME = {
   ON_CONVERSATION_TAG_CHANGED: 'on_conversation_tag_changed',
 
   ON_SHOW_CALL_DIALOG: 'on_show_call_dialog',
-  ON_CALL_FINISHED: 'on_call_finished'
+  ON_CALL_FINISHED: 'on_call_finished',
+
+  ON_APP_LANGUAGE_CHANGED: 'on_app_language_changed'
 };
 export let STORAGE = {
   PREFIX: 'jgweb',
@@ -23,6 +25,7 @@ export let STORAGE = {
   SERVER_SETTING: 'server_setting',
   TRANSLATE_CONF: 'translate_conf',
   USERS: 'users_auth',
+  APP_LANGUAGE: 'app_language'
 }
 let TRANSFER_TYPE = {
   NONE: -1,
@@ -64,48 +67,6 @@ let MESSAGE_OP_TYPE = {
   REMOVE: 2
 };
 
-let EMOJI_POS_LIST = [
-  { pos: '-64px -6px', text: '😀' },
-  { pos: '-96px -6px', text: '😆' },
-  { pos: '-128px -6px', text: '😄' },
-  { pos: '-160px -6px', text: '😁' },
-  { pos: '-192px -6px', text: '🙂' },
-  { pos: '-222px -6px', text: '🙃' },
-  { pos: '-254px -6px', text: '🙁' },
-  { pos: '-130px -190px', text: '😭' },
-  { pos: '-284px -42px', text: '😡' },
-  { pos: '-68px -152px', text: '😬' },
-  { pos: '-96px -152px', text: '😅' },
-  { pos: '-312px -42px', text: '😌' },
-  { pos: '-128px -152px', text: '😓' },
-  { pos: '-6px -78px', text: '😒' },
-  { pos: '-36px -78px', text: '😏' },
-  { pos: '-68px -78px', text: '😉' },
-  { pos: '-100px -78px', text: '😘' },
-  { pos: '-162px -78px', text: '😗' },
-  { pos: '-254px -78px', text: '😔' },
-  { pos: '-285px -78px', text: '😖' },
-  { pos: '-3px -114px', text: '😊' },
-  { pos: '-34px -114px', text: '🤗' },
-  { pos: '-66px -114px', text: '😵' },
-  { pos: '-100px -114px', text: '😲' },
-  { pos: '-130px -114px', text: '😩' },
-  { pos: '-160px -114px', text: '😝' },
-  { pos: '-192px -114px', text: '😛' },
-  { pos: '-224px -114px', text: '😜' },
-  { pos: '-254px -114px', text: '😋' },
-  { pos: '-284px -114px', text: '🙄' },
-  { pos: '-312px -114px', text: '😳' },
-  { pos: '-32px -149px', text: '😇' },
-  { pos: '-284px -150px', text: '😱' },
-  { pos: '-315px -150px', text: '😂' },
-  { pos: '-6px -186px', text: '😪' },
-  { pos: '-36px -186px', text: '😎' },
-  { pos: '-68px -186px', text: '😷' },
-  { pos: '-100px -186px', text: '😴' },
-  { pos: '-316px -186px', text: '🤓' },
-  { pos: '-36px -224px', text: '💩' },
-  ]
 let CONVERATION_TAG_ID = {
   ALL: 'jg_all'
 }
@@ -157,13 +118,13 @@ let GROUP_ROLE = {
   MANGENT: 2
 };
 let LANGUAGES = [
-  { title: '自动检测', name: 'auto' },
-  { title: '简体中文', name: 'zh-CHS' },
-  { title: '繁體中文', name: 'zh-CHT' },
+  { title: 'Auto', name: 'auto' },
+  { title: 'Simplified Chinese', name: 'zh-CHS' },
+  { title: 'Traditional Chinese', name: 'zh-CHT' },
   { title: 'English', name: 'en' },
   { title: 'Français', name: 'fr' },
   { title: 'Indonesia', name: 'id' },
-  { title: '日本語', name: 'ja' },
+  { title: 'Japanese', name: 'ja' },
   { title: '한국어', name: 'ko' },
   { title: 'ภาษาไทย', name: 'th' },
 ];
@@ -179,39 +140,20 @@ let ASIDE_MENU_TYPE = {
   SETTING: 10,
   USER_QRCODE: 11,
   USER_FAV: 12,
-  USER_AGREENMENT: 13,
+  USER_AGREEMENT: 13,
   USER_PRIVACY: 14,
+  LANGUAGE: 15
 };
 
-let SETTING_CARDS = [
-  { tag: 1, 
-    menus: [ 
-    { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
-    { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
-    { name: '我的收藏', icon: 'fav', event: ASIDE_MENU_TYPE.USER_FAV },
-    { name: '我的二维码', icon: 'qrcode', event: ASIDE_MENU_TYPE.USER_QRCODE },
-    ] 
-  },
-  { tag: 2, 
-    menus: [ 
-    { name: '账号管理', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
-    ] 
-  },
-  { 
-    tag: 3, 
-    menus: [ 
-    { name: '用户协议', icon: 'config', event: ASIDE_MENU_TYPE.USER_AGREENMENT },
-    { name: '隐私协议', icon: 'operate', event: ASIDE_MENU_TYPE.USER_PRIVACY },
-    ]
-  },
-  { tag: 10, 
-    menus: [ 
-    { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
-    ] 
-  },
-];
 let USER_AGREEMENT = {
   USER: 'https://juggle.im/jc/user.html',
   PRIVACY: 'https://juggle.im/jc/privacy.html',
 };
-export { USER_AGREEMENT, SETTING_CARDS, ASIDE_MENU_TYPE, LANGUAGES, GROUP_ROLE, ASIDER_SETTING_SWITCH, GROUP_AVATAR, FILE_TYPE, SYS_CONVERSATION_FRIEND, SYS_CONVERSATION_GROUP, IGNORE_CONVERSATIONS, FRIEND_APPLY_STATUS, CONTACT_TYPE, SETTING_TYPE, EMOJI_POS_LIST, EVENT_NAME, TRANSFER_TYPE, CONTACT_TAB_TYPE, RESPONSE, GROUP_CHANGE_TYPE, MSG_NAME, REG_EXP, MESSAGE_OP_TYPE, CONVERATION_TAG_ID, CONVERSATION_TAG_TYPE }
+
+let LOGIN_TYPE = {
+  PHONE: 1,
+  QRCODE: 2,
+  EMAIL: 3,
+};
+
+export { LOGIN_TYPE, USER_AGREEMENT, ASIDE_MENU_TYPE, LANGUAGES, GROUP_ROLE, ASIDER_SETTING_SWITCH, GROUP_AVATAR, FILE_TYPE, SYS_CONVERSATION_FRIEND, SYS_CONVERSATION_GROUP, IGNORE_CONVERSATIONS, FRIEND_APPLY_STATUS, CONTACT_TYPE, SETTING_TYPE, EVENT_NAME, TRANSFER_TYPE, CONTACT_TAB_TYPE, RESPONSE, GROUP_CHANGE_TYPE, MSG_NAME, REG_EXP, MESSAGE_OP_TYPE, CONVERATION_TAG_ID, CONVERSATION_TAG_TYPE }

@@ -14,7 +14,7 @@ import File from './message-file.vue';
 import ImageMessage from './message-image.vue';
 import Video from './message-video.vue';
 import Merge from './message-merge.vue';
-
+import Avatar from "./avatar.vue";
 const props = defineProps(["isShow", "right"]);
 const emit = defineEmits(["oncancel"]);
 const context = getCurrentInstance();
@@ -22,6 +22,7 @@ let juggle = im.getCurrent();
 let { MessageType } = juggle;
 
 let state = reactive({
+  i18n: common.i18n(),
   list: [],
   offset: '',
   limit: 20,
@@ -40,7 +41,7 @@ function getMessages(params){
     return;
   }
   if(!state.hasMore){
-    return context.proxy.$toast({ text: `没有更多啦`, icon: 'warn' });
+    return context.proxy.$toast({ text: state.i18n.COMMON.LIST_NONE, icon: 'warn' });
   }
   isFetching = true;
   let { limit, offset } = params;
@@ -69,7 +70,7 @@ function onRemove(message, index){
   }).then((result) => {
     state.list.splice(index, 1);
   }, (error) => {
-    context.proxy.$toast({ text: `取消收藏失败: ${error.code}`, icon: 'error' });
+    context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
   });
 }
 function onPlay() {
@@ -110,7 +111,7 @@ watch(() => props.isShow, () => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'消息收藏'" :right="props.right" @oncancel="onCancel">
+  <Asider :is-show="props.isShow" :title="state.i18n.USER_FAV.TITLE" :right="props.right" @oncancel="onCancel">
     <div class="jg-aside-favorite-body">
       <ul class="jg-fav-list" ref="favmsgs">
         <li class="jg-fav-item" v-for="(item, index) in state.list">
@@ -165,8 +166,10 @@ watch(() => props.isShow, () => {
           </div>
           <div class="jg-fav-info">
             <div class="jg-fav-title">
-              <div class="tyn-avatar tyn-s-avatar jg-fav-avatar" :style="{ 'background-image': 'url(' + item.message.sender.portrait + ')' }"></div>
-              <div class="jg-fav-label jg-ellipsis">{{ item.message.sender.name }} 来自 {{ item.message.conversationTitle }}</div>
+
+              <Avatar :cls="'jg-fav-avatar tyn-sd-avatar'" :avatar="item.message.sender.portrait" :name="item.message.sender.name || item.message.sender.id"></Avatar>
+
+              <div class="jg-fav-label jg-ellipsis">{{ item.message.sender.name }} {{ state.i18n.USER_FAV.FROM }} {{ item.message.conversationTitle }}</div>
             </div>
             <div class="jg-fav-time">{{ utils.formatTime(item.message.sentTime, 'MM-dd hh:mm') }}</div>
           </div>

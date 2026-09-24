@@ -13,6 +13,7 @@ import LoginBody from "../components/login-body.vue";
 const props = defineProps(["isShow", "right"]);
 const emit = defineEmits(["oncancel"]);
 const context = getCurrentInstance();
+let i18n = common.i18n();
 
 let state = reactive({});
 
@@ -28,7 +29,7 @@ watch(() => props.isShow, () => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'添加账号'" @oncancel="onCancel" :right="props.right">
+  <Asider :is-show="props.isShow" :title="i18n.UI.ADD_ACCOUNT" @oncancel="onCancel" :right="props.right">
     <div class="jg-aside-userlogin-body">
       <LoginBody :is-login="false" :is-add="true" :is-show="props.isShow"></LoginBody>
     </div>

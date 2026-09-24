@@ -8,6 +8,7 @@
   const emit = defineEmits(["oncancel", "onconfirm"]);
   let juggle = im.getCurrent();
   let state = reactive({
+    i18n: common.i18n(),
     conversations: []
   });
 
@@ -39,7 +40,7 @@
     <div class="modal-dialog modal-dialog-centered modal-sm">
       <div class="modal-content border-0">
         <div class="modal-body">
-          <h4 class="pb-2">最近联系人</h4>
+          <h4 class="pb-2">{{ state.i18n.UI.RECENT_CONTACTS }}</h4>
           <ul class="tyn-media-list gap gap-2">
             <li v-for="item in state.conversations" @click="onSelected(item)">
               <div class="form-check form-check-algin">
@@ -61,10 +62,10 @@
           </ul>
           <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center">
             <li>
-              <button class="btn btn-md btn-success" @click="onConfirm()">确认</button>
+              <button class="btn btn-md btn-success" @click="onConfirm()">{{ state.i18n.COMMON.CONFIRM_BTN }}</button>
             </li>
             <li>
-              <button class="btn btn-md btn-light" @click="onCancel()">取消</button>
+              <button class="btn btn-md btn-light" @click="onCancel()">{{ state.i18n.COMMON.CANCEL_BTN }}</button>
             </li>
           </ul>
         </div>

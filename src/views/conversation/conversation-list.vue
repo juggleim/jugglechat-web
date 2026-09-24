@@ -3,6 +3,7 @@ import utils from "../../common/utils";
 import { reactive, getCurrentInstance, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import Conversation from "./conversation.vue";
+import Avatar from "../../components/avatar.vue";
 import None from "./none.vue";
 
 import { STORAGE, EVENT_NAME, CONVERATION_TAG_ID, CONVERSATION_TAG_TYPE } from "../../common/enum";
@@ -49,7 +50,15 @@ let state = reactive({
   isShowGroupMemberManager: false,
   conversationMap: {},
   currentTag: { id: CONVERATION_TAG_ID.ALL },
+  i18n: common.i18n(),
 });
+
+emitter.$on(EVENT_NAME.ON_APP_LANGUAGE_CHANGED, () => {
+  utils.extend(state, {
+    i18n: common.i18n()
+  })
+});
+
 emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
   let { type, id, avatar, name} = friend;
   let conversation = {
@@ -59,7 +68,7 @@ emitter.$on(EVENT_NAME.ON_ADDED_FRIEND, (friend) => {
     conversationPortrait: avatar,
     latestMessage: { sentTime: 0 },
     f_mentionContent: '',
-    shortName: '新朋友',
+    shortName: common.i18n().MAIN.NEW_FRIEND,
   }
   onConversationChanged({ conversations: [conversation] })
   state.currentConversation = conversation;
@@ -139,7 +148,7 @@ im.connect(user, {
   success: async (_user) => {
     console.log("conversation connect success", _user);
     // let { tags = [] } = await juggle.getConversationTags();
-    let tags = [{id: CONVERATION_TAG_ID.ALL, name: '消息'}]
+    let tags = [{id: CONVERATION_TAG_ID.ALL, name: common.i18n().MAIN.CHAT}]
     utils.forEach(tags, (tag) => {
       let map = {};
       map[tag.id] = [];
@@ -189,7 +198,6 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
     utils.forEach(_list, conversation => {
       let {
         latestMessage,
-        conversationPortrait,
         conversationTitle = ""
       } = conversation;
       let { sentTime } = latestMessage;
@@ -197,16 +205,16 @@ function getConversations(isFirst = false, tag, callback = utils.noop) {
       if (!sentTime) {
         f_time = "";
       }
-      conversation = common.formatMention(conversation);
+     
+      let converMention = common.formatMention(conversation);
       let shortName = im.msgShortFormat(latestMessage);
-      conversationPortrait =
-        conversationPortrait || common.getTextAvatar(conversationTitle);
+      shortName = converMention +  shortName;
+
       utils.extend(conversation, {
         f_time,
         isShowDrop: false,
         isActive: false,
         shortName,
-        conversationPortrait
       });
       if(!state.conversationMap[tag]){
         state.conversationMap[tag] = [];
@@ -302,8 +310,11 @@ function onTagConversationChanged({ removes, adds, tag }){
 
     adds = utils.map(adds, (item) => {
       let { latestMessage } = item;
-      common.formatMention(item);
+      let  f_content = common.formatMention(item);
+
       let shortName = im.msgShortFormat(latestMessage);
+      shortName = f_content + shortName;
+      
       let { sentTime } = latestMessage;
       let f_time = common.getConversationTime(sentTime);
       if (!sentTime) {
@@ -354,8 +365,8 @@ function onTagConversationChanged({ removes, adds, tag }){
 
           <div class="jg-conversations-header">
             <ul class="jg-conversations-tools jg-convers-tools">
-              <li class="jg-conversation-tool wr" :class="[state.isShowConversationGroup ? 'wr-menu-left' : 'wr-menu-right']" @click="onShowConversationGroup()">消息</li>
-              <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)" v-if="state.currentTag.type == CONVERSATION_TAG_TYPE.CUSTOM">会话设置</li>
+              <li class="jg-conversation-tool wr" :class="[state.isShowConversationGroup ? 'wr-menu-left' : 'wr-menu-right']" @click="onShowConversationGroup()">{{ state.i18n.MAIN.CHAT }}</li>
+              <li class="jg-conversation-tool wr wr-menu-modify" @click="onShowGroupMemberManager(true)" v-if="state.currentTag.type == CONVERSATION_TAG_TYPE.CUSTOM">{{ state.i18n.MAIN.CHAT_SETTING }}</li>
             </ul>
           </div>
 
@@ -366,11 +377,12 @@ function onTagConversationChanged({ removes, adds, tag }){
               @mouseleave="onHideTopDrop()"
               @click="onConversation(item)"
             >
-              <div
-                class="tyn-avatar tyn-topitem-avatar"
-                :style="{'background-image': 'url(' + item.conversationPortrait + ')'}"
-                @click.right.prevent="onShowTopDropmenu(index)"
-              ></div>
+              <Avatar 
+                :cls="'tyn-topitem-avatar tyn-md-avatar'"
+                :avatar="messageUtils.isGroup(item) ? '' :item.conversationPortrait"
+                :name="item.conversationTitle"
+                @click.right.prevent="onShowTopDropmenu(index)">
+              </Avatar>
               <div class="tyn-topitem-name">{{ item.conversationTitle || 'JG' }}</div>
               <ul class="tyn-media-option-list">
                 <li class="dropdown">
@@ -378,7 +390,7 @@ function onTagConversationChanged({ removes, adds, tag }){
                     <ul class="tyn-list-links">
                       <li>
                         <a class="wr wr-untop" @click.stop="onSetConversationTop(item, false)">
-                          <span>取消置顶</span>
+                          <span>{{ state.i18n.MAIN.CHAT_MENU.UNPIN }}</span>
                         </a>
                       </li>
                     </ul>

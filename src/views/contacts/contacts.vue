@@ -4,6 +4,7 @@ import ContactDetail from "./detail.vue";
 import AsiderContactDetail from "../../components/aside-contact-detail.vue";
 import { useRouter } from "vue-router";
 import Dropmenu from "./dropmenu.vue";
+import Avatar from "../../components/avatar.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
 import { CONTACT_TAB_TYPE, RESPONSE, EVENT_NAME, CONTACT_TYPE, FRIEND_APPLY_STATUS, IGNORE_CONVERSATIONS, SYS_CONVERSATION_FRIEND }  from "../../common/enum";
 
@@ -20,26 +21,39 @@ import emitter from "../../common/emmit";
 let juggle = im.getCurrent();
 let { ConversationType, Event, ConnectionState } = juggle;
 
-let tabs = [
-    { id: Date.now(), name: '联系人', type: CONTACT_TYPE.FRIEND, icon: 'contact', isActive: true },
-    { id: SYS_CONVERSATION_FRIEND, name: '新朋友', type: CONTACT_TYPE.NEW_FRIEND, unreadCount: 0, icon: 'adduser', isActive: false },
-    { id: Date.now(), name: '群组', type: CONTACT_TYPE.GROUP, icon: 'group', isActive: false },
-    { id: Date.now(), name: '智能体', type: CONTACT_TYPE.BOT, icon: 'bot', isActive: false },
-  ];
 let contacts = [];
 let groups = [];
 let newContacts = [];
 const context = getCurrentInstance();
 let state = reactive({
-  tabs: tabs,
-  currentTab: tabs[0].type,
+  tabs: getTabs(),
+  currentTab: getTabs()[0].type,
   contacts: contacts,
   groups: groups,
   currentList: contacts,
   current: {},
   isShowAddFriend: false,
   isShowDetail: false,
+  i18n: common.i18n(),
 });
+
+function getTabs(){
+  let CONTACT_I18N = common.i18n().CONTACT;
+  return [
+    { id: Date.now(), name: CONTACT_I18N.FRIEND, type: CONTACT_TYPE.FRIEND, icon: 'contact', isActive: true },
+    { id: SYS_CONVERSATION_FRIEND, name: CONTACT_I18N.NEW_FRIEND, type: CONTACT_TYPE.NEW_FRIEND, unreadCount: 0, icon: 'adduser', isActive: false },
+    { id: Date.now(), name: CONTACT_I18N.GROUP, type: CONTACT_TYPE.GROUP, icon: 'group', isActive: false },
+    { id: Date.now(), name: CONTACT_I18N.AGENT, type: CONTACT_TYPE.BOT, icon: 'bot', isActive: false },
+  ];
+}
+
+emitter.$on(EVENT_NAME.ON_APP_LANGUAGE_CHANGED, () => {
+  utils.extend(state, {
+    i18n: common.i18n(),
+    tabs: getTabs()
+  })
+});
+
 
 function onConversationChanged({ conversations }){
   utils.forEach(conversations, (conversation) => {
@@ -116,7 +130,7 @@ function getBots(){
   Friend.getBots({ count: 50 }).then((result) => {
     let { data: { items }, code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
-      return context.proxy.$toast({ text: `获取失败: ${error.code}`, icon: 'error' });
+      return context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
     }
     let list = utils.map(items, (item) => {
       let { bot_id, nickname, avatar } = item;
@@ -124,7 +138,7 @@ function getBots(){
         id: bot_id,
         type: CONTACT_TYPE.BOT, 
         name: nickname, 
-        avatar: avatar || common.getTextAvatar(nickname), 
+        avatar: avatar || '', 
         isSelected: false
       };
     });
@@ -136,7 +150,7 @@ function getNewFriends(start = 0){
   Friend.getNewList({ start, count: 50, order: 0 }).then((result) => {
     let { data: { items = [] }, code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
-      return context.proxy.$toast({ text: `获取失败: ${error.code}`, icon: 'error' });
+      return context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
     }
 
     let user = Storage.get(STORAGE.USER_TOKEN);
@@ -145,10 +159,11 @@ function getNewFriends(start = 0){
       let { id, target_user, is_sponsor = false, status = FRIEND_APPLY_STATUS.APPLYING } = item;
       
       let _user = target_user;
-      let avatar = target_user.avatar || common.getTextAvatar(target_user.nickname || target_user.user_id);
-      let content = `${target_user.nickname || target_user.user_id} 添加你为好友`;
+      let avatar = target_user.avatar || '';
+      let username = target_user.nickname || target_user.user_id;
+      let content = utils.templateFormat(state.i18n.CONTACT.USER_ADD_SELF, { name: username });
       if(is_sponsor){
-        content = `你添加 ${target_user.nickname || target_user.user_id} 为好友`;
+        content = utils.templateFormat(state.i18n.CONTACT.SELF_ADD_USER, { name: username })
       }
       return {
         id: utils.getUUID(),
@@ -171,11 +186,17 @@ function getNewFriends(start = 0){
     state.currentList = newContacts;
   });
 }
-let statusMap = {};
-statusMap[FRIEND_APPLY_STATUS.APPLYING] = '待处理';
-statusMap[FRIEND_APPLY_STATUS.ACCEPTED] = '已添加';
-statusMap[FRIEND_APPLY_STATUS.DECLINED] = '已拒绝';
-statusMap[FRIEND_APPLY_STATUS.EXPIRED] = '已过期';
+
+
+function getStatusMap(){
+  let statusMap = {};
+  let CONTACT_I18N = common.i18n().CONTACT;
+  statusMap[FRIEND_APPLY_STATUS.APPLYING] = CONTACT_I18N.NEW_APPLYING;
+  statusMap[FRIEND_APPLY_STATUS.ACCEPTED] = CONTACT_I18N.NEW_ACCEPTED;
+  statusMap[FRIEND_APPLY_STATUS.DECLINED] = CONTACT_I18N.NEW_DECLINED;
+  statusMap[FRIEND_APPLY_STATUS.EXPIRED] = CONTACT_I18N.NEW_DECLINED; 
+  return statusMap; 
+}
 function onAddFriend({ item }){
   item.status = FRIEND_APPLY_STATUS.ACCEPTED;
   item.statusName = statusMap[item.status];
@@ -192,7 +213,7 @@ function onRemoveFriend({ item }){
   onShowDetail(false);
 }
 function getFriendApplyName(status){
-  return statusMap[status] || '';
+  return getStatusMap()[status] || '';
 }
 function getFriends(startUserId = ''){
   if(!utils.isEmpty(contacts) && utils.isEmpty(startUserId)){
@@ -202,7 +223,7 @@ function getFriends(startUserId = ''){
   Friend.getList({ userId: user.id, count: 20, startUserId }).then((result) => {
     let { data: { items }, code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
-      return context.proxy.$toast({ text: `获取失败: ${error.code}`, icon: 'error' });
+      return context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
     }
 
     let list = utils.map(items, (item) => {
@@ -211,7 +232,7 @@ function getFriends(startUserId = ''){
         id: user_id,
         type: CONTACT_TYPE.FRIEND, 
         name: nickname, 
-        avatar: avatar || common.getTextAvatar(nickname), 
+        avatar: avatar, 
         isSelected: false
       };
     });
@@ -228,7 +249,7 @@ function getGroups(startId = ''){
   Group.getList({ count: 20, startId }).then((result) => {
     let { data: { items }, code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
-      return context.proxy.$toast({ text: `获取失败: ${error.code}`, icon: 'error' });
+      return context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
     }
 
     let list = utils.map(items, (item) => {
@@ -274,14 +295,14 @@ getFriends();
                 :class="{'active': item.isSelected}" 
                 @click="onShowProfile(item)">
                 <div class="tyn-media-group">
-                  <div class="tyn-media tyn-size-rg contact-avatar" :style="{'background-image': 'url(' + item.avatar +')'}"></div>
+                  <Avatar :cls="'tyn-size-rg contact-avatar jg-size-md'" :avatar="utils.isEqual(item.type, CONTACT_TYPE.GROUP) ? '' : item.avatar" :name="item.user && item.user.nickname || item.name"></Avatar>
                   <div class="tyn-media-col">
                     <div class="tyn-media-row"><h6 class="name">{{ item.name }}</h6></div>
                   </div>
                   <div class="jg-friend-applystatus" v-if="utils.isEqual(item.type, CONTACT_TYPE.NEW_FRIEND)">{{ item.statusName }}</div>
                 </div>
               </li>
-              <li class="tyn-aside-item js-toggle-main name tyn-aside-nothing" v-if="state.currentList.length == 0">没有更多了</li>
+              <li class="tyn-aside-item js-toggle-main name tyn-aside-nothing" v-if="state.currentList.length == 0">{{ state.i18n.COMMON.LIST_NONE }}</li>
             </ul>
           </div>
         </div>

@@ -10,6 +10,8 @@ const props = defineProps(["isShow", "tag"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 let context = getCurrentInstance();
 
+let i18n = common.i18n();
+
 let juggle = im.getCurrent();
 let { ConversationType } = juggle;
 let state = reactive({
@@ -49,7 +51,7 @@ function getConversations(isFirst = false, callback = utils.noop) {
   juggle.getConversations(params).then(result => {
     let { conversations: list } = result;
     let _list = common.filterIgnoreConversations(list);
-    state.conversations = conversations.concat();
+    state.conversations = conversations.concat(_list);
     callback();
   });
 }
@@ -180,14 +182,14 @@ watch(() => props.isShow, () => {
           </div>
           <div class="tyn-media-list">
             <div class="jg-group-conver-box">
-              <div class="jg-group-conver-header">最近聊天</div>
+              <div class="jg-group-conver-header">{{ i18n.MAIN.TAG.RECENTLY }}</div>
               <div class="jg-group-convers" ref="conversations">
                 <Conversation v-for="(item, index) in state.conversations" :is-remove="0" :conversation="item" :index="index" :cls="'wr-cir-add jg-text-success'" @onemit="onClick"></Conversation>
               </div>
             </div>
             <div class="jg-line"></div>
             <div class="jg-group-conver-checkbox">
-              <div class="jg-group-conver-header">已选聊天</div>
+              <div class="jg-group-conver-header">{{ i18n.MAIN.TAG.SELECTED }}</div>
               <div class="jg-group-convers" ref="selectList">
                 <Conversation v-for="(item, index) in state.selectList" :is-remove="1" :conversation="item" :index="index"  :cls="'wr-cir-remove jg-text-danger'" @onemit="onClick"></Conversation>
               </div>
@@ -195,10 +197,10 @@ watch(() => props.isShow, () => {
           </div>
           <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center">
             <li>
-              <button class="btn btn-sm btn-success" @click="onConfirm()">确认</button>
+              <button class="btn btn-sm btn-success" @click="onConfirm()">{{ i18n.COMMON.CONFIRM_BTN }}</button>
             </li>
             <li>
-              <button class="btn btn-sm btn-light" @click="onCancel()">取消</button>
+              <button class="btn btn-sm btn-light" @click="onCancel()">{{ i18n.COMMON.CANCEL_BTN }}</button>
             </li>
           </ul>
         </div>

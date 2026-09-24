@@ -4,6 +4,7 @@ import utils from "../common/utils";
 import common from "../common/common";
 import emitter from "../common/emmit";
 import Asider from "./aside.vue";
+import Avatar from "./avatar.vue";
 
 import AsiderUserUpdate from "./aside-user-update.vue";
 import AsiderUserConfig from "./aside-user-config.vue";
@@ -11,9 +12,10 @@ import AsiderUserAccount from "./aside-user-account.vue";
 import AsiderQrCode from "./aside-qrcode.vue";
 import AsideFavoriteMsg from "./aside-msg-favorite.vue";
 import AsideUserAgreement from "./aside-user-agreement.vue";
+import AsideLanguage from "./aside-language.vue";
 
 import { User } from "../services/index";
-import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME, SETTING_CARDS, USER_AGREEMENT } from "../common/enum";
+import { RESPONSE, STORAGE, ASIDE_MENU_TYPE, EVENT_NAME, USER_AGREEMENT } from "../common/enum";
 import Storage from "../common/storage";
 
 const context = getCurrentInstance();
@@ -23,15 +25,24 @@ const emit = defineEmits(["oncancel"]);
 let user = Storage.get(STORAGE.USER_TOKEN);
 let state = reactive({
   user: user,
-  cards: SETTING_CARDS,
+  cards: common.getSettingCards(),
   isShowUserUpdateAsider: false,
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,
   isShowUserQrcode: false,
   isShowFavoriteMsg: false,
   isShowUserAgreement: false,
+  isShowLanguage: false,
   userAgreentUrl: '',
   userAgreentTitle: '',
+  i18n: common.i18n()
+});
+
+emitter.$on(EVENT_NAME.ON_APP_LANGUAGE_CHANGED, () => {
+  utils.extend(state, {
+    cards: common.getSettingCards(),
+    i18n: common.i18n()
+  })
 });
 
 function onLogout(){
@@ -55,11 +66,14 @@ function onClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_FAV)){
     onShowFavoriteMsg(true);
   }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_AGREENMENT)){
-    onShowUserAgreement(true, USER_AGREEMENT.USER, '用户协议');
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_AGREEMENT)){
+    onShowUserAgreement(true, USER_AGREEMENT.USER, state.i18n.USER_SETTING.USER_AGREEMENT);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_PRIVACY)){
-    onShowUserAgreement(true, USER_AGREEMENT.PRIVACY, '隐私协议');
+    onShowUserAgreement(true, USER_AGREEMENT.PRIVACY, state.i18n.USER_SETTING.USER_PRIVACY);
+  }
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.LANGUAGE)){
+    onShowLanguage(true);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
@@ -83,6 +97,9 @@ function onShowUserSettingAsider(isShow){
 function onShowAccountAsider(isShow){
   state.isShowAccountAsider = isShow;
 }
+function onShowLanguage(isShow){
+  state.isShowLanguage = isShow;
+}
 function onCancel() {
   emit('oncancel', {});
 }
@@ -93,17 +110,22 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'个人设置'" @oncancel="onCancel" :cls="'jg-aside-ust-box'">
+  <Asider :is-show="props.isShow" :title="state.i18n.USER_SETTING.SETTING" @oncancel="onCancel" :cls="'jg-aside-ust-box'">
     <div class="jg-aside-userst-body jg-setting-aside">
       <ul class="jg-cards">
           <li class="jg-card jg-card-userinfo">
             <ul class="jg-ul">
               <li class="jg-li jg-card-li-userinfo">
-                <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
+                <Avatar
+                  :cls="'tyn-ss-avatar jg-header-user-avatar'"
+                  :avatar="state.user.portrait"
+                  :name="state.user.name || state.user.id">
+                </Avatar>
+                <!-- <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div> -->
                 <div class="jg-header-user-name">{{ state.user.name }}</div>
               </li>
               <li class="jg-li">
-                <div class="label">用户 ID</div>
+                <div class="label">{{ state.i18n.USER_SETTING.USER_ID }}</div>
                 <div class="value">{{ state.user.id }}</div>
               </li>
             </ul>
@@ -133,11 +155,17 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <AsiderQrCode 
     :is-show="state.isShowUserQrcode"
     :right="0"
-    :title="'我的二维码'"
-    :desc="'扫一扫二维码，加我为好友'"
+    :title="state.i18n.USER_SETTING.QRCODE"
+    :desc="state.i18n.USER_SETTING.SCANQR_DESC"
     :isGroup="0"
     :uid="state.user.id"
     @oncancel="onShowUserQrCode(false)">
   </AsiderQrCode>
+
+  <AsideLanguage
+    :is-show="state.isShowLanguage"
+    :right="0"
+    @oncancel="onShowLanguage(false)">
+  </AsideLanguage>
 
 </template>

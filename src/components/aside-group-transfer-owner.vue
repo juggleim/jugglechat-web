@@ -5,11 +5,13 @@ import { Group } from "../services";
 import Storage from "../common/storage";
 import { STORAGE, RESPONSE } from "../common/enum";
 import Asider from "./aside.vue";
+import common from "../common/common";
 
 const props = defineProps(["isShow", "groupId", "members"]);
 const emit = defineEmits(["oncancel", "onfinish"]);
 
 let user = Storage.get(STORAGE.USER_TOKEN);
+let i18n = common.i18n();
 const context = getCurrentInstance();
 
 let state = reactive({
@@ -40,12 +42,12 @@ function onConfirm() {
     let { code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       context.proxy.$toast({
-        text: `群主转让失败 ${code}`,
+        text: utils.templateFormat(i18n.UI.TRANSFER_OWNER_FAILED, { code }),
         icon: 'error'
       });
     }
     context.proxy.$toast({
-      text: `转让成功`,
+      text: i18n.UI.TRANSFER_OWNER_SUCCESS,
       icon: 'success'
     });
     emit('onfinish', { });
@@ -61,7 +63,7 @@ function onSelected(item, index) {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'转让群主'" @oncancel="onCancel" :right="1">
+  <Asider :is-show="props.isShow" :title="i18n.UI.TRANSFER_OWNER" @oncancel="onCancel" :right="1">
     <div class="jg-aside-group-body">
       <ul class="tyn-media-list gap gap-2">
         <li v-for="(item, index) in state.members"  @click="onSelected(item, index)" class="tyn-media-item">
@@ -79,10 +81,10 @@ function onSelected(item, index) {
       </ul>
       <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center jg-tools">
         <li>
-          <button class="btn btn-sm btn-success" @click="onConfirm()">确认</button>
+          <button class="btn btn-sm btn-success" @click="onConfirm()">{{ i18n.COMMON.CONFIRM_BTN }}</button>
         </li>
         <li>
-          <button class="btn btn-sm btn-light" @click="onCancel()">取消</button>
+          <button class="btn btn-sm btn-light" @click="onCancel()">{{ i18n.COMMON.CANCEL_BTN }}</button>
         </li>
       </ul>
     </div>

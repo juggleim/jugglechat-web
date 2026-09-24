@@ -14,33 +14,30 @@ const props = defineProps(["isShow"]);
 const emit = defineEmits(["oncancel"]);
 let juggle = im.getCurrent();
 let state = reactive({
+  i18n: common.i18n(),
   phone: '',
   users: []
 });
 function onCancel() {
   emit('oncancel', {});
 }
+
 function onSearch() {
-  let { phone } = state;
+  let { phone, i18n } = state;
   if (utils.isEmpty(phone)) {
-    return state.errorMsg = '手机号不能为空';
+    return state.errorMsg = i18n.SEARCH_FRIEND.PHONE_EMPTY;
   }
   if (!utils.isPhoneNumber(phone)) {
-    return state.errorMsg = '手机号格式不正确';
+    return state.errorMsg = i18n.SEARCH_FRIEND.PHONE_ERROR;
   }
   User.search({ phone }).then((result) => {
     let { code, data } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
-      utils.extend(state, { errorMsg: '没有找到用户', users: [] });
+      utils.extend(state, { errorMsg: i18n.SEARCH_FRIEND.USER_NONE, users: [] });
       return;
     }
     let { items } = data;
-    let users = utils.map(items, (item) => {
-      let { avatar, nickname } = item;
-      item.avatar = avatar || common.getTextAvatar(nickname);
-      return item;
-    });
-    utils.extend(state, { users });
+    utils.extend(state, { users: items });
   });
 }
 function onAdd(_user){
@@ -54,12 +51,12 @@ function onAdd(_user){
     let { code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       return context.proxy.$toast({
-        text: `添加好友失败：${code}`,
+        text: common.errorText(code),
         icon: 'error'
       });
     }
     context.proxy.$toast({
-      text: `已发送好友添加请求`,
+      text: state.i18n.SEARCH_FRIEND.REQUEST_SENT,
       icon: 'success'
     });
     setTimeout(() => {
@@ -83,13 +80,13 @@ watch(() => props.isShow, () => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'添加好友'" @oncancel="onCancel">
+  <Asider :is-show="props.isShow" :title="state.i18n.SEARCH_FRIEND.TITLE" @oncancel="onCancel">
     <div class="jg-aside-friend-body">
       <div class="tyn-aside-search">
         <div class="form-group tyn-pill">
           <div class="form-control-wrap">
             <div class="form-control-icon start wr wr-search"></div>
-            <input type="search" class="form-control form-control-solid" placeholder="输入手机号回车搜索好友"
+            <input type="search" class="form-control form-control-solid" :placeholder="state.i18n.SEARCH_FRIEND.PLACEHOLDER"
               @keydown.enter.self="onSearch" v-model="state.phone" @input="onInput"/>
             <label class="form-label" for="email-address">
               <span class="small ms-2 text-danger">{{ state.errorMsg }}</span>

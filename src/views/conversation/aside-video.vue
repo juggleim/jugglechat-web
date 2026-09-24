@@ -2,6 +2,9 @@
 const props = defineProps(["isShow", "messages"]);
 import { reactive, getCurrentInstance } from "vue";
 import utils from "../../common/utils";
+import common from "../../common/common";
+
+let i18n = common.i18n();
 
 let state = reactive({
   list: []
@@ -37,7 +40,7 @@ function onPlay(messageId){
           <div class="tyn-video-icon wr wr-video tyn-aside-video" v-if="state.list.indexOf(msg.messageId) == -1"></div>
         </a>
       </div>
-      <div class="name tyn-aside-nothing" v-if="props.messages.length == 0">没有更多了</div>
+      <div class="name tyn-aside-nothing" v-if="props.messages.length == 0">{{ i18n.UI.NO_MORE_ITEMS }}</div>
     </div>
   </div>
 </template>

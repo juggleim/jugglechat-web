@@ -1,14 +1,17 @@
 <script setup>
 import messageUtils from "./message-utils";
 import AsiderContactDetail from "./aside-contact-detail.vue";
+import Avatar from "./avatar.vue";
 import { reactive, getCurrentInstance, watch } from "vue";
 import { User } from "../services/index";
 import utils from "../common/utils";
 import { RESPONSE, FRIEND_APPLY_STATUS, CONTACT_TYPE } from "../common/enum";
+import common from "../common/common";
 
 const context = getCurrentInstance();
 const props = defineProps(['message']);
 let state = reactive({
+  i18n: common.i18n(),
   isShowDetail: false,
   current: {}
 });
@@ -20,7 +23,7 @@ function onShow(){
     let { code, data } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       return context.proxy.$toast({
-        text: `查看名片异常 ${code}`,
+        text: common.errorText(code),
         icon: 'error'
       });
     }
@@ -46,8 +49,12 @@ function onShowDetail(isShow){
 
 <template>
   <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md">
-      <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
+ <div class="tyn-media">
+      <Avatar 
+        :cls="'tyn-size-md jg-size-md '"
+        :avatar="props.message.sender.portrait"
+        :name="props.message.sender.name">
+      </Avatar>
     </div>
   </div>
   <div class="tyn-reply-group">
@@ -61,7 +68,7 @@ function onShowDetail(isShow){
             </div>
             <div class="jg-contact-card-title jg-ellipsis">{{ props.message.content.name }}</div>
           </div>
-          <div class="jg-contact-memo">[个人名片]</div>
+          <div class="jg-contact-memo">{{ state.i18n.MAIN.LAST_MSG.CARD }}</div>
         </div>
       </div>
     </div>

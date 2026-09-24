@@ -18,6 +18,7 @@ let state = reactive({
   isRemote: false,
   groups: [],
   isShowGroupManager: false,
+  i18n: common.i18n()
 });
 
 function onSelected(item, index){
@@ -80,7 +81,9 @@ juggle.once(Event.TAG_CHANGED, (notify) => {
       return utils.isEqual(group.id, tag.id);
     });
     if(index > -1){
-      groups.splice(index, 1, tag);
+      let _tag = groups[index];
+      utils.extend(_tag, tag);
+      // groups.splice(index, 1, tag);
     }else{
       groups.push(tag);
     }
@@ -91,10 +94,11 @@ watch(() => props.isShow, async () => {
   if(props.isShow){
     let { tags = [] } = await juggle.getConversationTags();
     // let tags = [{id: CONVERATION_TAG_ID.ALL, name: '消息'}];
+    state.i18n = common.i18n();
     if(!state.isRemote){
       state.isRemote = true;
-      state.groups = common.formatTags(tags);
     }
+    state.groups = common.formatTags(tags);
   }
 });
 
@@ -105,7 +109,7 @@ watch(() => props.isShow, async () => {
     <div class="jg-conversations-header">
       <ul class="jg-conversations-tools">
         <li></li>
-        <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">设置</li>
+        <li class="jg-conversation-tool wr wr-setting" @click="onShowGroupManager(true)">{{ state.i18n.MAIN.TAG.SETTING }}</li>
       </ul>
     </div>
     <ul class="jg-conver-groups">

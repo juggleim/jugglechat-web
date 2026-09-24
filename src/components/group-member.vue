@@ -1,18 +1,18 @@
 <script setup>
 import { reactive } from "vue";
+import Avatar from "./avatar.vue";
 const props = defineProps(['member']);
-let state = reactive({
-  url: 'https://file.lwoowl.cn/avatar_jgd/2f6c22f5-0043-4377-98f7-043c0b98532e.png'
-});
+let state = reactive({});
 </script>
 
 <template>
   <div class="tyn-media-group tyn-media-group-reads fadein-o4">
-    <div class="tyn-media tyn-size-xs tyn-group-msg-avatar"
-      :style="{ 'background-image': 'url(' + (props.member.portrait || state.url ) + ')' }">
+    <div class="tyn-media tyn-size-xs tyn-group-msg-avatar">
+      <Avatar :cls="'tyn-size-xs'" :avatar="props.member.portrait" :name="props.member.name || props.member.id"></Avatar>
     </div>
+    
     <div class="tyn-media-row">
-      <h6 class="name">{{ props.member.name || '默认用户' }}</h6>
+      <h6 class="name">{{ props.member.name || props.member.id }}</h6>
     </div>
   </div>
 </template>

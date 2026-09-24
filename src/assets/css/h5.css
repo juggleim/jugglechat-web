@@ -1,7 +1,7 @@
 @media (max-width: 768px) {  
   .tyn-root::after,
   .tyn-root::before{
-    position: fixed;
+    /* position: fixed; */
   }
   .tyn-web-root{
     --footer-height: 0;
@@ -110,7 +110,7 @@
     width: 300px;
   }
   .tyn-emoji-pn.show-aside{
-    top: -16rem;
+    top: -18rem;
   }
   .emojis__grid{
     justify-content: center;

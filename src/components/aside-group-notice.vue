@@ -8,6 +8,7 @@ const props = defineProps(["isShow", "content", 'groupid']);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 
 let state = reactive({
+  i18n: common.i18n(),
   content: '',
 });
 
@@ -28,17 +29,17 @@ watch(() => props.isShow, async () => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'群公告'" @oncancel="onCancel" :right="1">
+  <Asider :is-show="props.isShow" :title="state.i18n.UI.GROUP_NOTICE" @oncancel="onCancel" :right="1">
     <div class="jg-aside-group-notice-body">
       <div class="jg-modal-content">
-        <textarea type="text" class="tyn-title-overline text-none jg-group-notice" v-model="state.content" placeholder="说点什么~"></textarea>
+        <textarea type="text" class="tyn-title-overline text-none jg-group-notice" v-model="state.content" :placeholder="state.i18n.UI.WRITE_SOMETHING"></textarea>
       </div>
       <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center jg-tools">
         <li>
-          <button class="btn btn-sm btn-success" @click="onConfirm()"> 保存</button>
+          <button class="btn btn-sm btn-success" @click="onConfirm()">{{ state.i18n.COMMON.SAVE_BTN }}</button>
         </li>
         <li>
-          <button class="btn btn-sm btn-light" @click="onCancel()">取消</button>
+          <button class="btn btn-sm btn-light" @click="onCancel()">{{ state.i18n.COMMON.CANCEL_BTN }}</button>
         </li>
       </ul>
     </div>

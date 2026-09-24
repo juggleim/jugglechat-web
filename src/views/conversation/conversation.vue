@@ -13,6 +13,7 @@ import im from "../../common/im";
 
 import Perch from "../../components/perch.vue";
 import Text from '../../components/message-text.vue';
+import Staker from '../../components/message-staker.vue';
 import StreamText from '../../components/message-stream-text.vue';
 import File from '../../components/message-file.vue';
 import ImageMessage from '../../components/message-image.vue';
@@ -26,6 +27,7 @@ import GroupNtfMessage from '../../components/message-group-notify.vue';
 import FriendNtfMessage from '../../components/message-friend-notify.vue';
 import Call1v1FinishedMessage from '../../components/message-1v1-finished.vue';
 import ContactCard from '../../components/message-contact-card.vue';
+import Avatar from "../../components/avatar.vue";
 
 import utils from "../../common/utils";
 import conversationTools from "./conversation";
@@ -50,6 +52,7 @@ let { MessageType, Event, ConversationType, MentionType, SentState, MediaType } 
 let context = getCurrentInstance();
 
 let state = reactive({
+  i18n: common.i18n(),
   isShowAside: false,
   isShowEmoji: false,
   isShowTransfer: false,
@@ -83,6 +86,13 @@ let state = reactive({
   pinnedMessage: {},
 });
 
+
+emitter.$on(EVENT_NAME.ON_APP_LANGUAGE_CHANGED, () => {
+  utils.extend(state, {
+    i18n: common.i18n()
+  })
+});
+
 juggle.once(Event.MESSAGE_RECEIVED, (message) => {
   console.log('---------', message)
   if (conversationTools.isSameConversation(message, state)) {
@@ -90,6 +100,22 @@ juggle.once(Event.MESSAGE_RECEIVED, (message) => {
       return utils.isEqual(msg.messageId, message.messageId)
     });
     message.streamMsg = { isEnd: false, streams: [] };
+    let isText = utils.isEqual(message.name, MessageType.TEXT);
+    let { content: { extra } } = message;
+    if(isText && extra){
+      let extMap = utils.parse(extra) || {};
+      let stream_msg_id = extMap.stream_msg_id;
+      let msgIndex = utils.find(state.messages, (msg) => {
+        return utils.isEqual(msg.messageId, stream_msg_id)
+      });
+      if(msgIndex > -1){
+        let _msg = state.messages[msgIndex];
+        let streams = message.content.content;
+        let isEnd = true;
+        _msg.streamMsg = { isEnd, streams };
+        return;
+      }
+    }
     if(index == -1){
       state.messages.unshift(message);
     }else{
@@ -98,7 +124,7 @@ juggle.once(Event.MESSAGE_RECEIVED, (message) => {
     scrollBottom();
     conversationTools.readMessage([message]);
     conversationTools.clearUnreadCount(message)
-    let isText = utils.isEqual(message.name, MessageType.TEXT);
+    
     if(isText && !message.isSender){
       conversationTools.translate(state, [message]);
     }
@@ -111,19 +137,19 @@ juggle.once(Event.STREAM_APPENDED, ({ message }) => {
     if(utils.isEmpty(msg)){
       return;
     }
-    let { streams } = message;
-    utils.extend(msg.streamMsg, { isEnd: false, streams })
+    let { content: { content } } = message;
+    utils.extend(msg.streamMsg, { isEnd: false, streams: content })
   }
 });
-juggle.once(Event.STREAM_COMPLETED, ({ message }) => {
-  if (conversationTools.isSameConversation(message, state)) {
-    let msg = findMsgById(message) || {};
-    if(utils.isEmpty(msg)){
-      return;
-    }
-    utils.extend(msg.streamMsg, { isEnd: true, streams: [] })
-  }
-});
+// juggle.once(Event.STREAM_COMPLETED, ({ message }) => {
+//   if (conversationTools.isSameConversation(message, state)) {
+//     let msg = findMsgById(message) || {};
+//     if(utils.isEmpty(msg)){
+//       return;
+//     }
+//     utils.extend(msg.streamMsg, { isEnd: true, streams: [] })
+//   }
+// });
 function findMsgById(msg){
   let { messageId } = msg;
   let index = utils.find(state.messages, (_msg) => {
@@ -335,8 +361,14 @@ function onMentionSelected(index) {
   content += `${member.name} `
   utils.extend(state, { isShowMention: false, selectMentionIndex: 0, mentions, content });
 }
+
 let isSending = false;
+let isComposing = false;
 function onSend() {
+  if(isComposing){
+    return;
+  }
+  isComposing = false;
   let { selectMentionIndex, mentions, isShowMention, content } = state
   if (utils.isEmpty(content)) {
     return;
@@ -376,13 +408,13 @@ function onSend() {
     utils.forEach(mentions, (mention) => {
       let name = `@${mention.name} `;
       if (utils.isInclude(content, name)) {
+        newContent = newContent.replace(name, `{${mention.id}}`);
         if (!mention.isAll) {
           members.push(mention);
         }
-        // 实际发送消息时不携带 @ 文本，各端通过标识拼接
-        newContent = newContent.replace(name, '');
       }
     });
+
     let isMentionSomeone = members.length > 0;
     if (isMentionSomeone) {
       mentionType = MentionType.SOMEONE
@@ -393,6 +425,7 @@ function onSend() {
 
     if (isMentionAll) {
       mentionType = MentionType.ALL;
+      newContent = newContent.replace(`@${state.i18n.CONVERSATION.MENTION_ALL} `, `{all}`);
     }
     if (isMentionAll && isMentionSomeone) {
       mentionType = MentionType.ALL_SOMEONE;
@@ -416,13 +449,13 @@ function onSend() {
       message.streamMsg = { isEnd: false, streams: [] };
       state.messages.unshift(message);
     }
-  }).then(({ sentTime, messageId }) => {
+  }).then(({ sentTime, messageId, messageIndex }) => {
     utils.extend(msg, { sentTime, messageId });
     isSending = false;
     let index = utils.find(state.messages, (m) => { return utils.isEqual(m.tid, msg.tid)});
     let _msg = state.messages[index];
     if(_msg){
-      utils.extend(_msg, { sentTime, messageId, sentState: SentState.SUCCESS })
+      utils.extend(_msg, { sentTime, messageId, sentState: SentState.SUCCESS, messageIndex })
     }
     console.log('send successfully', msg);
     onCancelReply();
@@ -433,9 +466,16 @@ function onSend() {
     if(_msg){
       utils.extend(_msg, { sentState: SentState.FAILED });
     }
-    context.proxy.$toast({ text: `消息发送失败: ${error.code}`, icon: 'error' });
+    context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
     isSending = false;
   });
+}
+
+function onCompositionStart() {
+  isComposing = true;
+}
+function  onCompositionEnd() {
+  isComposing = false;
 }
 function onInputBlur() {
   
@@ -478,8 +518,8 @@ function sendImage(e) {
     sender: juggle.getCurrentUser(),
     name: MessageType.IMAGE,
     percent: 0,
-    localUrl: url,
-    tid: utils.getUUID()
+    sentState: SentState.SENDING,
+    localUrl: url
   };
 
   var img = new Image();
@@ -490,19 +530,22 @@ function sendImage(e) {
 
     juggle.sendImageMessage(message, {
       onbefore: (msg) => {
+        utils.extend(msg, { sentTime: Date.now(), isSender: true, sentState: -1 })
         state.messages.unshift(msg);
       },
-      onprogress: ({ percent }) => {
+      onprogress: ({ percent, message }) => {
         let propMsg = state.messages.filter((msg) => {
           return utils.isEqual(msg.tid, message.tid);
         })[0];
-        utils.extend(propMsg, { percent });
+        utils.extend(propMsg, { percent, sentState: SentState.SENDING });
       }
     }).then(({ tid, messageId, sentTime, content }) => {
-      let propMsg = state.messages.filter((msg) => {
+      let index = utils.find(state.messages, (msg) => {
         return utils.isEqual(msg.tid, tid);
-      })[0];
-      utils.extend(propMsg, { messageId, sentTime, content });
+      })
+      let propMsg = state.messages[index];
+      propMsg.sentState = -1;
+      utils.extend(propMsg, { messageId, sentTime, content, sentState: SentState.SUCCESS });
       e.target.value = '';
     }, (error) => {
       console.log(error)
@@ -638,7 +681,7 @@ function onReply(message){
   messageInput.focus();
 }
 function onReaction(reaction){
-  let { text, message } = reaction;
+  let { emoji: text, message } = reaction;
   let { conversationId, conversationType } = state.currentConversation;
   let { messageId } = message;
 
@@ -680,8 +723,14 @@ function onPaste(){
 function onShowEmoji(isShow){
   state.isShowEmoji = isShow;
 }
+function onOverShowEmoji(isShow){
+  if(utils.isMobile()){
+    return;
+  }
+  state.isShowEmoji = isShow;
+}
 function onChoiceEmoji(emoji){
-  state.content += emoji.text;
+  state.content += emoji.emoji;
   inputFocus();
 }
 function onShowImgSender(img){
@@ -707,14 +756,11 @@ function getMembers() {
     state.isShowGroupMute = !!group_mute;
     let { members } = result;
     let mentionMembers = [
-      { id: 'all', val: '@', isActive: true, name: '所有人', portrait: '', isAll: true }
+      { id: 'all', val: '@', isActive: true, name: state.i18n.CONVERSATION.MENTION_ALL, portrait: '', isAll: true }
     ];
     members = utils.map(members, (member) => {
       let { user_id: id, nickname: name, avatar: portrait } = member;
       let item = { id, name, portrait };
-      if(!portrait){
-        item.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
-      }
       mentionMembers.push(item);
       return item;
     });
@@ -777,7 +823,7 @@ function onResendMessage({ message }){
     if(_msg){
       utils.extend(_msg, { sentState: SentState.FAILED });
     }
-    context.proxy.$toast({ text: `消息发送失败: ${error.code}`, icon: 'error' });
+    context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
   });
 }
 function onPinned({ message }){
@@ -786,9 +832,9 @@ function onPinned({ message }){
 function onFav({ message }){
   conversationTools.addFavoriteMsg(message, (error) => {
     if(error){
-      return context.proxy.$toast({ text: `收藏失败: ${error.code}`, icon: 'error' });
+      return context.proxy.$toast({ text: common.errorText(error.code), icon: 'error' });
     }
-    return context.proxy.$toast({ text: `收藏成功`, icon: 'success' });
+    return context.proxy.$toast({ text: state.i18n.CONVERSATION.FAV_SUCCESS, icon: 'success' });
   })
 }
 function onUnpinned(){
@@ -815,11 +861,10 @@ function onBanGroup(isMute){
   state.isShowGroupMute = isMute;
   state.group.group_management.group_mute = isMute;
 }
+function isUnknown(message){
+  message.isUnknown = true;
+}
 function onAskAI(){
-  if(state.isAsking){
-    return;
-  }
-  state.isAsking = true;
   let { messages } = state;
   let msgs = [];
   for(let i = 0; i < messages.length; i++){
@@ -838,17 +883,34 @@ function onAskAI(){
   }
   if(utils.isEqual(msgs.length, 0)){
     state.isAsking = false;
-    return context.proxy.$toast({ text: `当前会话无文本消息`, icon: 'error' });
+    return context.proxy.$toast({ text: state.i18n.CONVERSATION.AI_CONTEXT_EMPTY, icon: 'error' });
   }
+  requestAI(msgs);
+}
+function onAIReply({ message }){
+  let { sender, content, sentTime } = message;
+  let msgs = [{ 
+    sender_id: sender.id,
+    content: content.content,
+    msg_time: sentTime
+  }];
+  requestAI(msgs);
+}
+function requestAI(msgs){
+  if(state.isAsking){
+    return;
+  }
+  state.isAsking = true;
   AI.answer({ msgs }).then((result) => {
     let { code, msg, data } = result;
     state.isAsking = false;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
-      return context.proxy.$toast({ text: `AI 回复异常 ${code}`, icon: 'error' });
+      return context.proxy.$toast({ text: common.errorText(code), icon: 'error' });
     }
     state.content = data.answer;
   });
 }
+
 watch(() => state.content, (val) => {
   let str = val.split('')[val.length - 1]
   if (conversationTools.isGroup(state.currentConversation) && utils.isEqual(str, '@')) {
@@ -861,6 +923,19 @@ watch(() => state.content, (val) => {
   }
 });
 
+function isStaker(message){
+  let isText = utils.isEqual(message.name, MessageType.TEXT);
+  let { referMsg } = message;
+  let isRefer = referMsg && referMsg.name;
+  return isText && common.isShowStaker(message) && !isRefer;
+}
+
+function getPinOrigin(){
+  let { pinnedMessage, i18n } = state;
+  let name = common.purify(pinnedMessage.operator.name);
+  let content = utils.templateFormat(i18n.CONVERSATION.MSG_PIN, { name: `<span class="name"> ${name} </span>` });
+  return content;
+}
 </script>
 <template>
   <div class="tyn-main tyn-chat-content aside-collapsed"
@@ -874,8 +949,12 @@ watch(() => state.content, (val) => {
         </li>
       </ul>
       <div class="tyn-media-group">
-        <div class="tyn-media tyn-size-md tyn-conver-avatar" :style="{ 'background-image': 'url(' + props.conversation.conversationPortrait + ')' }">
-        </div>
+        <Avatar 
+          :cls="'tyn-size-md jg-size-md tyn-conver-avatar'"
+          :avatar="conversationTools.isGroup(props.conversation) ? '' :props.conversation.conversationPortrait"
+          :name="props.conversation.conversationTitle">
+        </Avatar>
+
         
         <div class="tyn-media-col">
           <div class="tyn-media-row">
@@ -890,8 +969,8 @@ watch(() => state.content, (val) => {
       </div>
       <ul class="tyn-list-inline gap gap-3 ms-auto">
         <li><button class="btn btn-icon btn-light wr wr-gpt" @click="onAskAI()"></button></li>
-        <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-mic jg-op-icon" @click="onShowCall(true, MediaType.AUDIO)"></button></li>
-        <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li>
+        <!-- <li v-if="!conversationTools.isGroup(state.currentConversation)"><button class="btn btn-icon btn-light wr wr-rtc-mic jg-op-icon" @click="onShowCall(true, MediaType.AUDIO)"></button></li>
+        <li><button class="btn btn-icon btn-light wr wr-rtc-camera jg-op-icon" @click="onShowCall(true, MediaType.VIDEO)"></button></li> -->
         <li><button class="btn btn-icon btn-light wr wr-more-dot" @click="onShowAside"></button></li>
       </ul>
       <div class="jg-pinned-box" v-if="!utils.isEmpty(state.pinnedMessage)">
@@ -899,10 +978,14 @@ watch(() => state.content, (val) => {
           <div class="jg-pinned-icon wr wr-top-s"></div>
           <ul class="jg-pinned-content">
             <li class="jg-pinned-item content">
-              <div class="tyn-avatar tyn-s-avatar jg-top-avatar" :style="{ 'background-image': 'url(' + state.pinnedMessage.message.sender.portrait + ')' }"></div>
+              <Avatar 
+                :cls="'jg-top-avatar'"
+                :avatar="state.pinnedMessage.message.sender.portrait"
+                :name="state.pinnedMessage.message.sender.name"
+              ></Avatar>
               <div>{{ state.pinnedMessage.message.sender.name }}：{{ state.pinnedMessage.shortName }}</div>
             </li>
-            <li class="jg-pinned-item operator">由 <span class="name">{{ state.pinnedMessage.operator.name }}</span> 置顶</li>
+            <li class="jg-pinned-item operator" v-html="getPinOrigin()"></li>
           </ul>
         </div>
         <ul class="jg-pinned-tools">
@@ -918,11 +1001,20 @@ watch(() => state.content, (val) => {
           <RecallMessage v-else-if="message.name == MessageType.RECALL_INFO" :message="message"></RecallMessage>
           <GroupNtfMessage v-else-if="message.name == MSG_NAME.GROUP_NTF" :message="message"></GroupNtfMessage>
           <FriendNtfMessage v-else-if="message.name == MSG_NAME.FRIEND_NTF" :message="message"></FriendNtfMessage>
-          <div class="tny-conent-msg" v-else>
+          <div class="tny-conent-msg" v-else :class="{'jg-notify-message': message.isUnknown}">
             <span class="tyn-transfer wr" v-if="state.isShowTransfer" :class="{'wr-success-square': message.isSelected, 'wr-square': !message.isSelected}" @click="onSelected(message)"></span>
             <div class="tyn-reply-item" :class="[message.isSender ? 'outgoing' : 'ingoing', state.isShowTransfer ? 'tny-message' : '']"  @click="onSelected(message)">
               
-              <Text v-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" 
+              <Staker v-if="isStaker(message)" :message="message"
+                @onrecall="onRecall"
+                @onreply="onReply" 
+                @onreaction="onReaction" 
+                @onresend="onResendMessage"
+                @onfav="onFav"
+                @onpinned="onPinned"
+                @onaireply="onAIReply">
+              </Staker>
+              <Text v-else-if="utils.isEqual(message.name, MessageType.TEXT)" :message="message" 
                 @onrecall="onRecall"
                 @onmodify="onModifyText" 
                 @ontransfer="onShowTransfer" 
@@ -930,7 +1022,8 @@ watch(() => state.content, (val) => {
                 @onreaction="onReaction" 
                 @onresend="onResendMessage"
                 @onfav="onFav"
-                @onpinned="onPinned">
+                @onpinned="onPinned"
+                @onaireply="onAIReply">
               </Text>
 
               <ImageMessage v-else-if="utils.isEqual(message.name, MessageType.IMAGE)" :message="message"
@@ -973,7 +1066,7 @@ watch(() => state.content, (val) => {
               <Call1v1FinishedMessage v-else-if="utils.isEqual(message.name, MessageType.CALL_1V1_FINISHED)" :message="message"></Call1v1FinishedMessage>
               <StreamText v-else-if="utils.isEqual(message.name, MessageType.STREAM_TEXT)" :message="message"></StreamText>
               <ContactCard v-else-if="utils.isEqual(message.name, MSG_NAME.CONTACT_CARD)" :message="message"></ContactCard>
-              <Known v-else :message="message"></Known>
+              <Known v-else :message="message" :is-unknow="isUnknown(message)"></Known>
             </div>
           </div>
         </div>
@@ -991,22 +1084,24 @@ watch(() => state.content, (val) => {
               @change="onFileChange" />
           </li>
         </ul>
-        <input  class="tyn-chat-form-input" v-model="state.content" @keydown.enter="onSend()" :disabled="state.isShowGroupMute || state.isAsking" @keydown.esc="onInputEsc"
-          @keydown.up.prevent="onInputUp" @keydown.down.prevent="onInputDown" @paste="onPaste" placeholder="Write a message" ref="messageInput"/>
+        <input  class="tyn-chat-form-input"
+          @compositionstart="onCompositionStart" @compositionend="onCompositionEnd"
+          v-model="state.content" @keydown.enter="onSend" :disabled="state.isShowGroupMute || state.isAsking" @keydown.esc="onInputEsc"
+          @keydown.up="onInputUp" @keydown.down="onInputDown" @paste="onPaste" :placeholder="state.i18n.UI.WRITE_MESSAGE" ref="messageInput"/>
         <ul class="tyn-list-inline me-n2 my-1">
           <li class="d-sm-block">
-            <div type="file" class="btn btn-icon btn-light btn-md btn-pill wr wr-smile j-pointer" @click="onShowEmoji(true)" ></div>
+            <div type="file" class="btn btn-icon btn-light btn-md btn-pill wr wr-smile j-pointer" @click="onShowEmoji(true)" @mouseover="onOverShowEmoji(true)" ></div>
           </li>
           <li class="d-sm-block tyn-input-block">
-            <button :class="{'tyn-chat-has-content': state.content.length > 0}" class="btn btn-icon btn-light btn-md btn-pill  wr wr-send j-pointer" @click="onSend()"></button>
+            <button :class="{'tyn-chat-has-content': state.content.length > 0}" class="btn btn-icon btn-light btn-md btn-pill  wr wr-send j-pointer" @click="onSend"></button>
           </li>
         </ul>
       </div>
       <Transfer :is-show="state.isShowTransfer" :op-type="state.msgOpType" @oncancel="onCancelTransfer(false)" @ontransfer="onTransfer"></Transfer>
-      <div class="jg-group-ban" v-if="state.isShowGroupMute">群组已禁言</div>
-      <div class="jg-askai-ban" v-if="state.isAsking">
+      <div class="jg-group-ban" :class="{'jg-ban-none' : !state.isShowGroupMute}">{{ state.i18n.CONVERSATION.GROUP_BAN }}</div>
+      <div class="jg-askai-ban" :class="{'jg-ban-none': !state.isAsking}">
         <div class="jg-askai-loading"></div>
-        <div class="jg-askai-memo">AI 正在理解最近的 3 条文本消息</div>
+        <div class="jg-askai-memo">{{ state.i18n.CONVERSATION.AI_THINKING }}</div>
       </div>
     </div>
     <ConversationAsider :is-show="state.isShowAside" 

@@ -6,12 +6,16 @@ import { CONTACT_TYPE, FRIEND_APPLY_STATUS, RESPONSE, EVENT_NAME } from "../../c
 import { Friend } from "../../services";
 import { reactive, getCurrentInstance } from "vue";
 import emitter from "../../common/emmit";
+import Avatar from "../../components/avatar.vue";
+import common from "../../common/common";
 
 let { ConversationType } = im.getCurrent();
 const router = useRouter();
 const props = defineProps(["current"]);
 const emit = defineEmits(["onadded", "onremoved"]);
 const context = getCurrentInstance();
+
+let i18n = common.i18n();
 
 function onConversation(){
   let { type, id, user } = props.current;
@@ -32,12 +36,12 @@ function onAddFriend(isAgree){
     let { code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       return context.proxy.$toast({
-        text: `处理失败：${code}`,
+        text: utils.templateFormat(i18n.UI.OPERATION_FAILED, { code }),
         icon: 'error'
       });
     }
     context.proxy.$toast({
-      text: isAgree ? `好友已添加` : `拒绝成功`,
+      text: isAgree ? i18n.UI.FRIEND_ADDED : i18n.UI.REQUEST_DECLINED,
       icon: 'success'
     });
     let _friend = {
@@ -56,12 +60,12 @@ function onRemoveFriend(){
   Friend.remove({ friendId: id }).then(({ code }) => {
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       return context.proxy.$toast({
-        text: `删除好友失败：${code}`,
+        text: utils.templateFormat(i18n.UI.DELETE_FRIEND_FAILED, { code }),
         icon: 'error'
       });
     }
     context.proxy.$toast({
-      text: '好友已删除',
+      text: i18n.UI.FRIEND_DELETED,
       icon: 'success'
     });
     emit('onremoved', { item: props.current })
@@ -73,16 +77,16 @@ function onRemoveFriend(){
     <div class="contact-content">
       <div class="tyn-chat-head" v-if="!utils.isEmpty(props.current)">
         <div class="tyn-media-group">
-          <div class="tyn-media tyn-size-3xl tyn-conver-avatar" :style="{ 'background-image': 'url('+props.current.avatar+')' }"></div>
+          <Avatar :cls="'jg-size-rg tyn-conver-avatar'" :avatar="utils.isEqual(props.current.type, CONTACT_TYPE.GROUP) ? '' : props.current.avatar" :name="props.current.name || props.current.user.nickname"></Avatar>
           <div class="tyn-media-col" v-if="utils.isEqual(props.current.type, CONTACT_TYPE.NEW_FRIEND)">
             <div class="tyn-media-row">
               <h3 class="name">{{ props.current.user.nickname }}</h3>
             </div>
             <div class="tyn-media-row has-dot-sap">
-              <span class="meta">ID: {{ props.current.user.user_id }}</span>
+              <span class="meta">ID: @{{ props.current.user.user_id }}</span>
             </div>
             <div class="tyn-media-row has-dot-sap" v-if="props.current.phone">
-              <span class="meta">手机号: {{ props.current.phone }}</span>
+              <span class="meta">{{ i18n.UI.PHONE }}: {{ props.current.phone }}</span>
             </div>
           </div>
           <div class="tyn-media-col" v-else>
@@ -90,21 +94,21 @@ function onRemoveFriend(){
               <h3 class="name">{{ props.current.name }}</h3>
             </div>
             <div class="tyn-media-row has-dot-sap">
-              <span class="meta">ID: {{ props.current.id }}</span>
+              <span class="meta">ID: @{{ props.current.id }}</span>
             </div>
             <div class="tyn-media-row has-dot-sap" v-if="props.current.phone">
-              <span class="meta">手机号: {{ props.current.phone }}</span>
+              <span class="meta">{{ i18n.UI.PHONE }}: {{ props.current.phone }}</span>
             </div>
           </div>
         </div>
         <div class="tyn-media-group">
           <div class="tyn-media-row">
             <div class="tyn-media-col" v-if="!utils.isEqual(props.current.type, CONTACT_TYPE.NEW_FRIEND) || (utils.isEqual(props.current.type, CONTACT_TYPE.NEW_FRIEND) && utils.isEqual(props.current.status, FRIEND_APPLY_STATUS.ACCEPTED))">
-              <div class="wr wr-message btn btn-light tyn-size-md w-100 contact-send-msg" @click="onConversation">发起会话</div>
-              <div class="wr wr-message btn btn-light tyn-size-md w-100 jg-warn-bg" @click="onRemoveFriend" v-if="utils.isEqual(props.current.type, ConversationType.PRIVATE)" >删除好友</div>
+              <div class="wr wr-message btn btn-light tyn-size-md w-100 contact-send-msg" @click="onConversation">{{ i18n.CONTACT.START_CHAT }}</div>
+              <div class="wr wr-delete btn btn-light tyn-size-md w-100 jg-warn-bg" @click="onRemoveFriend" v-if="utils.isEqual(props.current.type, ConversationType.PRIVATE)" >{{ i18n.CONTACT.REMOVE_FRIEND }}</div>
             </div>
             <div class="tyn-media-col" v-else-if="!props.current.isOneSelf && utils.isEqual(props.current.status, FRIEND_APPLY_STATUS.APPLYING)">
-              <div class="wr wr-message btn btn-light tyn-size-md w-100 contact-send-msg" @click="onAddFriend(true)">添加好友</div>
+              <div class="wr wr-message btn btn-light tyn-size-md w-100 contact-send-msg" @click="onAddFriend(true)">{{ i18n.CONTACT.ADD_FRIEND }}</div>
             </div>
           </div>
         </div>

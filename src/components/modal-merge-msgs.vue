@@ -9,11 +9,13 @@ import ImageMessage from './message-image.vue';
 import Video from './message-video.vue';
 import Merge from './message-merge.vue';
 import Known from './message-unknown.vue';
+import common from "../common/common";
 
 const props = defineProps(["isShow", "message"]);
 const emit = defineEmits(["oncancel"]);
 let juggle = im.getCurrent();
 let { MessageType } = juggle;
+let i18n = common.i18n();
 let state = reactive({
   messages: []
 });
@@ -38,7 +40,7 @@ watch(() => props.message, (msg) => {
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 modal-merge-content">
         <div class="modal-body tyn-chat-body js-scroll-to-end" ref="mergemessages">
-          <h4 class="pb-2">消息记录</h4>
+          <h4 class="pb-2">{{ i18n.UI.MESSAGE_HISTORY }}</h4>
           <div class="tyn-reply">
             <div v-for="message in state.messages">
               <div class="tny-conent-msg">

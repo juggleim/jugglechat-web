@@ -1,5 +1,7 @@
 <script setup>
+import common from "../../common/common";
 const props = defineProps(["isShow"]);
+let i18n = common.i18n();
 </script>
 
 <template>
@@ -12,7 +14,7 @@ const props = defineProps(["isShow"]);
               <img src="../../assets/images/gallery/chat/thumb-7.jpg" alt />
             </div>
             <div class="tyn-media-col">
-              <h6 class="name">Digital Marketing Guide</h6>
+              <h6 class="name">{{ i18n.UI.DIGITAL_MARKETING_GUIDE }}</h6>
               <div class="anchor">https://www.envato.com/blog/digital-marketing-guide/</div>
             </div>
           </div>
@@ -25,7 +27,7 @@ const props = defineProps(["isShow"]);
               <img src="../../assets/images/gallery/chat/thumb-8.jpg" alt />
             </div>
             <div class="tyn-media-col">
-              <h6 class="name">Atomic power plant engine</h6>
+              <h6 class="name">{{ i18n.UI.ATOMIC_POWER_GUIDE }}</h6>
               <div class="anchor">https://www.envato.com/atomic-power-plant-engine/</div>
             </div>
           </div>

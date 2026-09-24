@@ -7,13 +7,17 @@ import { Friend } from "../services";
 import { reactive, watch, getCurrentInstance } from "vue";
 import emitter from "../common/emmit";
 import Asider from "./aside.vue";
+import Avatar from "./avatar.vue";
 import Storage from "../common/storage";
+import common from "../common/common";
 
 let { ConversationType } = im.getCurrent();
 const router = useRouter();
 const props = defineProps(["isShow","current", "isNew"]);
 const emit = defineEmits(["onadded", "onremoved", "oncancel"]);
 const context = getCurrentInstance();
+
+let i18n = common.i18n();
 
 function onConversation(){
   let { type, id, user } = props.current;
@@ -37,12 +41,12 @@ function onAddFriend(isAgree){
       let { code } = result;
       if(!utils.isEqual(code, RESPONSE.SUCCESS)){
         return context.proxy.$toast({
-          text: `添加好友失败：${code}`,
+          text: common.errorText(code),
           icon: 'error'
         });
       }
       context.proxy.$toast({
-        text: `已发送好友添加请求`,
+        text: i18n.COMMON.OP_SUCCESS,
         icon: 'success'
       });
       setTimeout(() => {
@@ -55,12 +59,12 @@ function onAddFriend(isAgree){
     let { code } = result;
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       return context.proxy.$toast({
-        text: `处理失败：${code}`,
+        text: common.errorText(code),
         icon: 'error'
       });
     }
     context.proxy.$toast({
-      text: isAgree ? `好友已添加` : `拒绝成功`,
+      text: i18n.COMMON.OP_SUCCESS,
       icon: 'success'
     });
     let _friend = {
@@ -79,12 +83,12 @@ function onRemoveFriend(){
   Friend.remove({ friendId: id }).then(({ code }) => {
     if(!utils.isEqual(code, RESPONSE.SUCCESS)){
       return context.proxy.$toast({
-        text: `删除好友失败：${code}`,
+        text: common.errorText(code),
         icon: 'error'
       });
     }
     context.proxy.$toast({
-      text: '好友已删除',
+      text: i18n.COMMON.OP_SUCCESS,
       icon: 'success'
     });
     emit('onremoved', { item: props.current })
@@ -103,10 +107,13 @@ watch(() => props.isShow, () => {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'详情'" @oncancel="onCancel" :right="1">
+  <Asider :is-show="props.isShow" :title="i18n.CONTACT.DETAIL_TITLE" @oncancel="onCancel" :right="1">
     <div class="jg-aside-contact-body">
       <div class="tyn-media-group">
-          <div class="tyn-media tyn-size-3xl tyn-conver-avatar" :style="{ 'background-image': 'url('+props.current.avatar+')' }"></div>
+
+        <Avatar :cls="'jg-size-rg tyn-conver-avatar'" :avatar="utils.isEqual(props.current.type, CONTACT_TYPE.GROUP) ? '' : props.current.avatar" :name="props.current.name"></Avatar>
+          <!-- <div class="tyn-media tyn-size-3xl tyn-conver-avatar" :style="{ 'background-image': 'url('+props.current.avatar+')' }"></div> -->
+
           <div class="tyn-media-col" v-if="utils.isEqual(props.current.type, CONTACT_TYPE.NEW_FRIEND)">
             <div class="tyn-media-row">
               <h3 class="name">{{ props.current.user.nickname }}</h3>
@@ -115,7 +122,7 @@ watch(() => props.isShow, () => {
               <span class="meta">ID: {{ props.current.user.user_id }}</span>
             </div>
             <div class="tyn-media-row has-dot-sap" v-if="props.current.phone">
-              <span class="meta">手机号: {{ props.current.phone }}</span>
+              <span class="meta">{{ i18n.UI.PHONE }}: {{ props.current.phone }}</span>
             </div>
           </div>
           <div class="tyn-media-col" v-else>
@@ -126,18 +133,18 @@ watch(() => props.isShow, () => {
               <span class="meta">ID: {{ props.current.id }}</span>
             </div>
             <div class="tyn-media-row has-dot-sap" v-if="props.current.phone">
-              <span class="meta">手机号: {{ props.current.phone }}</span>
+              <span class="meta">{{ i18n.UI.PHONE }}: {{ props.current.phone }}</span>
             </div>
           </div>
         </div>
         <div class="tyn-media-group">
           <div class="tyn-media-row">
             <div class="tyn-media-col" v-if="!utils.isEqual(props.current.type, CONTACT_TYPE.NEW_FRIEND) || (utils.isEqual(props.current.type, CONTACT_TYPE.NEW_FRIEND) && utils.isEqual(props.current.status, FRIEND_APPLY_STATUS.ACCEPTED))">
-              <div class="wr wr-message btn btn-light contact-send-msg" @click="onConversation">发起会话</div>
-              <div class="wr wr-message btn btn-light jg-warn-bg" @click="onRemoveFriend" v-if="utils.isEqual(props.current.type, ConversationType.PRIVATE)" >删除好友</div>
+              <div class="wr wr-message btn btn-light contact-send-msg" @click="onConversation">{{ i18n.CONTACT.START_CHAT }}</div>
+              <div class="wr wr-delete btn btn-light jg-warn-bg" @click="onRemoveFriend" v-if="utils.isEqual(props.current.type, ConversationType.PRIVATE)" >{{ i18n.CONTACT.REMOVE_FRIEND }}</div>
             </div>
             <div class="tyn-media-col" v-else-if="!props.current.isOneSelf && utils.isEqual(props.current.status, FRIEND_APPLY_STATUS.APPLYING)">
-              <div class="wr wr-message btn btn-light contact-send-msg" @click="onAddFriend(true)">添加好友</div>
+              <div class="wr wr-message btn btn-light contact-send-msg" @click="onAddFriend(true)">{{ i18n.CONTACT.ADD_FRIEND }}</div>
             </div>
           </div>
         </div>

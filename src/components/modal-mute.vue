@@ -4,10 +4,12 @@ import { reactive, watch } from "vue";
 import utils from "../common/utils";
 import Storage from "../common/storage";
 import { STORAGE } from "../common/enum";
+import common from "../common/common";
 const props = defineProps(["isShow"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 let juggle = im.getCurrent();
 let { ConversationType } = juggle;
+let i18n = common.i18n();
 let state = reactive({
   list: utils.clone([
     { time: 1, start: '8:00', end: '12:00', checked: true },
@@ -49,7 +51,7 @@ function onConfirm() {
     <div class="modal-dialog modal-dialog-centered modal-sm">
       <div class="modal-content border-0">
         <div class="modal-body">
-          <h4 class="pb-2">消息免打扰时段</h4>
+          <h4 class="pb-2">{{ i18n.UI.DND_SCHEDULE }}</h4>
           <ul class="tyn-media-list gap gap-2">
             <li v-for="item in state.list" @click="onSelected(item)">
               <div class="form-check form-check-algin">
@@ -63,10 +65,10 @@ function onConfirm() {
           </ul>
           <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center">
             <li>
-              <button class="btn btn-md btn-success" @click="onConfirm()">确认</button>
+              <button class="btn btn-md btn-success" @click="onConfirm()">{{ i18n.COMMON.CONFIRM_BTN }}</button>
             </li>
             <li>
-              <button class="btn btn-md btn-light" @click="onCancel()">取消</button>
+              <button class="btn btn-md btn-light" @click="onCancel()">{{ i18n.COMMON.CANCEL_BTN }}</button>
             </li>
           </ul>
         </div>

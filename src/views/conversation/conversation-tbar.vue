@@ -3,16 +3,18 @@ import { reactive, getCurrentInstance, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ASIDE_MENU_TYPE } from "../../common/enum";
 import utils from "../../common/utils";
+import common from "../../common/common";
 
 const router = useRouter();
 const props = defineProps(["isShow"]);
 let { currentRoute: { _value: { name } } } = router;
+let i18n = common.i18n();
 
 let state = reactive({
   tbars: [
-    { name: 'ConversationList', title: '消息', icon: 'hmsg', type: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(name, 'ConversationList'),  },
-    { name: 'Contacts', title: '通讯录', icon: 'hcontact', type: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(name, 'Contacts') },
-    { name: 'Setting', title: '我的', icon: 'hsetting', type: ASIDE_MENU_TYPE.SETTING, isActive: utils.isEqual(name, 'Setting') },
+    { name: 'ConversationList', title: i18n.UI.CHATS, icon: 'hmsg', type: ASIDE_MENU_TYPE.MESSAGE, isActive: utils.isEqual(name, 'ConversationList'),  },
+    { name: 'Contacts', title: i18n.UI.CONTACTS, icon: 'hcontact', type: ASIDE_MENU_TYPE.CONTACT, isActive: utils.isEqual(name, 'Contacts') },
+    { name: 'Setting', title: i18n.UI.ME, icon: 'hsetting', type: ASIDE_MENU_TYPE.SETTING, isActive: utils.isEqual(name, 'Setting') },
   ]
 });
 

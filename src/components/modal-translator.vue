@@ -8,6 +8,7 @@ import LanguageSelect from "../components/select-language.vue";
 import JSwitch from "../components/switch.vue";
 
 import { STORAGE, RESPONSE } from "../common/enum";
+import common from "../common/common";
 const props = defineProps(["isShow", "conversation"]);
 const emit = defineEmits(["oncancel", "onfinish"]);
 let juggle = im.getCurrent();
@@ -18,6 +19,7 @@ const context = getCurrentInstance();
 let T_UID = 'translator';
 
 let state = reactive({
+  i18n: common.i18n(),
   source: 'auto',
   traget: 'en',
   isOpen: false,
@@ -71,25 +73,25 @@ watch(() => props.isShow, () => {
     <div class="modal-dialog modal-dialog-centered jg-translator-modal">
       <div class="modal-content border-0">
         <div class="modal-body">
-          <h5 class="pb-2">翻译设置</h5>
+          <h5 class="pb-2">{{ state.i18n.UI.TRANSLATION_SETTINGS }}</h5>
           <ul class="tyn-media-list gap gap-2">
             <li class="jg-flex-row">
-              <div class="tyn-aside-title">消息接收自动翻译</div>
+              <div class="tyn-aside-title">{{ state.i18n.UI.AUTO_TRANSLATE }}</div>
               <JSwitch :uid="state.uid" :is-checked="state.isOpen" @onchanged="onSwitchChanged" ></JSwitch>
             </li>
             <li v-if="state.isOpen">
-              <LanguageSelect :title="'原语言'" :is-auto="true" :current="state.source" :name="'source'" @save="onChanged"></LanguageSelect>
+              <LanguageSelect :title="state.i18n.UI.SOURCE_LANGUAGE" :is-auto="true" :current="state.source" :name="'source'" @save="onChanged"></LanguageSelect>
             </li>
             <li v-if="state.isOpen">
-              <LanguageSelect :title="'目标语言'" :current="state.traget" :name="'traget'" @save="onChanged"></LanguageSelect>
+              <LanguageSelect :title="state.i18n.UI.TARGET_LANGUAGE" :current="state.traget" :name="'traget'" @save="onChanged"></LanguageSelect>
             </li>
           </ul>
           <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center">
             <li>
-              <button class="btn btn-md btn-success" @click="onConfirm()">确认</button>
+              <button class="btn btn-md btn-success" @click="onConfirm()">{{ state.i18n.COMMON.CONFIRM_BTN }}</button>
             </li>
             <li>
-              <button class="btn btn-md btn-light" @click="onCancel()">取消</button>
+              <button class="btn btn-md btn-light" @click="onCancel()">{{ state.i18n.COMMON.CANCEL_BTN }}</button>
             </li>
           </ul>
         </div>
