@@ -6,6 +6,8 @@ import utils from "../../common/utils";
 import emitter from "../../common/emmit";
 import { EVENT_NAME } from "../../common/enum";
 import ConversationRightMenu from "../../components/conversation-menu.vue";
+import Avatar from "../../components/avatar.vue";
+import messageUtils from "../../components/message-utils";
 
 let context = getCurrentInstance();
 const props = defineProps(["conversations", "tag"]);
@@ -14,6 +16,7 @@ let juggle = im.getCurrent();
 let { MessageType, UndisturbType, UserType } = juggle;
 
 let state = reactive({
+  i18n: common.i18n(),
   dropmenuX: 0,
   currentConversation: {}
 });
@@ -37,6 +40,9 @@ function onSetConversationTop(item, isTop) {
   emit('ontop', item, isTop);
 }
 
+function isGroup(item){
+  return messageUtils.isGroup(item);
+}
 function onShowDropmenu(e) {
   e.stopPropagation();
   let current = e.currentTarget;
@@ -124,10 +130,11 @@ async function clearUnreadCount(item, index) {
       >
         <div class="tyn-media-group">
           <div class="tyn-media tyn-size-lg">
-            <div
-              class="tyn-avatar tyn-s-avatar position-relative tyn-circle"
-              :style="{ 'background-image': 'url(' + item.conversationPortrait + ')' }"
-            >
+            <Avatar 
+              :cls="'tyn-s-avatar'"
+              :avatar="isGroup(item) ? '' :item.conversationPortrait"
+              :name="item.conversationTitle">
+
               <div
                 class="badge bg-danger position-absolute rounded-pill top-0 end-0 mt-n2 me-n2"
                 v-if="item.unreadCount > 0 && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
@@ -137,13 +144,15 @@ async function clearUnreadCount(item, index) {
                 v-if="item.unreadCount == 0 && item.unreadTag && utils.isEqual(item.undisturbType, UndisturbType.UNDISTURB)"
               >1</div>
               <div class="position-absolute rounded-pill top-1 end-0 mt-n2 me-n1 wr wr-dot text-danger conver-dot" v-if="((item.unreadCount == 0 && item.unreadTag) || item.unreadCount > 0) && utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></div>
-            </div>
+
+            </Avatar>
+           
           </div>
           <div class="tyn-media-col">
             <div class="tyn-media-row jg-conversation-title">
               <h6 class="name">
                 {{ item.conversationTitle }}
-                <span class="wr wr-fire" v-if="item.conversationUserType == UserType.BOT">( 智能体 )</span>
+                <span class="jg-tag jg-tag-agent" v-if="item.conversationUserType == UserType.BOT">{{ state.i18n.MAIN.AGENT }}</span>
               </h6>
               <span class="wr wr-soundoff jg-conver-mute" v-if="utils.isEqual(item.undisturbType, UndisturbType.DISTURB)"></span>
               <span class="typing" v-if="item.isTyping">typing ...</span>
@@ -157,12 +166,8 @@ async function clearUnreadCount(item, index) {
                 {{
                 item.draft }}
               </span>
-              <span class="content" v-else>
-                <span
-                  class="text-danger lastmsg-mention"
-                  v-if="item.f_mentionContent != ''"
-                >{{ item.f_mentionContent }}</span>
-                {{ item.shortName }}
+              <span class="content" v-else v-html="item.shortName">
+              
               </span>
               <span class="meta">{{ item.f_time }}</span>
             </div>
@@ -180,7 +185,7 @@ async function clearUnreadCount(item, index) {
       </li>
     </ul>
     <div class="tyn-aside-row text-center" v-if="props.conversations.length == 0">
-      <h6>没有记录</h6>
+      <h6>{{ state.i18n.COMMON.LIST_NONE }}</h6>
     </div>
   </div>
 </template>

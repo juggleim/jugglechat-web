@@ -63,9 +63,8 @@ function getMessages(isFirst, callback, state, props) {
         })
       }
       let { sender } = message;
-      if(!sender.portrait){
-        let name = sender.name || '默认';
-        sender.portrait = common.getTextAvatar(name, { height: 60, width: 60 });
+      if(!sender.name){
+        sender.name = sender.id;
       }
 
       utils.extend(message, { isSelected: false, sender, streamMsg: { isEnd: false, streams: []} })
@@ -244,9 +243,9 @@ function sendMerge(conversations, msgs, state){
     let content = im.msgShortFormat(msg);
     labels.push({ content, senderName: msg.sender.name  });
     if(isGroup(msg)){
-      title = '群的聊天记录';
+      title = common.i18n().UI.GROUP_CHAT_HISTORY;
     }else{
-      title = `${msg.conversationTitle} 和 ${msg.sender.name} 的聊天记录`
+      title = utils.templateFormat(common.i18n().UI.CHAT_HISTORY_BETWEEN, { conversation: msg.conversationTitle, sender: msg.sender.name })
     }
   });
  
@@ -420,7 +419,7 @@ function insertTempConversation(query, state) {
 
       let message = {
         name: MessageType.TEXT,
-        content: { content: "[新会话]" },
+        content: { content: common.i18n().UI.NEW_CONVERSATION },
         sentTime: Date.now(),
         messageIndex: -1
       };
@@ -433,7 +432,7 @@ function insertTempConversation(query, state) {
         conversationId,
         conversationType,
         conversationTitle: nickname,
-        conversationPortrait: avatar || common.getTextAvatar(nickname),
+        conversationPortrait: avatar || '',
         shortName: im.msgShortFormat(message),
         latestMessage: message,
         isActive: true
@@ -451,12 +450,6 @@ function insertTempConversation(query, state) {
 function getTops(state) {
   juggle.getTopConversations().then(result => {
     let { conversations, isFinished } = result;
-    conversations = utils.map(conversations, item => {
-      let { conversationPortrait, conversationTitle } = item;
-      item.conversationPortrait =
-        conversationPortrait || common.getTextAvatar(conversationTitle);
-      return item;
-    });
     state.tops = conversations;
   });
 }

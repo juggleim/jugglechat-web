@@ -1,7 +1,9 @@
 <script setup>
 import { reactive, watch } from "vue";
+import Avatar from "./avatar.vue";
 import utils from "../common/utils";
 import common from "../common/common";
+
 const props = defineProps(["isShow", "members", "index"]);
 const emit = defineEmits(["onselected"]);
 
@@ -35,8 +37,11 @@ function onSelected(index){
         <div class="form-control-wrap form-control-plaintext-wrap jg-mentions-warp">
           <ul>
             <li class="tyn-media-row mention-row" v-for="(member, index) in state.members" :class="{'mention-active': member.isActive}" @click="onSelected(index)">
-              <div class="tyn-media tyn-size-sm">
-                <div class="tyn-avatar" :class="{'tyn-mention-all': member.isAll}" :style="{ 'background-image': 'url('+member.portrait+')' }">{{ member.val }}</div>
+              <div class="tyn-media">
+                <Avatar 
+                  :cls="member.isAll ? 'tyn-mention-all tyn-size-sm' : 'tyn-size-sm'"
+                  :avatar="member.portrait"
+                  :name="member.val || member.name"></Avatar>
               </div>  
               <h6>{{ member.name }}</h6>
             </li>

@@ -22,6 +22,19 @@ dl {
   background-position: 54%; */
   position: relative;
 }
+/* .tyn-root::after{
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-position: top right;
+  background-size: 510px auto;
+  background-repeat: repeat;
+  mix-blend-mode: overlay;
+  background: linear-gradient(136deg, #f5f5f7, #f5f5f7);
+} */
 .tyn-root::after{
   content: "";
   position: absolute;
@@ -29,16 +42,13 @@ dl {
   left: 0;
   bottom: 0;
   right: 0;
-  background-image: url(../images/cover/bg-chat.png);
+  background-image: url(../images/cover/chat-bg.png);
   background-position: top right;
   background-size: 510px auto;
   background-repeat: repeat;
   mix-blend-mode: overlay;
-  opacity: 0.48;
-  z-index: -1;
 }
 .tyn-root::before{
-  /* background-image: url(../images/cover/chat-bg-br.png); */
   content: "";
   position: absolute;
   top: 0;
@@ -48,8 +58,7 @@ dl {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  background-color: #f1ede7;
-  z-index: -1;
+  background-image: url(../images/cover/chat-bg-br.png);
 }
 
 .tyn-content {
@@ -60,7 +69,7 @@ dl {
   --aside-head-gap-y: 1.25rem;
   --aside-item-bubbly-radius: .5rem;
   --aside-item-gap-y: .5rem;
-  --aside-item-active-bg:var(--bs-gray-100);
+  --aside-item-active-bg:rgb(244,244,245);
   --border-color: var(--bs-primary-100);
   --content-bg: var(--bs-body-bg);
   position: relative;
@@ -274,6 +283,8 @@ dl {
   flex-direction: column;
   border-right: 1px solid #FAFAFA;
   min-width: 62px;
+  position: relative;
+  z-index: 1055;
 }
 .jg-asider-footer-item{
   display: flex;
@@ -319,10 +330,18 @@ dl {
   border-radius: 6px;
 }
 .tyn-aside-item.active{
-  background: #cce3ff;
+  background: #338feb;
   border-radius: 6px;
   transition: background 0.3s linear;
 }
+.tyn-aside-item.active .jg-conver-mute,
+.tyn-aside-item.active .name,
+.tyn-aside-item.active .content,
+.tyn-aside-item.active .jg-mention-msg-name,
+.tyn-aside-item.active .meta{
+  color: #FFF !important;
+}
+
 .tyn-aside-item-bubbly {
   border-radius: var(--aside-item-bubbly-radius);
   margin: 0 calc(var(--aside-gap-x) * 0.5);
@@ -342,8 +361,7 @@ dl {
   padding: var(--aside-gap-y) var(--aside-gap-x);
 }
 .tyn-aside-contact-row{
-  padding-top: 0;
-  padding-bottom: 0;
+  padding: 0;
 }
 .tyn-aside-row .nav-tabs-line {
   margin: 0 calc(var(--aside-gap-x) * -1);
@@ -513,8 +531,7 @@ dl {
 }
 
 .tyn-media {
-  --media-bg: var(--bs-white);
-  --media-border: var(--bs-white);
+  --media-border: transparent;
   --tyn-size: var(--bs-size-rg);
   --tyn-shape: var(--bs-border-radius);
   display: inline-flex;
@@ -523,8 +540,8 @@ dl {
   flex-shrink: 0;
   height: var(--tyn-size);
   width: var(--tyn-size);
-  border-radius: var(--tyn-shape);
-  background: var(--media-bg);
+  border-radius: 50%;
+  background: transparent;
 }
 
 .tyn-media img {
@@ -586,7 +603,7 @@ dl {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  gap: 0.25rem;
+  gap: 0.15rem;
   white-space: nowrap;
   max-width: 100%;
   overflow: hidden;
@@ -598,6 +615,7 @@ dl {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
+  color: #000000;
 }
 .tyn-media-col .name .username {
   font-size: 70%;
@@ -635,8 +653,7 @@ dl {
 }
 .tyn-contact .tyn-media-col .meta {
   font-size: 0.825rem;
-  color: var(--media-text-light);
-  font-weight: 700;
+  color: #000;
 }
 .tyn-media-col .anchor {
   font-size: 0.625rem;
@@ -896,15 +913,15 @@ dl {
   display: flex;
   /* align-items: flex-end; */
   padding: var(--content-gap-y) var(--content-gap-x);
-  padding-right: 0.5rem;
-  padding-left: 2rem;
+  padding-right: 0rem;
+  padding-left: 6px;
 }
 .tyn-reply-item.outgoing{
   display: flex;
   flex-direction: row-reverse;
 }
 .outgoing .tyn-reply-avatar{
-  margin-left: 10px;
+  margin-left: 6px;
 }
 .tyn-reply-separator {
   font-size: 10px;
@@ -914,15 +931,24 @@ dl {
   margin: 1rem 0;
 }
 .tyn-separator-item{
-  margin: 0 auto;
-  background: #FFF;
+  margin: 0 2rem;
+  background: #4A8E3A8C;
+  color: #FFF;
   border-radius: 10px;
-  padding: 0 12px;
+  padding: 0 1rem;
   line-height: 14px;
   display: inline-block;
+
+  /* margin: 0 2rem;
+  background: #a6a6a626;
+  color: #424242b3;
+  border-radius: 10px;
+  padding: 0 1rem;
+  line-height: 14px;
+  display: inline-block; */
 }
 .tyn-reply-avatar {
-  margin-right: var(--avatar-gap);
+  margin-right: 6px;
   flex-shrink: 0;
   display: inline-flex;
 }
@@ -979,7 +1005,7 @@ dl {
 }
 .tyn-reply-text {
   font-size: 0.833rem;
-  padding: 0.3rem 1rem;
+  padding: 0.3rem 0.5rem;
   color: var(--reply-text);
   background: var(--reply-bg);
   position: relative;
@@ -988,13 +1014,13 @@ dl {
   border-radius: 7.5px;
 }
 .tyn-reply-text::before{
-  content: '';
+  /* content: '';
   position: absolute;
   top: 0;
   left: -12px;
   width: 20px;
   height: 20px;
-  background: linear-gradient(239deg, #FFF 0%, #FFF 50%, transparent 50%, transparent);
+  background: linear-gradient(239deg, #FFF 0%, #FFF 50%, transparent 50%, transparent); */
 }
 .wr-bubble-a::after,
 .wr-bubble-b::before{
@@ -1010,12 +1036,13 @@ dl {
   top: 11px;
   color: #effcde;
 }
+.outgoing .tyn-reply-media, 
 .outgoing .tyn-reply-text {
   color: #111b21;
   background: #d9fdd3;
 }
 .outgoing .tyn-reply-text::before{
-  --chat: #d9fdd3;
+  /* --chat: #d9fdd3;
   content: '';
   position: absolute;
   top: 0;
@@ -1023,7 +1050,7 @@ dl {
   left: unset;
   width: 20px;
   height: 20px;
-  background: linear-gradient(113deg, var(--chat) 0%, var(--chat) 50%, transparent 50%, transparent);
+  background: linear-gradient(113deg, var(--chat) 0%, var(--chat) 50%, transparent 50%, transparent); */
 }
 .tyn-reply-link {
   display: flex;
@@ -1079,6 +1106,7 @@ dl {
 .tyn-reply-media .tyn-image {
   height: 100%;
   object-fit: cover;
+  box-shadow: #00000042 0 10px 16px;
 }
 .tyn-reply-video{
   position: relative;

@@ -41,7 +41,7 @@
 .tyn-aside-member-name{
   font-size: 10px;
   margin-top: 2px;
-  width: 2rem;
+  width: 2.5rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis; 
@@ -63,4 +63,139 @@
   border-radius: 2px;
   background-repeat: no-repeat;
   margin: 2px;
+}
+.tyn-avatar{
+  position: relative;
+}
+.tyn-avatar > .inner {
+  overflow: hidden;
+  border-radius: var(--radius);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  background-image: linear-gradient(#ffffff -300%, var(--color-user));
+  color: #FFF;
+  border-radius: 10%;
+  font-weight: 600;
+}
+.jg-peer-color-0{
+  --color-user: #D45246;
+}
+.jg-peer-color-1{
+  --color-user: #F68136;
+}
+.jg-peer-color-2{
+  --color-user: #6C61DF;
+}
+.jg-peer-color-3{
+  --color-user: #46BA43;
+}
+.jg-peer-color-4{
+  --color-user: #5CAFFA;
+}
+.jg-peer-color-5{
+  --color-user: #408ACF;
+}
+.jg-peer-color-6{
+  --color-user: #D95574;
+}
+.tyn-s-avatar .inner{
+  font-size: 1.6rem;
+}
+.tyn-ss-avatar .inner{
+  font-size: 3.4rem;
+}
+.tyn-md-avatar .inner{
+  font-size: 1rem;
+}
+.tyn-sd-avatar .inner{
+  font-size: 0.6rem;
+}
+.jg-size-md{
+  height: var(--tyn-size) !important;
+  width: var(--tyn-size) !important;
+}
+.jg-size-rg{
+  height: 4rem !important;
+  width: 4rem !important;
+}
+.jg-size-rg .inner{
+  font-size: 2rem;
+}
+.jg-mention-msg-name{
+	color: #3390ec;
+	margin: 0 0.2rem;
+}
+.jg-warn{
+  color: #FF0000;
+}
+.jg-notify-message .tyn-reply-item{
+  flex-direction: column;
+}
+.jg-msg-emoji-box{
+  display: flex;
+}
+.jg-msg-emoji{
+  display: flex;
+}
+.jg-msg-emoji-img{
+  height: 6rem;
+  width: 6rem;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+.jg-msg-emoji-content{
+  font-size: 4rem;
+}
+.jg-tag{
+	font-size: 0.6rem;
+	border-radius: 2px;
+	padding: 0 4px;
+	min-width: 2rem;
+	text-align: center;
+}
+.jg-tag-agent{
+	background-color: #fbd349;
+  color: #281f00;
+}
+
+.tyn-transpant-bubble .tyn-reply-media,
+.tyn-staker-bubble .tyn-reply-text{
+  background: transparent;
+}
+
+.tyn-transpant-bubble .tyn-reply-media .message-state,
+.tyn-staker-bubble .tyn-reply-text .message-state{
+  position: relative;
+  left: unset;
+  bottom: unset;
+}
+.tyn-transpant-bubble .tyn-reply-media .jg-message-senttime,
+.tyn-staker-bubble .tyn-reply-text .jg-message-senttime{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+.jg-staker-msg-st{
+  background: #000d044f;
+  color: #FFF;
+  background: #000d044f;
+  padding: 0px 4px;
+  border-radius: 4px;
+}
+.tyn-transpant-bubble .tyn-reply-media{
+  padding: 0;
+}
+
+.tyn-transpant-bubble .jg-reaction{
+  background-color: #fdfeff;
+  box-shadow: #03040445 0 3px 20px;
+  backdrop-filter: blur(30px);
 }

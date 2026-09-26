@@ -12,6 +12,9 @@ let SERVER_PATH = {
   USER_LOGIN_POLLING: 'login/qrcode/check',
   USER_CURRENT_QRCODE: 'users/qrcode',
 
+  USER_SEND_EMAIL_CODE: 'email/send',
+	USER_VERIFY_EMAIL_CODE: 'email/login',
+  
   FRIEND_ADD: 'friends/apply',
   FRIEND_REMOVE: 'friends/del',
   FRIEND_LIST: 'friends/list',

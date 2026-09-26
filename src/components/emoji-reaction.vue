@@ -2,21 +2,20 @@
 import { reactive, watch } from "vue";
 import utils from "../common/utils";
 import common from "../common/common";
-import { EMOJI_POS_LIST } from "../common/enum";
+import { emojis } from "../common/emoji";
 const props = defineProps(['isShow', 'message']);
 const emit = defineEmits(["onhide", "onemit"]);
 
-let list = utils.clone(EMOJI_POS_LIST);
-
 let state = reactive({
   isTop: true,
-  list: list
+  list: emojis
 });
 
 watch(() => props.isShow, (value) => {
   let isTop = true;
   if(value){
     isTop = common.isElementTop(props.message);
+    console.log('isTop', isTop)
   }
   utils.extend(state, { isTop });
 })
@@ -25,7 +24,7 @@ watch(() => props.isShow, (value) => {
   <div class="jg-reaction-emoji-pn" :class="[props.isShow ? 'tyn-emoji-pn show-aside fadein-o4' : 'tyn-emoji-pn', !state.isTop ? 'jg-reaction-top' :'jg-reaction-bottom']" @mouseleave="emit('onhide')">
     <div class="tyn-emoni-box">
       <div class="emojis__grid">
-        <div @click="emit('onemit', item)" role="img" aria-label="emoji" class="emoji emojis__emoji" v-for="item in state.list" :data="item.text" :style="['background-position:' + item.pos + ';']"></div>
+        <div @click="emit('onemit', item)" class="emoji-item" v-for="item in state.list">{{ item.emoji }}</div>
       </div>
     </div>
   </div>

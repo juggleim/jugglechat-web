@@ -62,6 +62,20 @@ function startPolling({ id }){
 function getCurrentQRCode(data){
   return request(SERVER_PATH.USER_CURRENT_QRCODE, { method: 'GET'});
 }
+
+function sendEmailCode(data){
+  return request(SERVER_PATH.USER_SEND_EMAIL_CODE, {
+    method: 'POST',
+    body: utils.toJSON(data)
+  });
+}
+function verifyEmailCode(data){
+  return request(SERVER_PATH.USER_VERIFY_EMAIL_CODE, {
+    method: 'POST',
+    body: utils.toJSON(data)
+  });
+}
+
 export default {
   sendCode,
   verifyCode,
@@ -73,4 +87,6 @@ export default {
   startPolling,
   getQRCode,
   getCurrentQRCode,
+  sendEmailCode,
+	verifyEmailCode
 }

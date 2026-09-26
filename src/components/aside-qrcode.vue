@@ -5,10 +5,12 @@ import { Group, User } from "../services";
 import Storage from "../common/storage";
 import { STORAGE, RESPONSE } from "../common/enum";
 import Asider from "./aside.vue";
+import common from "../common/common";
 
 const props = defineProps(["isShow", "right", "title", "desc", "isGroup", "uid"]);
 const emit = defineEmits(["oncancel", "onfinish"]);
 const context = getCurrentInstance();
+let i18n = common.i18n();
 
 let state = reactive({
   qrcode: ''
@@ -20,7 +22,7 @@ function handler(result){
   let { code, data } = result;
   if(!utils.isEqual(code, RESPONSE.SUCCESS)){
     return context.proxy.$toast({
-      text: `获取二维码失败 ${code}`,
+      text: utils.templateFormat(i18n.UI.QR_CODE_FAILED, { code }),
       icon: 'error'
     });
   }

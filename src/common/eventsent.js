@@ -12,10 +12,10 @@ function EventSent(url, options){
   function connnect(){
     es = new EventSourcePolyfill(url, { headers });
     let timer = setTimeout(() => {
-      console.log('超时啦')
+      console.log('Request timed out')
       clearTimeout(timer)
       if(!isReceiving){
-        console.log('重连啦')
+        console.log('Reconnecting')
         es.close();
         connnect();
       }

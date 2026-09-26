@@ -2,7 +2,7 @@
 import utils from "../../common/utils";
 import { useRouter } from "vue-router";
 import { reactive, getCurrentInstance, watch } from "vue";
-import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE, SETTING_CARDS, USER_AGREEMENT }  from "../../common/enum";
+import { RESPONSE, EVENT_NAME, ASIDE_MENU_TYPE, USER_AGREEMENT }  from "../../common/enum";
 
 import H5TBar from "../conversation/conversation-tbar.vue";
 import H5Header from "../conversation/conversation-header.vue";
@@ -13,6 +13,7 @@ import AsiderUserAccount from "../../components/aside-user-account.vue";
 import AsiderQrCode from "../../components/aside-qrcode.vue";
 import AsideFavoriteMsg from "../../components/aside-msg-favorite.vue";
 import AsideUserAgreement from "../../components/aside-user-agreement.vue";
+import Avatar from "../../components/avatar.vue";
 
 import { STORAGE } from "../../common/enum";
 import Storage from "../../common/storage";
@@ -24,9 +25,10 @@ let juggle = im.getCurrent();
 let { ConversationType, Event, ConnectionState } = juggle;
 
 let user = Storage.get(STORAGE.USER_TOKEN);
+let i18n = common.i18n();
 let state = reactive({
   user: user,
-  cards: SETTING_CARDS,
+  cards: common.getSettingCards(),
   isShowUserUpdateAsider: false,
   isShowUserSettingAsider: false,
   isShowAccountAsider: false,
@@ -58,11 +60,11 @@ function onClick(menu){
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_FAV)){
     onShowFavoriteMsg(true);
   }
-  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_AGREENMENT)){
-    onShowUserAgreement(true, USER_AGREEMENT.USER, '用户协议');
+  if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_AGREEMENT)){
+    onShowUserAgreement(true, USER_AGREEMENT.USER, i18n.UI.USER_AGREEMENT);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_PRIVACY)){
-    onShowUserAgreement(true, USER_AGREEMENT.PRIVACY, '隐私协议');
+    onShowUserAgreement(true, USER_AGREEMENT.PRIVACY, i18n.UI.PRIVACY_POLICY);
   }
   if(utils.isEqual(event, ASIDE_MENU_TYPE.USER_LOGOUT)){
     emitter.$emit(EVENT_NAME.UN_UNATHORIZED);
@@ -112,11 +114,16 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
           <li class="jg-card jg-card-userinfo">
             <ul class="jg-ul">
               <li class="jg-li jg-card-li-userinfo">
-                <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
+                <Avatar
+                  :cls="'tyn-ss-avatar jg-header-user-avatar'"
+                  :avatar="state.user.portrait"
+                  :name="state.user.name || state.user.id">
+                </Avatar>
+
                 <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
               </li>
               <li class="jg-li">
-                <div class="label">用户 ID</div>
+                <div class="label">{{ i18n.UI.USER_ID }}</div>
                 <div class="value">{{ state.user.id }}</div>
               </li>
             </ul>
@@ -146,8 +153,8 @@ emitter.$on(EVENT_NAME.ON_USER_INFO_UPDATE, ({ user }) => {
   <AsiderQrCode 
     :is-show="state.isShowUserQrcode"
     :right="1"
-    :title="'我的二维码'"
-    :desc="'扫一扫二维码，加我为好友'"
+    :title="i18n.UI.MY_QR_CODE"
+    :desc="i18n.UI.QR_ADD_FRIEND"
     :isGroup="0"
     :uid="state.user.id"
     @oncancel="onShowUserQrCode(false)">

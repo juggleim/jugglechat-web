@@ -1,16 +1,30 @@
 <script setup>
 import { reactive } from "vue";
 import utils from "../common/utils";
+import common from "../common/common";
 const props = defineProps(['message']);
 let { content: { type },isSender, sender, conversationTitle } = props.message;
-let opName = type == 0 ? '添加' : '通过';
-let tip = `${sender.name} ${opName} 你 为好友`;
-if(isSender){
-  tip = `你 ${opName} ${conversationTitle} 为好友`;
-}
+
 let state = reactive({
-  label: tip
+  i18n: common.i18n(),
 });
+let { i18n } = state;
+
+let opName = type == 0 ? i18n.MESSAGE_FRD_NTF.OP_ADD : i18n.MESSAGE_FRD_NTF.OP_AGREE;
+
+let tip = utils.templateFormat(i18n.MESSAGE_FRD_NTF.OTHER, { 
+  name: conversationTitle,
+  op: opName
+ });
+
+ if(isSender){
+  tip = utils.templateFormat(i18n.MESSAGE_FRD_NTF.SELF, { 
+    name: conversationTitle,
+    op: opName
+  });
+}
+utils.extend(state, { label: tip });
+
 </script>
 
 <template>

@@ -5,6 +5,7 @@ import Member from "./group-member.vue";
 import im from "../common/im";
 import utils from "../common/utils";
 import commcon from "../common/common";
+let i18n = commcon.i18n();
 
 let juggle = im.getCurrent();
 
@@ -32,7 +33,7 @@ juggle.getMessageReadDetails(props.message).then((result) => {
 <template>
   <div class="dropdown-menu dropdown-menu-xs tyn-group-dropdown show fadeinx " :class="[state.isTop ? 'tyn-group-dropdown-top' : 'tyn-group-dropdown-bottom']">
     <div class="tyn-group-read-box">
-      <h6 class="name">{{ state.reads.length }} 人已读</h6>
+      <h6 class="name">{{ utils.templateFormat(i18n.UI.READ_BY, { count: state.reads.length }) }}</h6>
       <ul class="tyn-list-links tyn-group-reads-links">
         <li v-for="read in state.reads">
           <Member :member="read.member"></Member>
@@ -41,7 +42,7 @@ juggle.getMessageReadDetails(props.message).then((result) => {
     </div>
 
     <div class="tyn-group-read-box">
-      <h6 class="name">{{ state.unreads.length }} 人未读</h6>
+      <h6 class="name">{{ utils.templateFormat(i18n.UI.UNREAD_BY, { count: state.unreads.length }) }}</h6>
       <ul class="tyn-list-links tyn-group-reads-links">
         <li v-for="unread in state.unreads">
         <Member :member="unread.member"></Member>

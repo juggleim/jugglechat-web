@@ -486,7 +486,10 @@ function formatTimetoHM(time) {
   var minutes = date.getMinutes().toString().padStart(2, '0');
   return hours + ':' + minutes;
 }
-
+function isEmail(email){
+	let reg = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+	return reg.test(email);
+}
 export default {
   Prosumer,
   Observer,
@@ -543,4 +546,5 @@ export default {
   formatTimetoHM,
   isHighInclude,
   isUniapp,
+  isEmail,
 }

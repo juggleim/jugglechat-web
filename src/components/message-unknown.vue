@@ -1,19 +1,19 @@
 <script setup>
 import messageUtils from "./message-utils";
+import Avatar from "./avatar.vue";
+import { reactive } from "vue";
+import common from "../common/common";
 const props = defineProps(['message']);
+let state = reactive({
+  i18n: common.i18n(),
+});
 
 </script>
 
 <template>
-  <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md">
-      <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
-    </div>
-  </div>
-  <div class="tyn-reply-group">
-    <span class="jg-sender-name" v-if="messageUtils.isGroup(props.message)">{{ props.message.sender.name }}</span>
-    <div class="tyn-reply-bubble">
-      <div class="tyn-reply-text">[UnknownMessage]</div>
-    </div>
+  <div class="tyn-reply-separator">
+    <span class="tyn-separator-item">
+      {{ state.i18n.MESSAGE_UNKNOWN }}
+    </span>
   </div>
 </template>

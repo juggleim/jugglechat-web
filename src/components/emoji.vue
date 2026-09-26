@@ -1,12 +1,12 @@
 <script setup>
 import { reactive, watch } from "vue";
 import utils from "../common/utils";
-import { EMOJI_POS_LIST } from "../common/enum";
+import { emojis } from "../common/emoji";
 const props = defineProps(['isShow']);
 const emit = defineEmits(["onhide", "onemit"]);
 
 let state = reactive({
-  list: utils.clone(EMOJI_POS_LIST)
+  list: emojis
 });
 </script>
 <template>
@@ -14,7 +14,7 @@ let state = reactive({
     <div class="tyn-emoni-box">
       <div class="emojis__grid">
         <!-- <div @click="emit('onemit', item)" role="img" aria-label="emoji" class="emoji emojis__emoji" v-for="item in state.list" :style="['background-position:' + item.pos + ';']"></div> -->
-        <div @click="emit('onemit', item)" class="emoji-item" v-for="item in state.list">{{ item.text }}</div>
+        <div @click="emit('onemit', item)" class="emoji-item" v-for="item in state.list">{{ item.emoji }}</div>
       </div>
     </div>
   </div>

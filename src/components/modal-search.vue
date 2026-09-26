@@ -15,6 +15,7 @@ function onCancel(){
 let juggle = im.getCurrent();
 
 let state = reactive({
+  i18n: common.i18n(),
   content: '',
   conversations: [
   ],
@@ -99,7 +100,7 @@ watch(() => props.isShow, () => {
             <div class="form-group">
               <div class="form-control-wrap">
                 <div class="jg-search-icon wr wr-search"></div>
-                <input type="text" class="form-control" v-model="state.content" placeholder="Search Chat" autocomplete="off"  @keydown.enter="onSearch" @input="onSearch"/>
+                <input type="text" class="form-control" v-model="state.content" :placeholder="state.i18n.UI.SEARCH_CHAT" autocomplete="off"  @keydown.enter="onSearch" @input="onSearch"/>
               </div>
             </div>
 
@@ -107,12 +108,12 @@ watch(() => props.isShow, () => {
               <ul class="jg-search-list">
                 <li class="jg-search-item">
                   <div class="jg-search-item-title">
-                    聊天记录
-                    <span class="fz-9" v-if="state.conversations.length > 0">( {{ state.conversations.length }} ) 个记录</span>
+                    {{ state.i18n.UI.CHAT_HISTORY }}
+                    <span class="fz-9" v-if="state.conversations.length > 0">{{ utils.templateFormat(state.i18n.UI.RECORDS, { count: state.conversations.length }) }}</span>
                   </div>
                   <ul class="jg-search-children">
                     <li class="jg-search-child jg-not-matched" v-if="state.conversations.length == 0">
-                      <span>本地没有匹配记录</span>
+                      <span>{{ state.i18n.UI.NO_LOCAL_RECORDS }}</span>
                     </li>
                     <li class="jg-search-child">
                       <li class="tyn-aside-item js-toggle-main" v-for="(item, index) in state.conversations"
@@ -129,7 +130,7 @@ watch(() => props.isShow, () => {
                             </div>
                             <div class="tyn-media-row has-dot-sap between">
                               <p class="content">
-                              {{ item.matchedCount }} 相关记录
+                              {{ utils.templateFormat(state.i18n.UI.MATCHING_RECORDS, { count: item.matchedCount }) }}
                               </p>
                             </div>
                           </div>
@@ -141,8 +142,8 @@ watch(() => props.isShow, () => {
               </ul>
               <div class="jg-search-preview-box" v-if="!utils.isEmpty(state.currentConversation)">
                 <div class="jg-search-pv-header">
-                  <div class="total">{{ state.currentConversation.matchedList.length }} 条与 {{ state.content }} 相关的搜索结果</div>
-                  <div class="nav wr wr-right-af" @click="onNavChat">进入聊天</div>
+                  <div class="total">{{ utils.templateFormat(state.i18n.UI.SEARCH_RESULTS, { count: state.currentConversation.matchedList.length, content: state.content }) }}</div>
+                  <div class="nav wr wr-right-af" @click="onNavChat">{{ state.i18n.UI.OPEN_CHAT }}</div>
                 </div>
                 <div class="jg-search-pv-body">
                   <ul class="jg-search-pv-msgs">

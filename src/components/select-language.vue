@@ -2,11 +2,14 @@
 import { reactive, watch, getCurrentInstance } from "vue";
 import utils from "../common/utils";
 import { LANGUAGES } from "../common/enum";
+import common from "../common/common";
 
 const props = defineProps(["title", "current", "isAuto", "name"]);
 const emit = defineEmits(['save']);
 const context = getCurrentInstance();
 let languages = utils.clone(LANGUAGES);
+let languageNames = common.i18n().LANGUAGE_NAMES;
+languages = languages.map((language) => ({ ...language, title: languageNames[language.name] || language.title }));
 if(!props.isAuto){
   languages.splice(0, 1);
 }

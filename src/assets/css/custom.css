@@ -3,13 +3,12 @@
 @import './custom_header.css';
 @import './custom_conversation.css';
 @import './custom_contacts.css';
-@import './markdown.min.css';
 
 .tyn-root {
   --appbar-height: 48px;
 }
 .tyn-web-root{
-  --footer-height: 20px;
+  --footer-height: 0px;
   height: calc(100vh - var(--footer-height));
 }
 @media (min-width: 768px){
@@ -47,7 +46,7 @@
   width: 100%;
   background-repeat: no-repeat;
   background-size: cover;
-  border-radius: 14%;
+  border-radius: 10%;
   background-color: #f0f0f1;
 }
 .tyn-mention-all{
@@ -76,7 +75,6 @@
   padding: 1px 5px;
   border-radius: 6px;
   width: fit-content;
-  line-height: 16px;
   height: 16px;
 }
 .jg-stream-completed,
@@ -97,7 +95,7 @@
   bottom: -4px;
 }
 .tyn-reply-text .jg-message-senttime{
-  right: -8px;
+  right: 0px;
 }
 .tyn-reply-media,
 .tyn-reply-file{
@@ -128,6 +126,7 @@
 } */
 .badge{
   --bs-badge-font-size: 0.6rem;
+  z-index: 1055;
 }
 .tyn-reply-tools .wr-more::before{
   font-size: 1.4rem;
@@ -153,7 +152,7 @@
   font-size: 10px;
 }
 .tyn-conver-avatar{
-  background-size: 100%;
+  /* background-size: 100%; */
 }
 .tyn-video-icon::before{
   font-size: 2rem;
@@ -162,12 +161,12 @@
 .message-state{
   position: absolute;
   left: -1rem;
-  bottom: 0;
+  bottom: -4px;
   cursor: pointer;
 }
 .message-state::before{
   font-weight: 700;
-  color: #d0d0d3;
+  color: #484848;
 }
 .message-group-state{
   position: absolute;
@@ -188,6 +187,7 @@
   bottom: 54px;
   padding: 0;
   background-color: #FAFAFA;
+  z-index: 1055;
 }
 
 .tyn-replies{
@@ -232,6 +232,7 @@
 }
 .tyn-chat-aside-avatar{
   background-size: 100%;
+  border-radius: 10%;
 }
 .tyn-aside-group{
   padding: 0.2rem 0;
@@ -352,14 +353,14 @@
 }
 .tyn-emoji-pn{
   position: absolute;
-  width: 470px;
+  width: 400px;
   top: 60px;
   right: 0;
   padding: 10px;
   z-index: 1201;
 }
 .tyn-emoji-pn.show-aside{
-  top: -144px;
+  top: -18rem;
   height: auto;
 }
 
@@ -373,8 +374,19 @@
   box-shadow: #0000002e 0 3px 12px;
 }
 .emoji-item{
-  font-size: 1.5rem;
-  margin: 4px;
+  font-size: 2rem;
+  margin: 2px;
+  height: 3rem;
+  width: 3rem;
+  display: flex;
+  justify-content: center;
+  float: left;
+  border-radius: 8px;
+  user-select: none;
+}
+.emoji-item:hover{
+  background-color: #FFF;
+  cursor: pointer;
 }
 .transfer-icon{
   position: relative;
@@ -1158,10 +1170,11 @@
 
 
 .emojis__grid {
-  display: flex;
+  /* display: flex; */
   flex-wrap: wrap;
-  margin: 0 auto;
-  padding-bottom: 4px;
+  overflow-y: auto;
+  height: 16rem;
+  margin: 8px;
 }
 
 .emoji {
@@ -1314,7 +1327,7 @@
   font-size: 18px;
 }
 .jg-nlogin-btnbox{
-  width: 300px;
+  width: 350px;
 }
 .jg-nlogin-btnbox .form-group{
   width: 100%;
@@ -1348,10 +1361,9 @@
 .jg-nlogin-button:hover{
   background-color: rgb(47 132 217 / 8%);
 }
-.jg-nlogin-num-btn{
-  margin-top: 30px;
+.jg-login-btn-group{
+  margin-top: 2rem;
 }
-
 @keyframes qr-show {
   0% {
     opacity: 0;
@@ -1403,6 +1415,8 @@
 .jg-reactions{
   display: flex;
   flex-wrap: wrap;
+  gap: 0.2rem;
+  align-items: baseline;
 }
 .jg-reaction{
   background-color: #00800033;
@@ -1410,15 +1424,26 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 2px 4px 0 0;
-  padding: 0 8px;
-  border-radius: 16px;
+  padding: 2px 5px;
+  border-radius: 20px;
   font-size: 12px;
   cursor: pointer;
 }
 .jg-reaction-emoji{
   font-size: 14px;
   animation: qr-show 300ms ease-in-out forwards;
+  display: flex;
+  align-items: center
+}
+.jg-reaction-emoji-img{
+  height: 1rem;
+  width: 1rem;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.jg-reaction-emoji-content{
+  font-size: 1rem;
+  line-height: 1rem;
 }
 .jg-reaction-emoji::after{
   content: "|";
@@ -1430,6 +1455,11 @@
   display: flex;
   animation: qr-show 300ms ease-in-out forwards;
 }
+.jg-reaction-name{
+  min-width: 16px;
+  text-align: center;
+  user-select: none;
+}
 .jg-reaction-emoji-pn{
   right: 100px;
   left: auto;
@@ -1440,10 +1470,10 @@
 }
 .jg-reaction-bottom{
   top: unset !important;
-  bottom: -120px;
+  bottom: -17rem;
 }
 .jg-reaction-top{
-  top: -110px !important;
+  top: -16rem !important;
   bottom: unset !important;
 }
 
@@ -1475,6 +1505,7 @@
 }
 .conver-dot{
   font-size: 10px;
+  z-index: 99;
 }
 .jg-conver-mute{
   color: #0000003b;
@@ -1651,6 +1682,9 @@
 }
 .jg-conver-group-modal .modal-body{
   height: 600px;
+}
+.jg-conver-group-modal .modal-content{
+  width: 400px;
 }
 /* Conversation Group End */
 
@@ -2046,8 +2080,8 @@
 }
 .jg-contact-navs{
   display: flex;
-  justify-content: space-between;
-  height: 50px;
+  justify-content: space-around;
+  height: 36px;
 }
 .nav-unreadcount{
   position: absolute;
@@ -2070,6 +2104,7 @@
 .jg-warn-bg{
   background-color: #ef2323;
   color: #FFF;
+  border: 0;
 }
 .jg-warn-letter{
   color: #ef2323;
@@ -2077,7 +2112,7 @@
 .jg-friend-applystatus{
   font-size: 12px;
   color: #a7a8ab;
-  width: 40px;
+  /* width: 40px; */
 }
 .warn-bg{
   background-color: #ef2323;
@@ -2180,8 +2215,11 @@
   left: 50px;
   top: -44px;
   z-index: 1210;
+  min-width: 9rem;
 }
-
+.tyn-h5header-create-list{
+  width: 3rem;
+}
 .jg-aside-btn-li{
   display: flex;
   justify-content: space-between;
@@ -2240,16 +2278,19 @@
   right: 0;
   top: 0;
   bottom: 0;
-  background-color: #00000099;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 12px;
   color: #fefefe;
+  background-color: #0b3904b3;
+  box-shadow: #1f373061 0 3px 20px;
+  backdrop-filter: blur(2px);
+  transition: all 0.3s ease-in-out;
 }
-.jg-askai-ban{
-  background-color: #00000054;
-  display: flex;
+.jg-ban-none{
+  top: unset;
+  bottom: -100%;
 }
 .jg-askai-loading {
   margin-right: 1rem;
@@ -2291,22 +2332,7 @@
   width: 600px;
   height: 400px;
 }
-.markdown-body{
-  border-radius: 4px;
-  padding: 4px 10px;
-  font-size: 12px;
-  color: #000;
-  background-color: #ffffff;
-}
-.markdown-body table tr{
-  background-color: #FFF;
-}
-.markdown-body table tr:nth-child(2n) {
-  background-color: #f2f2f2;
-}
-.markdown-body table{
-  border-radius: 2px;
-}
+
 .jg-aside-bli{
   display: flex;
   justify-content: space-between;
@@ -2541,6 +2567,7 @@
   position: absolute;
   top: -2px;
   right: 6px;
+  z-index: 1055;
 }
 .jg-aside-group-body .jg-tools{
   height: 2rem;
@@ -2590,6 +2617,9 @@
 }
 .jg-aside-ust-box .tyn-common-body{
   padding: 0;
+}
+.jg-aside-userupdate-body .form-group{
+  margin-bottom: 1rem;
 }
 .jg-aside-userupdate-body .form-avatars{
   height: 20rem;
@@ -2785,12 +2815,7 @@
   min-width: 16px;
   height: 16px;
   width: 16px;
-  border-radius: 50%;
-  background-size: 100%;
   margin-right: 8px;
-}
-.jg-top-avatar{
-  border-radius: 4px;
 }
 .jg-fav-msg{
   margin: 10px 0;
@@ -2811,4 +2836,16 @@
 .jg-aside-uagreement-body .content{
   height: 90vh;
   width: 100%;
+}
+.markdown-body{
+  padding: 0.5rem;
+}
+.markdown-body p{
+  margin-bottom: 0;
+}
+.markdown-body blockquote, .markdown-body details, .markdown-body dl, .markdown-body ol, .markdown-body p, .markdown-body pre, .markdown-body table, .markdown-body ul{
+  margin-bottom: 0;
+}
+.markdown-body ol, .markdown-body ul{
+  padding: 0;
 }

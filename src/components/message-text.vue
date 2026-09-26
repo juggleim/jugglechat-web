@@ -1,12 +1,13 @@
 <script setup>
 const props = defineProps(['message', 'isRead']);
-const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction', 'onresend', 'onpinned', 'onfav']);
+const emit = defineEmits(["onrecall", "onmodify", 'ontransfer', 'onreply', 'onreaction', 'onresend', 'onpinned', 'onfav', 'onaireply']);
 
 import { reactive, watch, getCurrentInstance } from "vue";
 import GroupReads from "./group-reads.vue";
 import Dropdownmenu from "./message-menu.vue";
 import Reaction from "./message-reaction.vue";
 import ReplyMessage from "./message-reply.vue";
+import Avatar from "./avatar.vue";
 import utils from "../common/utils";
 import im from "../common/im";
 import messageUtils from "./message-utils";
@@ -20,22 +21,23 @@ let state = reactive({
   isModify: false,
   content: '',
   errorMsg: '',
-  mentionMsgs: im.mentionShortFormat(props.message),
+  mentionMsgs: common.mentionShortFormat(props.message),
   isShowGroupDetail: false,
   dropRectX: 0,
   isShowReaction: false,
+  i18n: common.i18n(),
 });
 watch(() => props.message, (msg) => {
-  state.mentionMsgs = im.mentionShortFormat(msg);
+  state.mentionMsgs = common.mentionShortFormat(msg);
 });
 
 let context = getCurrentInstance();
 
 function onCopy(){
-  let { content } = props.message;
-  Clipboard.copy(content.content, utils.noop, utils.noop);
+  let content = common.mentionToText(props.message)
+  Clipboard.copy(content, utils.noop, utils.noop);
   context.proxy.$toast({
-    text: `已复制`,
+    text: state.i18n.MESSAGE_TEXT.COPY,
     icon: 'success'
   });
   onShowDrop(false);
@@ -51,9 +53,9 @@ function onRecall() {
 }
 function onModify() {
   let message = props.message;
-  let { content } = state;
+  let { content, i18n } = state;
   if (utils.isEmpty(content)) {
-    return state.errorMsg = '修改内容不能为空呀~';
+    return state.errorMsg = i18n.MESSAGE_TEXT.EDIT_CONTENT_EMPTY;
   }
   emit('onmodify', { message, content });
   state.isModify = false;
@@ -74,6 +76,10 @@ function onReply(){
   onShowDrop(false);
   emit('onreply', props.message);
 }
+function onAIReply(){
+  onShowDrop(false);
+  emit('onaireply', { message: props.message });
+}
 function onPinned(){
   onShowDrop(false);
   emit('onpinned', { message: props.message });
@@ -92,7 +98,18 @@ function getContent(content){
   // content = content.replace(REG_EXP.LINK, (current, match) => {
   //   return `<a href="${match}" target="_blank" >${match}</a>`;
   // });
-  return common.formatMarkdown(content);
+  let message = props.message;
+  let { mentionInfo } = message;
+  if(!mentionInfo){
+    mentionInfo = { mentionType: -1 };
+  }
+  let isMention = mentionInfo.mentionType > 0;
+  if(isMention){
+    let content = common.mentionShortFormat(message)
+    let reg = new RegExp('\n', 'g');
+    return content.replace(reg, '<br/>');	
+  }
+  return common.formatMarkdown(common.mentionShortFormat(props.message));
 }
 function onShowReadDetail(isShow) {
   if (!messageUtils.isGroup(props.message)) {
@@ -132,8 +149,12 @@ function onResend(){
 
 <template>
   <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md">
-      <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
+    <div class="tyn-media">
+      <Avatar 
+        :cls="'tyn-size-md jg-size-md '"
+        :avatar="props.message.sender.portrait"
+        :name="props.message.sender.name">
+      </Avatar>
     </div>
   </div>
   <ReactionEmoji :is-show="state.isShowReaction" @onhide="onShowEmojiReaction(false)" @onemit="onChoiceEmoji" :message="props.message"></ReactionEmoji>
@@ -143,17 +164,16 @@ function onResend(){
       <div class="tyn-reply-text" v-if="state.isModify">
         <div>
           <input class="tyn-chat-form-input" v-model="state.content" type="text" @input="onInput()" />
-          <button class="btn btn-sm" @click="onModify">保存</button>
-          <button class="btn btn-sm" @click="onCancelModify">取消</button>
+          <button class="btn btn-sm" @click="onModify">{{state.i18n.COMMON.SAVE_BTN}}</button>
+          <button class="btn btn-sm" @click="onCancelModify">{{state.i18n.COMMON.CANCEL_BTN}}</button>
         </div>
         <span class="small ms-2 text-warning" v-if="state.errorMsg">{{ state.errorMsg }}</span>
       </div>
-      <div class="tyn-reply-text wr" v-else v-longpress="onClickRight" @click.right.prevent="onClickRight" @click.prevent="onShowEmojiReaction(true)">
+      <div class="markdown-body tyn-reply-text wr" v-else v-longpress="onClickRight" @click.right.prevent="onClickRight" @click.prevent="onShowEmojiReaction(true)">
         <ReplyMessage  :message="props.message.referMsg"></ReplyMessage>
-        <span class="tyn-msg-mention tyn-mention-me" v-for="msg in state.mentionMsgs">{{ msg }}</span>
-        <span v-html="getContent(props.message.content.content)"></span>
+        <span class="" v-html="getContent(props.message.content.content)"></span>
         <div class="jg-translate" v-if="props.message.translation" v-html="getContent(props.message.translation)"></div>
-        <span class="tyn-text-modify" v-if="props.message.isUpdated">（已修改）</span>
+        <span class="tyn-text-modify" v-if="props.message.isUpdated">（{{state.i18n.MESSAGE_TEXT.EDIT_TIP}}）</span>
         
         <Reaction :is-show="!utils.isEmpty(props.message.reactions)" :reactions="props.message.reactions" @oncancel="onChoiceEmoji"></Reaction>
 
@@ -181,6 +201,7 @@ function onResend(){
         <li>
           <Dropdownmenu :style="[  props.message.isSender ? 'right:' + state.dropRectX + 'px' : 'left:' + state.dropRectX + 'px']" :is-show="state.isShowDrop" :message="props.message" 
             @oncopy="onCopy" 
+            @onaireply="onAIReply"
             @onmodify="onShowModify()" 
             @onrecall="onRecall()" 
             @ontransfer="onTransfer(MESSAGE_OP_TYPE.TRANSLATE)" 

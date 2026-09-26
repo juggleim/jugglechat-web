@@ -14,8 +14,10 @@ import { reactive, getCurrentInstance, nextTick, watch } from "vue";
 import { EVENT_NAME } from "../../common/enum";
 import conversationTools from "../conversation/conversation";
 import Ringing from "../../common/ringing";
+import common from "../../common/common";
 
 let context = getCurrentInstance();
+let i18n = common.i18n();
 
 let juggle = im.getCurrent();
 let juggleCall = im.getRTCEngine();
@@ -43,7 +45,7 @@ juggleCall.on(CallEvent.INVITED, ({ target }) => {
 
 emitter.$on(EVENT_NAME.ON_SHOW_CALL_DIALOG, ({ isShow, members, isCall, isMulti, mediaType }) => {
   if(state.isShowCall){
-    return context.proxy.$toast({ text: `正在通话中`, icon: 'error' });
+    return context.proxy.$toast({ text: i18n.UI.CALL_IN_PROGRESS, icon: 'error' });
   }
   state.callMembers = members;
   if(isCall){
@@ -105,7 +107,7 @@ function removeNotify({ callId }){
       <component :is="Component" :key="route.fullPath" />
     </RouterView>
   </div>
-  <JFooter></JFooter>
+  <!-- <JFooter></JFooter> -->
   <ModalCall :is-show="state.isShowCall" :members="state.callMembers" :callid="state.activeCallId" @onhangup="callCore.onHangup"></ModalCall>
   <CallInviteNotify v-for="(notify, index) in state.callNotifyList" :callid="notify.callId" :index="index" :inviter="notify.inviter" @onhangup="onhangup" @onaccept="onaccept"></CallInviteNotify>
   <audio src="/2472.mp3" id="ringing" loop="true"></audio>

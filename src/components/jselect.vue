@@ -1,7 +1,6 @@
 <script setup>
 import { reactive, watch } from "vue";
 import utils from "../common/utils";
-import { EMOJI_POS_LIST } from "../common/enum";
 const props = defineProps(['uid', 'current', 'list']);
 const emit = defineEmits(["onchanged"]);
 

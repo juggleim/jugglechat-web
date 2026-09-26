@@ -5,12 +5,15 @@ import { Friend, Group } from "../services";
 import Storage from "../common/storage";
 import { STORAGE, EVENT_NAME } from "../common/enum";
 import Asider from "./aside.vue";
+import Avatar from "./avatar.vue";
 import emitter from "../common/emmit";
+import common from "../common/common";
 
 const props = defineProps(["isShow", "groupId", "members"]);
 const emit = defineEmits(["oncancel", "onconfirm"]);
 
 let user = Storage.get(STORAGE.USER_TOKEN);
+let i18n = common.i18n();
 
 let state = reactive({
   members: [],
@@ -44,7 +47,7 @@ function removeMembers(members){
   state.isGroupRemoveMemberLoading = true;
   if (utils.isEqual(members.length, state.members.length)) {
     return context.proxy.$toast({
-      text: `留个人，不能都移除了吧～`,
+      text: i18n.UI.MEMBER_REQUIRED,
       icon: 'warn'
     });
   }
@@ -69,15 +72,15 @@ function onSelected(item) {
 </script>
 
 <template>
-  <Asider :is-show="props.isShow" :title="'移除成员'" @oncancel="onCancel" :right="props.right">
+  <Asider :is-show="props.isShow" :title="i18n.UI.REMOVE_MEMBERS" @oncancel="onCancel" :right="props.right">
     <div class="jg-aside-group-body">
       <ul class="tyn-media-list gap gap-2">
         <li v-for="item in state.members" @click="onSelected(item)" class="tyn-media-item">
           <span class="wr tyn-tfcontact-s"
             :class="[item.isTransferChecked ? 'wr-success-square tyn-contact-checked' : 'wr-square', item.disabled ? 'wr-disabled' : '']"></span>
-            <div class="tyn-media tyn-size-md tyn-conver-avatar"
-              :style="{ 'background-image': 'url(' + item.portrait + ')' }">
-            </div>
+
+            <Avatar :cls="'tyn-size-md jg-size-md'" :avatar="item.portrait" :name="item.name"></Avatar>
+
             <div class="tyn-media-col">
               <div class="tyn-media-row">
                 <h6 class="name">{{ item.name }}</h6>
@@ -87,10 +90,10 @@ function onSelected(item) {
       </ul>
       <ul class="tyn-list-inline gap gap-3 pt-3 tny-content-center jg-tools">
         <li>
-          <button class="btn btn-sm btn-success" @click="onConfirm()">确认</button>
+          <button class="btn btn-sm btn-success" @click="onConfirm()">{{ i18n.COMMON.CONFIRM_BTN }}</button>
         </li>
         <li>
-          <button class="btn btn-sm btn-light" @click="onCancel()">取消</button>
+          <button class="btn btn-sm btn-light" @click="onCancel()">{{ i18n.COMMON.CANCEL_BTN }}</button>
         </li>
       </ul>
       <div class="modal-body modal-loading" v-if="state.isGroupRemoveMemberLoading">

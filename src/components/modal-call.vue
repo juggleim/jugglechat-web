@@ -20,6 +20,7 @@ let juggle = im.getCurrent();
 let juggleCall = im.getRTCEngine();
 
 let state = reactive({
+  i18n: common.i18n(),
   list: [],
   activeCallId: '',
   callTime: '00:00:00',
@@ -214,23 +215,23 @@ function onMinWindow(isMin){
           <div class="jcall-tools">
             <div class="jcall-tool" @click="onmutemic">
               <div class="jcall-tool-icon wr wr-rtc-mutemic" :class="{ 'jc-tool-active': !state.isMuteMic }"></div>
-              <div class="jcall-tool-label" :class="{ 'jc-tool-active': !state.isMuteMic }">{{ state.isMuteMic ? '麦克风已禁用' : '麦克风已启用' }}</div>
+              <div class="jcall-tool-label" :class="{ 'jc-tool-active': !state.isMuteMic }">{{ state.isMuteMic ? state.i18n.UI.MICROPHONE_OFF : state.i18n.UI.MICROPHONE_ON }}</div>
             </div>
             <div class="jcall-tool" @click="onmutespeaker">
               <div class="jcall-tool-icon wr wr-rtc-ummutespeaker"  :class="{ 'jc-tool-active': !state.isMuteSpeaker }"></div>
-              <div class="jcall-tool-label"  :class="{ 'jc-tool-active': !state.isMuteSpeaker }">{{ state.isMuteSpeaker ? '扬声器已关闭' : '扬声器已打开'}}</div>
+              <div class="jcall-tool-label"  :class="{ 'jc-tool-active': !state.isMuteSpeaker }">{{ state.isMuteSpeaker ? state.i18n.UI.SPEAKER_OFF : state.i18n.UI.SPEAKER_ON}}</div>
             </div>
             <!-- <div class="jcall-tool" @click="on">
               <div class="jcall-tool-icon wr wr-rtc-mutecamera"></div>
-              <div class="jcall-tool-label">摄像头</div>
+              <div class="jcall-tool-label">{{ state.i18n.UI.CAMERA }}</div>
             </div> -->
             <div class="jcall-tool" v-if="state.session.isMultiCall" @click="onInvite(true)">
               <div class="jcall-tool-icon wr wr-rtc-add jc-tool-active"></div>
-              <div class="jcall-tool-label jc-tool-active">邀请成员</div>
+              <div class="jcall-tool-label jc-tool-active">{{ state.i18n.UI.INVITE_MEMBERS }}</div>
             </div>
             <div class="jcall-tool" @click="onHangup">
               <div class="jcall-tool-icon wr wr-rtc-hangup"></div>
-              <div class="jcall-tool-label jc-tool-active">挂断</div>
+              <div class="jcall-tool-label jc-tool-active">{{ state.i18n.UI.HANG_UP }}</div>
             </div>
           </div>
         </div>
@@ -259,7 +260,7 @@ function onMinWindow(isMin){
             </li>
           </ul>
           <ul class="jgcall-btns">
-            <li class="jgcall-btn jc-tool-active" @click="onInviteUsers">确定</li>
+            <li class="jgcall-btn jc-tool-active" @click="onInviteUsers">{{ state.i18n.COMMON.CONFIRM_BTN }}</li>
           </ul>
         </div>
       </div>

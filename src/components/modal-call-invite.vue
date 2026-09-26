@@ -9,7 +9,9 @@ import common from "../common/common";
 const props = defineProps(["isShow", "callid", "index", "inviter"]);
 const emit = defineEmits(["onhangup", "onaccept"]);
 
-let state = reactive({});
+let state = reactive({
+  i18n: common.i18n(),
+});
 
 function onhangup(){
   emit("onhangup", { callId: props.callid });
@@ -24,7 +26,7 @@ function onaccept(){
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-body">
-          <div class="jgcall-invite-title">{{ props.inviter.name || '' }} 邀请你音视频通话</div>
+          <div class="jgcall-invite-title">{{ props.inviter.name || '' }} {{ state.i18n.MESSAGE_CALL }}</div>
           <ul class="jgcall-invite-tools">
             <li class="jgcall-invite-tool wr wr-rtc-accept" @click="onaccept"></li>
             <li class="jgcall-invite-tool wr wr-rtc-hangup" @click="onhangup"></li>

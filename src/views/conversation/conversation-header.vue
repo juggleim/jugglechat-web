@@ -7,28 +7,24 @@ import AsiderFriendAdd from "../../components/aside-friend-add.vue";
 import AsiderGroupAddMember from "../../components/aside-group-add-member.vue";
 import { useRouter } from "vue-router";
 import Perch from "../../components/perch.vue";
+import common from "../../common/common";
 
 const router = useRouter();
 const props = defineProps(["isShow"]);
 
 let state = reactive({
-  addMenus: [
-    { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
-    { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
-  ],
-  tbars: [
-    { name: '消息', url: 'ConversationList', icon: 'hmsg', event: ASIDE_MENU_TYPE.MESSAGE },
-    { type: 'line' },
-    { name: '通讯录', url: 'Contacts', icon: 'hcontact', event: ASIDE_MENU_TYPE.CONTACT },
-    { type: 'line' },
-    { name: '设置', url: 'Setting', icon: 'hsetting', event: ASIDE_MENU_TYPE.SETTING },
-  ],
+  i18n: common.i18n(),
   isShowAddMenu: false,
   isShowAddFriend: false,
   isShowCreateGroup: false,
   isShowAddButton: true,
   isShowNavBar: false,
 });
+
+utils.extend(state, {
+  addMenus: getAddMenus(),
+  tbars: getTabs(),
+})
 
 function onShowAddMenu(isShow){
   state.isShowAddMenu = isShow;
@@ -57,6 +53,26 @@ function onShowAddFriend(isShow){
 function onShowCreateGroup(isShow){
   state.isShowCreateGroup = isShow;
 }
+
+function getAddMenus(){
+  let { i18n } = state;
+  let HEADER_MENU = i18n.HEADER.MENU;
+  return [
+    { name: HEADER_MENU.CREATE_FRIREND, icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
+    { name: HEADER_MENU.CREATE_GROUP, icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
+  ];
+}
+function getTabs(){
+  let { i18n } = state;
+  let HEADER_MENU = i18n.HEADER.MENU;
+  return [
+    { name: HEADER_MENU.CHAT, url: 'ConversationList', icon: 'hmsg', event: ASIDE_MENU_TYPE.MESSAGE },
+    { type: 'line' },
+    { name: HEADER_MENU.CONTACT, url: 'Contacts', icon: 'hcontact', event: ASIDE_MENU_TYPE.CONTACT },
+    { type: 'line' },
+    { name: HEADER_MENU.SETTING, url: 'Setting', icon: 'hsetting', event: ASIDE_MENU_TYPE.SETTING },
+  ]
+}
 </script>
 
 <template>
@@ -70,7 +86,7 @@ function onShowCreateGroup(isShow){
         </div>
         <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowNavBar" :menus="state.tbars" :class="'tyn-h5header-nav-list'" @onhide="onShowNavBar(false)"></HeaderDropMenu>
       </li>
-      <li class="jg-h5header-title">JuggleChat</li>
+      <li class="jg-h5header-title">JuggleGram</li>
       <li class="jg-h5header-right" v-if="state.isShowAddButton">
         <div class="jg-asider-footer-item" @click="onShowAddMenu(true)">
           <div class="icon wr wr-plus-w600"></div>

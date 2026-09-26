@@ -1,4 +1,4 @@
-import JuggleChat from "../libs/juggleim-es-1.8.0";
+import JuggleChat from "../libs/juggleim-es-1.8.1";
 import JuggleCall from "../libs/jugglecall-es-1.0.0";
 
 // import JuggleChat from "jugglechat-websdk";
@@ -7,6 +7,7 @@ import utils from "./utils";
 import { EVENT_NAME, MSG_NAME, STORAGE } from "../common/enum";
 import emitter from "../common/emmit";
 import Storage from "../common/storage";
+import common from "./common";
 
 
 let option = { appkey: CONFIG.appkey, upload: OSS, serverList: CONFIG.serverList };
@@ -61,47 +62,48 @@ function isConnected(){
 }
 
 function msgShortFormat(message){
+  let i18n = common.i18n();
+  let { LAST_MSG } = i18n.MAIN;
   let { MessageType } = juggle;
   let { name, content, sender, isSender, mentionInfo } = message;
-  let shortName = '[Unkown]'
+  let shortName = LAST_MSG.NOT_SUPPORT;
   if(utils.isEqual(name, MessageType.TEXT)){
-    shortName = content.content;
+    shortName = common.mentionShortFormat(message);
   }
   if(utils.isEqual(name, MessageType.FILE)){
-    shortName = '[文件]';
+    shortName = LAST_MSG.FILE;
   }
   if(utils.isEqual(name, MessageType.IMAGE)){
-    shortName = '[图片]';
+    shortName = LAST_MSG.IMAGE;
   }
   if(utils.isEqual(name, MessageType.VIDEO)){
-    shortName = '[视频]';
+    shortName = LAST_MSG.VIDEO;
   }
   if(utils.isEqual(name, MessageType.VOICE)){
-    shortName = '[语音]';
+    shortName = LAST_MSG.VOICE;
   }
   if(utils.isEqual(name, MessageType.MERGE)){
-    shortName = '[聊天记录]';
+    shortName = LAST_MSG.MERGE;
   }
   if(utils.isEqual(name, MSG_NAME.GROUP_NTF)){
-    shortName = `[群通知]`;
+    shortName = LAST_MSG.GROUP_NTF;
   }
   if(utils.isEqual(name, MSG_NAME.FRIEND_NTF)){
-    shortName = `[添加好友通知]`;
+    shortName = LAST_MSG.FRIEND_NTF;
   }
   if(utils.isEqual(name, MSG_NAME.CONTACT_CARD)){
-    shortName = `[名片消息]`;
+    shortName = LAST_MSG.CARD;
   }
   if(utils.isEqual(name, MessageType.CALL_1V1_FINISHED)){
-    shortName = `[音视频通话]`;
+    shortName = LAST_MSG.CALL;
   }
   if(utils.isEqual(name, MessageType.STREAM_TEXT)){
-    shortName = `[智能体消息]`;
+    shortName = LAST_MSG.AGENT;
   }
   if(utils.isEqual(name, MessageType.RECALL_INFO)){
-    let label = isSender ? '你' : sender.name;
-    shortName = `${label} 撤回了一条消息`;
+    let name = isSender ? i18n.COMMON.YOU : sender.name;
+    shortName = utils.templateFormat(LAST_MSG.RECALL, { name });
   }
-  shortName += ` ${mentionShortFormat(message).join(' ')}`;
  
   if(utils.isUndefined(name) || utils.isNull(name)){
     shortName = '';
@@ -109,21 +111,7 @@ function msgShortFormat(message){
 
   return shortName;
 }
-function mentionShortFormat(message){
-  let { MentionType } = juggle;
-  let names = [];
-  let { mentionInfo } = message;
-  if(mentionInfo){
-    let { members, mentionType } = mentionInfo;
-    utils.forEach(members, (member) => {
-      names.push(`@${member.name}`)
-    });
-    if(utils.isEqual(mentionType, MentionType.ALL) || utils.isEqual(mentionType, MentionType.ALL_SOMEONE)){
-      names.push('@所有人');
-    }
-  }
-  return names;
-}
+
 let { UnreadTag } = juggle;
 function isUnreadTag(conversation){
   return conversation.unreadTag == UnreadTag.UNREAD;
@@ -133,7 +121,6 @@ export default {
   isConnected,
   connect,
   msgShortFormat,
-  mentionShortFormat,
   isUnreadTag,
   CallEvent,
   CallFinishedReason,

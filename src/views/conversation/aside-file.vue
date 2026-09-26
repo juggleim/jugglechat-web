@@ -1,5 +1,7 @@
 <script setup>
+import common from "../../common/common";
 const props = defineProps(["isShow", "messages"]);
+let i18n = common.i18n();
 </script>
 
 <template>
@@ -15,7 +17,7 @@ const props = defineProps(["isShow", "messages"]);
             </div>
           </div>
         </a>
-        <div class="name tyn-aside-nothing" v-if="props.messages.length == 0">没有更多了</div>
+        <div class="name tyn-aside-nothing" v-if="props.messages.length == 0">{{ i18n.UI.NO_MORE_ITEMS }}</div>
       </li>
     </ul>
   </div>

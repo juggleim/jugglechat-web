@@ -17,6 +17,7 @@ import AsiderGroupAddMember from "./aside-group-add-member.vue";
 import AsiderUserSetting from "./aside-user-setting.vue";
 import AsideUserUpdate from "./aside-user-update.vue";
 import AsideFavoriteMsg from "./aside-msg-favorite.vue";
+import Avatar from "./avatar.vue";
 
 const emit = defineEmits([]);
 const router = useRouter();
@@ -29,20 +30,7 @@ let { _value: { path } } = router.currentRoute;
 let user = Storage.get(STORAGE.USER_TOKEN);
 
 let state = reactive({
-  settingMenus: [
-    { id: `${Date.now()}`, title: '消息', type: 'top', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, name: 'ConversationList', isActive: utils.isEqual(path, '/conversation') },
-    { id: `${SYS_CONVERSATION_FRIEND}`, type: 'top', title: '通讯录', icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, name: 'Contacts', isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
-  ],
-  addMenus: [
-    { name: '添加好友', icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
-    { name: '创建群组', icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
-  ],
-  userMenus: [
-    { name: '用户设置', icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
-    { name: '信息修改', icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
-    { name: '账号管理', icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
-    { name: '退出登录', icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
-  ],
+  i18n: common.i18n(),
   bottomMenus: [],
   isShowSearchModal: false,
   isShowAddMenu: false,
@@ -55,6 +43,20 @@ let state = reactive({
   isShowUserSetting: false,
   isShowAddAccount: false,
   isShowFavoriteMsg: false,
+});
+utils.extend(state, {
+  settingMenus: getSettingMenus(),
+  addMenus: getAddMenus(),
+  userMenus: getUserMenus(),
+})
+
+emitter.$on(EVENT_NAME.ON_APP_LANGUAGE_CHANGED, () => {
+  utils.extend(state, {
+    i18n: common.i18n(),
+    settingMenus: getSettingMenus(),
+    addMenus: getAddMenus(),
+    userMenus: getUserMenus(),
+  })
 });
 
 function onShowAddMenu(isShow){
@@ -179,11 +181,6 @@ function onNavChat(item) {
   });
 }
 
-// 强制修改头像
-let portrait = user.portrait || '';
-let isShowUser = utils.isBase64(portrait.replace('data:image/jpeg;base64,', ''));
-utils.extend(state, { user, isShowUser, disableClose: isShowUser });
-
 let useRouterCurrent = reactive(router);
 watch(useRouterCurrent, (value) => {
   let { currentRoute: { name } } = value;
@@ -196,6 +193,33 @@ watch(useRouterCurrent, (value) => {
     selectMenu(menu);
   }
 });
+
+function getSettingMenus(){
+  let i18n = common.i18n();
+  let HEADER_MENU = i18n.HEADER.MENU;
+  return [
+    { id: `${Date.now()}`, title: HEADER_MENU.CHAT, type: 'top', icon: 'message', event: ASIDE_MENU_TYPE.MESSAGE, name: 'ConversationList', isActive: utils.isEqual(path, '/conversation') },
+    { id: `${SYS_CONVERSATION_FRIEND}`, type: 'top', title: HEADER_MENU.CONTACT, icon: 'contact', event: ASIDE_MENU_TYPE.CONTACT, name: 'Contacts', isActive: utils.isEqual(path, '/contacts'), unreadCount: 0 },
+  ]
+}
+function getAddMenus(){
+  let i18n = common.i18n();
+  let HEADER_MENU = i18n.HEADER.MENU;
+  return [
+    { name: HEADER_MENU.CREATE_FRIREND, icon: 'adduser', event: ASIDE_MENU_TYPE.ADD_FRIREND },
+    { name: HEADER_MENU.CREATE_GROUP, icon: 'group', event: ASIDE_MENU_TYPE.ADD_GROUP },
+  ];
+}
+function getUserMenus(){
+  let i18n = common.i18n();
+  let HEADER_MENU = i18n.HEADER.MENU;
+  return [
+    { name: HEADER_MENU.USER_SETTING, icon: 'config', event: ASIDE_MENU_TYPE.USER_SETTING },
+    { name: HEADER_MENU.INFO_UPDATE, icon: 'operate', event: ASIDE_MENU_TYPE.USER_UPDATE },
+    { name: HEADER_MENU.ACCOUNT_MANAGE, icon: 'adduser', event: ASIDE_MENU_TYPE.USER_ACCOUNT },
+    { name: HEADER_MENU.LOGOUT, icon: 'logout', isWarn: true, event: ASIDE_MENU_TYPE.USER_LOGOUT },
+  ];
+}
 </script>
 
 <template>
@@ -203,7 +227,7 @@ watch(useRouterCurrent, (value) => {
     <ul class="jg-footer-tools jg-footer-top-box">
       <li class="jg-footer-tool"  @click.prevent="onShowSettingMenu(true)">
         <div class="jg-header-user">
-          <div class="tyn-avatar jg-header-user-avatar" :style="{ 'background-image': 'url(' + state.user.portrait + ')' }"></div>
+          <Avatar :cls="'jg-header-user-avatar'" :avatar="state.user.portrait" :name="state.user.name || state.user.id"></Avatar>
           <div class="jg-header-user-name">{{ state.user.name || state.user.id }}</div>
         </div>
       </li>
@@ -211,14 +235,14 @@ watch(useRouterCurrent, (value) => {
       <li class="jg-footer-tool" v-if="juggle.isDesktop()">
         <div class="jg-asider-footer-item" @click="onShowSearchModal(true)">
           <div class="icon wr wr-search"></div>
-          <div class="name">搜索</div>
+          <div class="name">{{ state.i18n.HEADER.MENU.SEARCH }}</div>
         </div>
       </li>
 
       <li class="jg-footer-tool">
         <div class="jg-asider-footer-item" @click="onShowAddMenu(true)">
           <div class="icon wr wr-plus"></div>
-          <div class="name">创建</div>
+          <div class="name">{{ state.i18n.HEADER.MENU.CREATE }}</div>
         </div>
         <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowAddMenu" :menus="state.addMenus" :class="'tyn-header-create-list'" @onhide="onShowAddMenu(false)"></HeaderDropMenu>
       </li>
@@ -234,7 +258,7 @@ watch(useRouterCurrent, (value) => {
       <li class="jg-footer-tool">
         <div class="jg-asider-footer-item" @click="onShowFavoriteMsg(true)">
           <div class="icon wr wr-fav"></div>
-          <div class="name">收藏</div>
+          <div class="name">{{ state.i18n.HEADER.MENU.FAV }}</div>
         </div>
       </li>
     </ul>
@@ -242,7 +266,7 @@ watch(useRouterCurrent, (value) => {
       <li class="jg-footer-tool">
         <div class="jg-asider-footer-item" @click="onShowSettingMenu(true)">
           <div class="icon wr wr-setting"></div>
-          <div class="name">设置</div>
+          <div class="name">{{ state.i18n.UI.SETTINGS }}</div>
         </div>
         <HeaderDropMenu @onemit="onDropMenuClick" :is-show="state.isShowSettingMenu" :menus="state.bottomMenus" :class="'tyn-header-create-list jg-layout-settingdrop'" @onhide="onShowSettingMenu(false)"></HeaderDropMenu>
       </li>

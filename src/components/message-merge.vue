@@ -1,6 +1,7 @@
 <script setup>
 import { reactive, getCurrentInstance } from "vue";
 import utils from "../common/utils";
+import Avatar from "./avatar.vue";
 import GroupReads from "./group-reads.vue";
 import messageUtils from "./message-utils";
 import Dropdownmenu from "./message-menu.vue";
@@ -62,8 +63,12 @@ function onClickRight(e){
 
 <template>
   <div class="tyn-reply-avatar">
-    <div class="tyn-media tyn-size-md">
-      <div class="tyn-avatar tyn-s-avatar" :style="{ 'background-image': 'url(' + props.message.sender.portrait + ')' }"></div>
+ <div class="tyn-media">
+      <Avatar 
+        :cls="'tyn-size-md jg-size-md '"
+        :avatar="props.message.sender.portrait"
+        :name="props.message.sender.name">
+      </Avatar>
     </div>
   </div>
   <div class="tyn-reply-group" @mouseleave="onShowDrop(false)">

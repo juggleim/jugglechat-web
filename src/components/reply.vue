@@ -2,10 +2,12 @@
 import { reactive, watch } from "vue";
 import im from "../common/im";
 import utils from "../common/utils";
+import common from "../common/common";
 const props = defineProps(["isShow", "message"]);
 const emit = defineEmits(["oncancel"]);
 
 let state = reactive({
+  i18n: common.i18n(),
   name: ''
 });
 
@@ -23,7 +25,7 @@ watch(() => props.message, (msg) => {
     <div class="flex-grow-1">
       <div class="form-group">
         <div class="form-control-wrap form-control-plaintext-wrap">
-          回复：{{ state.name }}
+          {{ state.i18n.UI.REPLY }}: {{ state.name }}
         </div>
       </div>
     </div>
